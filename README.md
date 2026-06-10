@@ -1,0 +1,3 @@
+# openCraft
+
+Project scaffold.
