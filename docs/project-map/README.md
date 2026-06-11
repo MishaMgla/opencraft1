@@ -42,4 +42,5 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-11: add PM/Dev agent system (`.github/` workflows + `docs/project-map/agents.md`).
 - **2026-06-11** — installed AI-docs scaffolding (thin `AGENTS.md`/`CLAUDE.md` stubs, `AGENT_RULES.md` single source of truth, `docs/project-map/` hub + glossary + index, `scripts/build-index.ts` generator), mirroring the contentos pattern. No leaf docs yet — repo is a pre-code scaffold.
