@@ -21,7 +21,8 @@ single source of truth for rules and documentation pointers shared by all AI cod
 
 ## coding style & naming
 
-_(pending stack)_ — define once the toolchain lands (language, framework, formatter, import alias). record the conventions here and the full tooling detail in `docs/project-map/tooling.md`.
+- **backend:** Go 1.23. format with `gofmt`; vet with `go vet ./...`. package layout: `cmd/<binary>` for entrypoints, `internal/<pkg>` for engine packages. lower_snake file names, idiomatic Go exported/unexported naming.
+- **client:** vanilla ES modules under `web/src/`, no bundler. PixiJS v8 imported from CDN. `camelCase` functions, one responsibility per module file.
 
 ## testing layout
 
@@ -41,7 +42,10 @@ _(pending stack)_ — define the single test convention (where shared mocks/fixt
 
 ## development commands
 
-_(pending stack)_ — fill in `install` / `dev` / `build` / `lint` / `typecheck` / `test` once a package manifest exists.
+- `go build ./...` — compile everything.
+- `go vet ./...` — static checks.
+- `go run ./cmd/server` — run the game server on `:8080` (serves `web/` + the `/ws` endpoint).
+- `node --check web/src/<file>.js` — syntax-check a client module (no bundler/test runner in MVP).
 
 - `tsx scripts/build-index.ts` regenerates `docs/project-map/index/*.json` from `src/`. it has no npm dependencies but is TypeScript, so it needs a TS runner (`tsx`, or Node ≥22.6 with `--experimental-strip-types`); this repo is on Node 20 with no runner installed, so it does not run yet. once a `package.json` and toolchain exist, alias it as `yarn index` and add a `yarn index:check` that rebuilds + fails on drift.
 
