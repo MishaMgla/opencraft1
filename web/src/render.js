@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text } from 'https://esm.sh/pixi.js@8';
+import { Application, Container, Graphics, Text } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 import { worldToScreen, depth, KX, KY } from './iso.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
