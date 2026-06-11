@@ -1,0 +1,160 @@
+name: PM Followup
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  pm-followup:
+    # Cheap inline pre-filter; authoritative author/allowlist check is the
+    # Authorize step below. Only comments on issues (not PRs), not from the bot,
+    # not /approved (that is dev-implement), not the // discuss escape hatch.
+    if: |
+      github.repository == 'MishaMgla/openCraft' &&
+      github.event.issue.pull_request == null &&
+      github.event.comment.user.login != 'github-actions[bot]' &&
+      !contains(github.event.comment.body, '<!-- agent-bot -->') &&
+      !startsWith(github.event.comment.body, '/approved') &&
+      !startsWith(github.event.comment.body, '//') &&
+      !contains(github.event.issue.labels.*.name, 'pm:skip')
+    runs-on: [self-hosted]
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Authorize
+        id: auth
+        env:
+          ACTOR: ${{ github.event.comment.user.login }}
+          OWNER_ISSUE: ${{ github.event.issue.number }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/authorize.sh
+
+      - name: Reject unauthorized commenter
+        if: steps.auth.outputs.authorized != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} \
+            --body "🤖 Only the issue author or an allowlisted maintainer can steer this issue's agent. Ignoring this comment.
+          <sub>🤖 PM · auth</sub><!-- agent-bot -->"
+
+      - name: Configure git
+        if: steps.auth.outputs.authorized == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Decide mode (draft / revise / question)
+        id: mode
+        if: steps.auth.outputs.authorized == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          ISSUE=${{ github.event.issue.number }}
+          OPEN_SPEC=$(gh pr list --repo ${{ github.repository }} \
+            --search "head:pm/issue-$ISSUE-" --state open --json number --jq '.[0].number // ""')
+          if [[ "$COMMENT_BODY" == /ready* ]]; then
+            echo "mode=draft" >> "$GITHUB_OUTPUT"
+          elif [ -n "$OPEN_SPEC" ]; then
+            echo "mode=revise" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=question" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip /ready if spec PR already exists
+        id: spec_check
+        if: steps.auth.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ISSUE=${{ github.event.issue.number }}
+          EXISTING=$(gh pr list --repo ${{ github.repository }} \
+            --search "head:pm/issue-$ISSUE-" --state all --json number --jq '.[0].number // ""')
+          if [ -n "$EXISTING" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            gh issue comment "$ISSUE" --repo ${{ github.repository }} \
+              --body "🤖 Ignored \`/ready\` — spec PR #$EXISTING already exists.
+          <sub>🤖 PM · auto</sub><!-- agent-bot -->"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build prompt
+        id: load
+        if: steps.auth.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          MODE="${{ steps.mode.outputs.mode }}"
+          case "$MODE" in
+            draft)    PROMPT_FILE=.github/prompts/pm-draft-spec.md ;;
+            revise)   PROMPT_FILE=.github/prompts/pm-revise-spec.md ;;
+            question) PROMPT_FILE=.github/prompts/pm-system.md ;;
+          esac
+          ISSUE=${{ github.event.issue.number }}
+          COMMENTS=$(gh issue view "$ISSUE" --comments --json title,body,comments)
+          {
+            echo 'prompt<<PROMPT_EOF'
+            cat "$PROMPT_FILE"
+            echo ''
+            echo '---'
+            echo ''
+            echo "RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "ISSUE NUMBER: $ISSUE"
+            echo ''
+            echo 'ISSUE + COMMENTS (JSON):'
+            echo "$COMMENTS"
+            echo ''
+            echo "LATEST COMMENT BODY:"
+            echo "$COMMENT_BODY"
+            echo 'PROMPT_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Turn budget per mode
+        id: tools
+        if: steps.auth.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
+        run: |
+          case "${{ steps.mode.outputs.mode }}" in
+            draft)    echo 'turns=60' >> "$GITHUB_OUTPUT" ;;
+            revise)   echo 'turns=45' >> "$GITHUB_OUTPUT" ;;
+            question) echo 'turns=30' >> "$GITHUB_OUTPUT" ;;
+          esac
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.auth.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: ${{ steps.load.outputs.prompt }}
+          claude_args: |
+            --max-turns ${{ steps.tools.outputs.turns }}
+            --setting-sources user,project,local
+            --dangerously-skip-permissions
+
+      - name: Auto-merge spec PR (PAT cascade)
+        if: success() && steps.auth.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft' && steps.spec_check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_PAT }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: .github/scripts/auto-merge-spec.sh
+
+      - name: Post failure comment on error
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} \
+            --body "🤖 PM followup failed (mode=${{ steps.mode.outputs.mode }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          <sub>🤖 PM · auto-error</sub><!-- agent-bot -->"
