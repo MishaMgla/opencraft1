@@ -92,7 +92,7 @@ jobs:
           PR=${{ steps.pr.outputs.pr }}
           gh pr merge "$PR" --repo ${{ github.repository }} --squash --delete-branch
           gh pr comment "$PR" --repo ${{ github.repository }} --body "🤖 Merged to main via /merge or /approved. Branch deleted.
-          <sub>🤖 Dev · ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}</sub><!-- agent-bot -->"
+          <sub>🤖 Dev · ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}</sub><!-- agent-bot -->" || true
 
       - uses: actions/checkout@v6
         if: steps.mode.outputs.mode == 'revise'
@@ -174,5 +174,5 @@ jobs:
         run: |
           gh pr comment ${{ steps.pr.outputs.pr }} \
             --repo ${{ github.repository }} \
-            --body "🤖 Dev revise failed (mode=${{ steps.mode.outputs.mode }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            --body "🤖 Dev revise failed (mode=${{ steps.mode.outputs.mode || 'unknown' }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           <sub>🤖 Dev · auto-error</sub><!-- agent-bot -->"

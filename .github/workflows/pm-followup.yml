@@ -156,5 +156,5 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} \
             --repo ${{ github.repository }} \
-            --body "🤖 PM followup failed (mode=${{ steps.mode.outputs.mode }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            --body "🤖 PM followup failed (mode=${{ steps.mode.outputs.mode || 'unknown' }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           <sub>🤖 PM · auto-error</sub><!-- agent-bot -->"

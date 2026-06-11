@@ -57,7 +57,11 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             BRANCH="${{ github.event.pull_request.head.ref }}"
-            ISSUE=$(echo "$BRANCH" | sed -E 's|^pm/issue-([0-9]+)-.*|\1|')
+            ISSUE=$(echo "$BRANCH" | sed -nE 's|^pm/issue-([0-9]+)-.*|\1|p')
+            if [ -z "$ISSUE" ]; then
+              echo "Cannot parse issue number from branch '$BRANCH'; aborting." >&2
+              exit 1
+            fi
           else
             ISSUE="${{ github.event.issue.number }}"
           fi
