@@ -1,0 +1,178 @@
+name: Dev Revise
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  dev-revise:
+    # PR comments only. `//` prefix or `<!-- discuss -->` = free discussion, no
+    # agent. Merge happens only via /merge or /approved. Authoritative author/
+    # allowlist check is the Authorize step (keyed to the originating issue).
+    if: |
+      github.repository == 'MishaMgla/openCraft' &&
+      github.event.issue.pull_request != null &&
+      github.event.comment.user.login != 'github-actions[bot]' &&
+      !contains(github.event.comment.body, '<!-- agent-bot -->') &&
+      !startsWith(github.event.comment.body, '//') &&
+      !contains(github.event.comment.body, '<!-- discuss -->')
+    runs-on: [self-hosted]
+    concurrency:
+      group: dev-revise-pr-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Resolve PR + branch + owner issue
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=${{ github.event.issue.number }}
+          INFO=$(gh pr view "$PR" --repo ${{ github.repository }} --json headRefName,state)
+          BRANCH=$(echo "$INFO" | jq -r .headRefName)
+          STATE=$(echo "$INFO" | jq -r .state)
+          echo "pr=$PR" >> "$GITHUB_OUTPUT"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          # Originating issue number parsed from the impl branch claude/issue-<N>-*
+          OWNER_ISSUE=$(echo "$BRANCH" | sed -nE 's|^claude/issue-([0-9]+)-.*|\1|p')
+          echo "owner_issue=$OWNER_ISSUE" >> "$GITHUB_OUTPUT"
+          if [[ "$BRANCH" == claude/issue-* && "$STATE" == "OPEN" ]]; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Authorize
+        id: auth
+        if: steps.pr.outputs.skip == 'false'
+        env:
+          ACTOR: ${{ github.event.comment.user.login }}
+          OWNER_ISSUE: ${{ steps.pr.outputs.owner_issue }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/authorize.sh
+
+      - name: Reject unauthorized commenter
+        if: steps.pr.outputs.skip == 'false' && steps.auth.outputs.authorized != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ steps.pr.outputs.pr }} --repo ${{ github.repository }} \
+            --body "🤖 Only the originating issue's author or an allowlisted maintainer can steer this PR. Ignoring.
+          <sub>🤖 Dev · auth</sub><!-- agent-bot -->"
+
+      - name: Decide mode (merge / revise / skip)
+        id: mode
+        if: steps.pr.outputs.skip == 'false' && steps.auth.outputs.authorized == 'true'
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          BODY_TRIM=$(printf '%s' "$COMMENT_BODY" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+          if [[ "$BODY_TRIM" == /merge* || "$BODY_TRIM" == /approved* ]]; then
+            echo "mode=merge" >> "$GITHUB_OUTPUT"
+          elif [[ "$BODY_TRIM" == /cancel* || -z "$BODY_TRIM" ]]; then
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=revise" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge PR (mode=merge)
+        if: steps.mode.outputs.mode == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.AUTO_PAT }}
+        run: |
+          PR=${{ steps.pr.outputs.pr }}
+          gh pr merge "$PR" --repo ${{ github.repository }} --squash --delete-branch
+          gh pr comment "$PR" --repo ${{ github.repository }} --body "🤖 Merged to main via /merge or /approved. Branch deleted.
+          <sub>🤖 Dev · ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}</sub><!-- agent-bot -->"
+
+      - uses: actions/checkout@v6
+        if: steps.mode.outputs.mode == 'revise'
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.branch }}
+
+      - name: Configure git
+        if: steps.mode.outputs.mode == 'revise'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - uses: actions/setup-node@v4
+        if: steps.mode.outputs.mode == 'revise'
+        with:
+          node-version: '20'
+
+      - name: Install deps if present
+        if: steps.mode.outputs.mode == 'revise'
+        run: |
+          if [ -f package.json ]; then
+            corepack enable || true
+            if [ -f yarn.lock ]; then yarn install --frozen-lockfile;
+            elif [ -f package-lock.json ]; then npm ci;
+            else npm install; fi
+          else
+            echo "No package.json — scaffold, skipping install."
+          fi
+
+      - name: Build prompt (revise)
+        id: load
+        if: steps.mode.outputs.mode == 'revise'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          PR=${{ steps.pr.outputs.pr }}
+          BRANCH=${{ steps.pr.outputs.branch }}
+          PR_VIEW=$(gh pr view "$PR" --repo ${{ github.repository }} \
+            --json title,body,comments,files,headRefName)
+          {
+            echo 'prompt<<PROMPT_EOF'
+            cat .github/prompts/dev-revise.md
+            echo ''
+            echo '---'
+            echo ''
+            echo "RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "PR NUMBER: $PR"
+            echo "PR BRANCH: $BRANCH"
+            echo ''
+            echo 'PR (JSON):'
+            echo "$PR_VIEW"
+            echo ''
+            echo 'LATEST COMMENT BODY (the revision request):'
+            echo "$COMMENT_BODY"
+            echo 'PROMPT_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: anthropics/claude-code-action@v1
+        if: steps.mode.outputs.mode == 'revise'
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: ${{ steps.load.outputs.prompt }}
+          claude_args: |
+            --max-turns 60
+            --setting-sources user,project,local
+            --dangerously-skip-permissions
+
+      - name: Verification gate
+        if: steps.mode.outputs.mode == 'revise' && success()
+        run: .github/scripts/run-gates.sh
+
+      - name: Post failure comment on error
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment ${{ steps.pr.outputs.pr }} \
+            --repo ${{ github.repository }} \
+            --body "🤖 Dev revise failed (mode=${{ steps.mode.outputs.mode }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          <sub>🤖 Dev · auto-error</sub><!-- agent-bot -->"
