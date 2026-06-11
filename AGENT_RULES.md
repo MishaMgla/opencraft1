@@ -71,6 +71,8 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 | product vision / north star | `docs/vision.md` |
 | MVP product requirements | `docs/prd/mvp.md` |
 | MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
+| Go engine (server / sim / wire / grid) | `docs/project-map/server.md` |
+| web client (render / net / input) | `docs/project-map/client.md` |
 | PM/Dev agent system (workflows, prompts, permissions) | `docs/project-map/agents.md` |
 
 > as subsystems land, add one row per leaf doc (e.g. `app architecture`, `service / lib layer`, `API routes`, `shared UI`) pointing at its `docs/project-map/*` file.

@@ -22,6 +22,8 @@ docs/project-map/
     pages.json
     components.json
     exports.json
+  server.md              # Go engine (cmd + internal packages)
+  client.md              # web client (web/ modules)
 ```
 
 ## machine-readable index
@@ -38,6 +40,8 @@ docs/project-map/
 | product vision / north star | `../vision.md` |
 | MVP product requirements | `../prd/mvp.md` |
 | MVP engine architecture (technical) | `../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
+| Go engine (server, sim, wire, grid) | `server.md` |
+| web client (render, net, input) | `client.md` |
 
 > add a row per leaf doc as subsystems land (e.g. `API routes` → `src/app/api.md`).
 
@@ -45,6 +49,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-11: implement MVP engine — Go tick server (`cmd/server`, `internal/{wire,world,server}`) + pixijs isometric client (`web/`). add `server.md` / `client.md` leaf docs.
 - 2026-06-11: define the product — opencraft is a multiplayer browser isometric world. add `docs/vision.md`, `docs/prd/mvp.md` (MVP: shared-world movement + presence), and `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` (Go engine: single-process tick server + grid interest management, pixijs client, binary protocol). seed glossary product/technical terms.
 - 2026-06-11: add PM/Dev agent system (`.github/` workflows + `docs/project-map/agents.md`).
 - **2026-06-11** — installed AI-docs scaffolding (thin `AGENTS.md`/`CLAUDE.md` stubs, `AGENT_RULES.md` single source of truth, `docs/project-map/` hub + glossary + index, `scripts/build-index.ts` generator), mirroring the contentos pattern. No leaf docs yet — repo is a pre-code scaffold.
