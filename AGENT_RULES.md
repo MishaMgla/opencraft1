@@ -64,6 +64,9 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 | repo overview | `docs/project-map/README.md` |
 | look up routes, pages, components, exported symbols | `docs/project-map/index/README.md` (machine-readable JSON) |
 | project-specific terms / acronyms | `docs/project-map/glossary.md` |
+| product vision / north star | `docs/vision.md` |
+| MVP product requirements | `docs/prd/mvp.md` |
+| MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
 | PM/Dev agent system (workflows, prompts, permissions) | `docs/project-map/agents.md` |
 
 > as subsystems land, add one row per leaf doc (e.g. `app architecture`, `service / lib layer`, `API routes`, `shared UI`) pointing at its `docs/project-map/*` file.
