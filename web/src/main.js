@@ -21,6 +21,11 @@ async function start(name) {
   const bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
   const others = new Map();
 
+  // E2E test hook (inert in prod). These objects are mutated in place by the
+  // game loop, so exposing the references once is enough for a test to read
+  // live state. Enabled by an init script that sets window.__E2E before load.
+  if (window.__E2E) window.__game = { me, others, bounds };
+
   const net = connect(`ws://${location.host}/ws`, name, {
     welcome(m) {
       me.id = m.id;

@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    name: go engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - run: go build ./...
+      - run: go vet ./...
+      # Includes the cross-language golden check: TestWireFixtures fails if any
+      # encoder drifts from the committed web/test/wire_fixtures.json.
+      - run: go test ./...
+
+  web:
+    name: web client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # No runtime deps — Node's built-in test runner. Validates the JS protocol
+      # mirror against the same golden fixtures the Go suite generates.
+      - run: node --test test/
+        working-directory: web
+
+  e2e:
+    name: browser e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      # Playwright's webServer boots `go run ./cmd/server` (from the repo root)
+      # and waits for :8080, then drives headless Chromium through the real
+      # load -> join -> move path. Catches browser-runtime wiring bugs (module
+      # load, pixi CDN load, WebSocket handshake) the unit suites can't see.
+      - run: npx playwright test
+        working-directory: web

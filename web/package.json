@@ -1,0 +1,13 @@
+{
+  "name": "opencraft-web",
+  "private": true,
+  "type": "module",
+  "description": "Web client. ES modules, no bundler. Unit tests use Node's built-in test runner (no runtime deps); e2e uses Playwright.",
+  "scripts": {
+    "test": "node --test test/",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

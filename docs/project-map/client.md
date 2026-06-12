@@ -8,7 +8,7 @@ vanilla ES modules, no bundler. PixiJS v8 from CDN (the jsdelivr prebuilt ESM bu
 - `net.js` — WebSocket connect, send Hello/Input, dispatch decoded frames to handlers.
 - `input.js` — keyboard state → local movement integration (client-authoritative).
 - `render.js` — PixiJS app (loaded from the jsdelivr prebuilt ESM bundle): static iso floor, player tokens (shape + shadow + label), depth-sorted by world position, camera follow.
-- `main.js` — orchestration: name-entry → connect → per-frame loop (move, interpolate remotes, center camera, rate-limited input send).
+- `main.js` — orchestration: name-entry → connect → per-frame loop (move, interpolate remotes, center camera, rate-limited input send). exposes live `{me, others, bounds}` on `window.__game` when `window.__E2E` is set, for the Playwright smoke test (`web/e2e/`); inert otherwise.
 - `index.html` — name-entry overlay + HUD + module entry.
 
 ## sharp edges
