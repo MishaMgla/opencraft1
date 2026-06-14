@@ -49,6 +49,9 @@ single source of truth for rules and documentation pointers shared by all AI cod
 - `go build ./...` — compile everything.
 - `go vet ./...` — static checks.
 - `go run ./cmd/server` — run the game server on `:8080` (serves `web/` + the `/ws` endpoint).
+- `PORT=9090 go run ./cmd/server` — run on a custom port (Railway injects `PORT` in prod).
+- `ALLOWED_ORIGINS=opencraft.vercel.app go run ./cmd/server` — run with the prod WS origin allowlist (empty = allow all, dev default).
+- `docker build -t opencraft-engine .` — build the engine image used by Railway.
 - `node --check web/src/<file>.js` — syntax-check a client module (no bundler in MVP).
 - `go test ./...` — run the Go engine tests.
 - `cd web && node --test test/` — run the web client unit tests (zero runtime deps).
@@ -58,6 +61,18 @@ single source of truth for rules and documentation pointers shared by all AI cod
 - `tsx scripts/build-index.ts` regenerates `docs/project-map/index/*.json` from `src/`. it has no npm dependencies but is TypeScript, so it needs a TS runner (`tsx`, or Node ≥22.6 with `--experimental-strip-types`); this repo is on Node 20 with no runner installed, so it does not run yet. once a `package.json` and toolchain exist, alias it as `yarn index` and add a `yarn index:check` that rebuilds + fails on drift.
 
 > the generator produces empty results until `src/app`, `src/components/ui`, and `src/` exist; the committed index files are hand-seeded with that empty output for now.
+
+## deployment & environment
+
+split deployment: static client → Vercel, Go engine → Railway. full runbook in `docs/deploy.md`.
+
+| var | side | meaning |
+|---|---|---|
+| `PORT` | engine | listen port; Railway injects it (default `8080`). |
+| `ALLOWED_ORIGINS` | engine | comma-separated WS origin host patterns; empty = allow all (dev). set to the Vercel host(s) in prod. |
+| `WS_URL` | client (Vercel) | `wss://` engine endpoint returned by `/config.json`, e.g. `wss://<service>.up.railway.app/ws`. |
+
+config files: `Dockerfile` + `railway.json` (engine), `web/vercel.json` + `web/api/config.js` (client). document new vars in `.env.example`.
 
 ## common pitfalls
 
