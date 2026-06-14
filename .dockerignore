@@ -1,0 +1,15 @@
+# The engine image only needs the Go sources (cmd/, internal/, go.mod, go.sum).
+# Everything else just inflates the build context and cache layer — the client
+# (web/) is deployed to Vercel, not baked into this image.
+.git
+.github
+.claude
+.codegraph
+web
+docs
+scripts
+*.md
+.env
+.env.*
+test-results
+playwright-report

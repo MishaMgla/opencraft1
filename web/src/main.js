@@ -1,6 +1,7 @@
 import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
+import { resolveWsUrl } from './config.js';
 
 const MOVE_SPEED = 600; // world units / second
 const INPUT_HZ = 15;
@@ -26,7 +27,7 @@ async function start(name) {
   // live state. Enabled by an init script that sets window.__E2E before load.
   if (window.__E2E) window.__game = { me, others, bounds };
 
-  const net = connect(`ws://${location.host}/ws`, name, {
+  const net = connect(await resolveWsUrl(), name, {
     welcome(m) {
       me.id = m.id;
       bounds.minX = m.minX;
