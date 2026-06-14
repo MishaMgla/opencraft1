@@ -18,9 +18,15 @@ func main() {
 	sim := world.NewSim()
 	go sim.Run(ctx)
 
-	httpSrv := &http.Server{Addr: ":8080", Handler: server.New(sim).Handler()}
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := ":" + port
+
+	httpSrv := &http.Server{Addr: addr, Handler: server.New(sim).Handler()}
 	go func() {
-		log.Println("listening on :8080")
+		log.Printf("listening on %s", addr)
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatal(err)
 		}
