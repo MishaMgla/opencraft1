@@ -6,6 +6,7 @@ playwright-report/
 
 .env
 .env.*
+!.env.example
 .DS_Store
 dist/
 build/
