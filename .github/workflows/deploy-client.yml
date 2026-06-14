@@ -1,0 +1,100 @@
+name: deploy client (vercel)
+
+# Builds the web/ client in GitHub Actions and uploads the prebuilt output to
+# Vercel, so Vercel never runs a (billable) build of its own. Vercel's Git
+# integration auto-build is disabled via `git.deploymentEnabled: false` in
+# web/vercel.json — this workflow is the only thing that ships the client.
+#
+# The Vercel project has Root Directory = `web`. We run the CLI from the repo
+# root: `vercel pull` fetches that setting and `vercel build` honors it, so the
+# .vercel/ dir lives at the repo root and no `working-directory` is needed.
+#
+# Required repo secrets (Settings → Secrets and variables → Actions):
+#   VERCEL_TOKEN       personal/team token  (Vercel → Account → Tokens)
+#   VERCEL_ORG_ID      from .vercel/project.json after a local `vercel link`
+#   VERCEL_PROJECT_ID  from .vercel/project.json after a local `vercel link`
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-client.yml'
+  pull_request:
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-client.yml'
+
+# Don't pile up deploys: a newer push to the same ref cancels the in-flight run.
+concurrency:
+  group: deploy-client-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+jobs:
+  # Gate deploys on the zero-dependency unit suite (Node's built-in test runner,
+  # same one test.yml runs). Fast and dep-free, so it's cheap insurance.
+  test:
+    name: web unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: node --test test/
+        working-directory: web
+
+  deploy:
+    name: build & deploy
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Pin the CLI: `vercel@latest` can change behavior between runs.
+      - name: install vercel cli
+        run: npm install -g vercel@54
+
+      # Production on main; preview on pull requests.
+      - name: set target
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            echo "env=production" >> "$GITHUB_OUTPUT"
+            echo "flag=--prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "env=preview" >> "$GITHUB_OUTPUT"
+            echo "flag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: pull vercel project settings
+        run: vercel pull --yes --environment=${{ steps.target.outputs.env }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: build
+        run: vercel build ${{ steps.target.outputs.flag }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: deploy prebuilt
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt ${{ steps.target.outputs.flag }} --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "deployed: $url"
+
+      - name: comment preview url on pr
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🔭 Client preview: ${{ steps.deploy.outputs.url }}`
+            })

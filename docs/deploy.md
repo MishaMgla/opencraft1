@@ -15,12 +15,23 @@ local dev is unaffected: `go run ./cmd/server` serves both halves on `:8080`, an
 4. set the WS origin allowlist **after** you know the Vercel domain (step 2.4). For now leave `ALLOWED_ORIGINS` empty or set a placeholder; you will update it.
 5. confirm liveness: `curl https://<railway-domain>/healthz` → `ok`.
 
-## 2. deploy the client to Vercel
+## 2. deploy the client to Vercel (prebuilt, built in CI)
+
+the client is **built in GitHub Actions and uploaded prebuilt** — Vercel never runs a (billable) build. `web/vercel.json` sets `git.deploymentEnabled: false`, so Vercel's Git integration does **not** auto-build; `.github/workflows/deploy-client.yml` is the only thing that ships the client (`vercel pull → vercel build → vercel deploy --prebuilt`). the CLI runs from the repo root and honors the project's **Root Directory = `web`** pulled by `vercel pull`.
+
+one-time setup:
 
 1. import the repo into Vercel. Set **Root Directory = `web`** (the client lives there). Framework preset: **Other** (no bundler).
-2. set the project env var `WS_URL` = `wss://<railway-domain>/ws` (from step 1.3), e.g. `wss://opencraft-engine.up.railway.app/ws`.
-3. deploy. Vercel serves `web/` statically and exposes `web/api/config.js`; `web/vercel.json` rewrites `/config.json` → `/api/config`.
-4. note the Vercel domain, e.g. `opencraft.vercel.app`.
+2. set the project env var `WS_URL` = `wss://<railway-domain>/ws` (from step 1.3), e.g. `wss://opencraft-engine.up.railway.app/ws`. read at runtime by `web/api/config.js`, so it never needs a rebuild to change.
+3. locally run `vercel link` against the project once, then copy `orgId`/`projectId` from `.vercel/project.json`. add three repo secrets (GitHub → Settings → Secrets and variables → Actions): `VERCEL_TOKEN` (Vercel → Account → Tokens), `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`.
+
+ongoing (no Vercel build cost):
+
+- **push to `main` touching `web/**`** → workflow deploys to **production**.
+- **PR touching `web/**`** → workflow deploys a **preview** and comments the URL.
+- Vercel serves `web/` statically and runs `web/api/config.js`; `web/vercel.json` rewrites `/config.json` → `/api/config`.
+
+note the Vercel domain, e.g. `opencraft.vercel.app`.
 
 ## 3. wire the origin allowlist
 
