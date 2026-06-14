@@ -19,5 +19,6 @@ export async function resolveWsUrl() {
   } catch {
     // fall through to the same-origin default
   }
-  return `ws://${location.host}/ws`;
+  const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${scheme}://${location.host}/ws`;
 }
