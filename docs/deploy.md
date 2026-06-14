@@ -36,7 +36,7 @@ local dev is unaffected: `go run ./cmd/server` serves both halves on `:8080`, an
 ## troubleshooting
 
 - **WS fails / 403 on upgrade:** `ALLOWED_ORIGINS` doesn't include the exact Vercel host (scheme-less, e.g. `opencraft.vercel.app`). Update it and redeploy.
-- **client tries `ws://<vercel-host>/ws`:** `/config.json` isn't returning a `wsUrl` — check `WS_URL` is set in Vercel and the rewrite/function deployed. The client falls back to same-origin only when the fetch fails.
+- **client tries `ws(s)://<vercel-host>/ws`:** `/config.json` isn't returning a usable `wsUrl` — check `WS_URL` is set in Vercel and the rewrite/function deployed. The client falls back to same-origin when the fetch fails **or** when the response has no usable `wsUrl`; note a misconfigured `WS_URL` still returns HTTP `200` with `{"wsUrl":""}`, which also triggers the fallback — so a `200` does not mean the URL is set.
 - **mixed-content blocked:** `WS_URL` must be `wss://` (not `ws://`) for an HTTPS client.
 - **healthcheck failing on Railway:** confirm the service listens on `$PORT` (it does by default) and that `/healthz` returns `ok`.
 
