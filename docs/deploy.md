@@ -15,6 +15,8 @@ local dev is unaffected: `go run ./cmd/server` serves both halves on `:8080`, an
 4. set the WS origin allowlist **after** you know the Vercel domain (step 2.4). For now leave `ALLOWED_ORIGINS` empty or set a placeholder; you will update it.
 5. confirm liveness: `curl https://<railway-domain>/healthz` → `ok`.
 
+the service auto-redeploys from the connected GitHub repo, but `railway.json` sets `build.watchPatterns` so **only engine changes** (`cmd/**`, `internal/**`, `go.mod`, `go.sum`, `Dockerfile`, `railway.json`) trigger a redeploy. client-only `web/**` pushes don't restart the engine (which would drop live player WebSocket connections). Railway bills usage-based on the running container, not per build, so the cost driver is the always-on engine + player egress, not deploy frequency.
+
 ## 2. deploy the client to Vercel (prebuilt, built in CI)
 
 the client is **built in GitHub Actions and uploaded prebuilt** — Vercel never runs a (billable) build. `web/vercel.json` sets `git.deploymentEnabled: false`, so Vercel's Git integration does **not** auto-build; `.github/workflows/deploy-client.yml` is the only thing that ships the client (`vercel pull → vercel build → vercel deploy --prebuilt`). the CLI runs from the repo root and honors the project's **Root Directory = `web`** pulled by `vercel pull`.

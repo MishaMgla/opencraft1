@@ -2,7 +2,15 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "DOCKERFILE",
-    "dockerfilePath": "Dockerfile"
+    "dockerfilePath": "Dockerfile",
+    "watchPatterns": [
+      "cmd/**",
+      "internal/**",
+      "go.mod",
+      "go.sum",
+      "Dockerfile",
+      "railway.json"
+    ]
   },
   "deploy": {
     "healthcheckPath": "/healthz",
