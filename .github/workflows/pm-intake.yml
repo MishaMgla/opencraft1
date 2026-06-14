@@ -51,15 +51,21 @@ jobs:
             echo 'PROMPT_EOF'
           } >> "$GITHUB_OUTPUT"
 
-      - uses: anthropics/claude-code-action@v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          prompt: ${{ steps.load.outputs.prompt }}
-          claude_args: |
-            --max-turns 60
-            --setting-sources user,project,local
-            --dangerously-skip-permissions
+      - name: Run Codex (PM agent)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROMPT: ${{ steps.load.outputs.prompt }}
+        run: |
+          command -v codex >/dev/null || { echo "::error::codex CLI not installed/authenticated on the self-hosted runner — see docs/agents-setup.md"; exit 1; }
+          gh auth setup-git
+          codex exec \
+            --cd "$GITHUB_WORKSPACE" \
+            --model gpt-5.5 \
+            -c model_reasoning_effort="medium" \
+            --sandbox danger-full-access \
+            --skip-git-repo-check \
+            "$PROMPT"
 
       - name: Auto-merge spec PR (PAT cascade to dev-implement)
         if: success()

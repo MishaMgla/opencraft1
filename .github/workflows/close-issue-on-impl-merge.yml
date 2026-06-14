@@ -1,6 +1,6 @@
 name: Close issue on impl PR merge
 
-# When a Dev-opened impl PR (head claude/issue-<N>-*) merges into main, close
+# When a Dev-opened impl PR (head codex/issue-<N>-*) merges into main, close
 # the originating issue #<N>. A dedicated workflow because GitHub ignores
 # `closes #N` keywords from bot-authored PRs without write access.
 
@@ -14,7 +14,7 @@ jobs:
       github.repository == 'MishaMgla/openCraft' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.repo.full_name == github.repository &&
-      startsWith(github.event.pull_request.head.ref, 'claude/issue-')
+      startsWith(github.event.pull_request.head.ref, 'codex/issue-')
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -26,7 +26,7 @@ jobs:
         env:
           BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          ISSUE=$(echo "$BRANCH" | sed -nE 's|^claude/issue-([0-9]+)-.*|\1|p')
+          ISSUE=$(echo "$BRANCH" | sed -nE 's|^codex/issue-([0-9]+)-.*|\1|p')
           if [ -z "$ISSUE" ]; then
             echo "Could not parse issue number from branch '$BRANCH'; nothing to close." >&2
             exit 0

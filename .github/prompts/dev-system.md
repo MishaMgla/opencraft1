@@ -6,7 +6,7 @@ documentation-maintenance protocol.
 
 A spec PR for issue #<N> has merged to `main`. Implement it:
 
-1. Check out `main` and pull. Create a branch `claude/issue-<N>-<slug>` (reuse
+1. Check out `main` and pull. Create a branch `codex/issue-<N>-<slug>` (reuse
    the spec's slug).
 2. Read the merged spec at `docs/specs/<...>-issue-<N>-<slug>.md`. Implement
    exactly what it requires — no unsolicited features beyond the spec.
