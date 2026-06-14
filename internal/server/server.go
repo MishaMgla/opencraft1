@@ -4,6 +4,8 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/coder/websocket"
 
@@ -12,23 +14,50 @@ import (
 )
 
 type Server struct {
-	sim *world.Sim
+	sim        *world.Sim
+	acceptOpts *websocket.AcceptOptions
 }
 
-func New(sim *world.Sim) *Server { return &Server{sim: sim} }
+func New(sim *world.Sim) *Server {
+	return &Server{sim: sim, acceptOpts: acceptOptions()}
+}
+
+// acceptOptions builds the WebSocket accept policy from ALLOWED_ORIGINS.
+// When set (comma-separated host patterns, e.g. "opencraft.vercel.app,*.vercel.app"),
+// only those origins may open a socket. When empty — the local dev case where the
+// engine serves the client itself — all origins are allowed.
+func acceptOptions() *websocket.AcceptOptions {
+	raw := strings.TrimSpace(os.Getenv("ALLOWED_ORIGINS"))
+	if raw == "" {
+		return &websocket.AcceptOptions{InsecureSkipVerify: true}
+	}
+	var patterns []string
+	for _, p := range strings.Split(raw, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			patterns = append(patterns, p)
+		}
+	}
+	return &websocket.AcceptOptions{OriginPatterns: patterns}
+}
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
 	mux.HandleFunc("/ws", s.handleWS)
-	mux.Handle("/", http.FileServer(http.Dir("web")))
+	// Serve the static client only when web/ is present (local dev). The Railway
+	// engine image carries no client assets — the client is served from Vercel —
+	// so this is skipped there and "/" 404s harmlessly.
+	if _, err := os.Stat("web"); err == nil {
+		mux.Handle("/", http.FileServer(http.Dir("web")))
+	}
 	return mux
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
-	c, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		// MVP/local dev: allow any origin. Tighten with OriginPatterns for prod.
-		InsecureSkipVerify: true,
-	})
+	c, err := websocket.Accept(w, r, s.acceptOpts)
 	if err != nil {
 		log.Printf("ws accept: %v", err)
 		return
