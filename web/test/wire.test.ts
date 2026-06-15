@@ -1,8 +1,8 @@
-// Cross-language protocol parity tests. The JS decoder/encoder in src/wire.js is
+// Cross-language protocol parity tests. The TS decoder/encoder in src/wire.ts is
 // a hand-written mirror of internal/wire/wire.go. These tests assert it agrees,
 // byte-for-byte, with the golden vectors that the Go suite generates
 // (wire_fixtures.json, regenerated via `go test ./internal/wire -update`).
-// If the Go protocol changes without updating the JS mirror, this fails.
+// If the Go protocol changes without updating the TS mirror, this fails.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,18 +15,18 @@ import { encodeHello, encodeInput, decodeServer } from '../src/wire.js';
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = JSON.parse(readFileSync(join(here, 'wire_fixtures.json'), 'utf8'));
 
-function hexToBytes(hex) {
+function hexToBytes(hex: string): Uint8Array {
   const b = new Uint8Array(hex.length / 2);
   for (let i = 0; i < b.length; i++) b[i] = parseInt(hex.substr(i * 2, 2), 16);
   return b;
 }
 
-function bytesToHex(buf) {
+function bytesToHex(buf: ArrayBufferLike): string {
   const b = new Uint8Array(buf);
   return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 }
 
-const byName = (cases) => Object.fromEntries(cases.map((c) => [c.name, c]));
+const byName = (cases: any[]) => Object.fromEntries(cases.map((c) => [c.name, c]));
 const server = byName(fixtures.server);
 const client = byName(fixtures.client);
 
@@ -62,7 +62,7 @@ test('decode pong matches golden', () => {
   assert.deepEqual(decodeServer(view), f.decoded);
 });
 
-// --- client -> server: JS-encoded bytes must equal the golden the Go parser reads ---
+// --- client -> server: TS-encoded bytes must equal the golden the Go parser reads ---
 
 test('encode hello matches golden bytes', () => {
   assert.equal(bytesToHex(encodeHello(client.hello.decoded.name)), client.hello.hex);
