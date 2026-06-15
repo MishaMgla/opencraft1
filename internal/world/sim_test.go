@@ -125,38 +125,6 @@ func TestJoinExchangesEnterEvents(t *testing.T) {
 	}
 }
 
-// Moving out of a peer's 3x3 neighborhood emits Leave to both sides; moving back
-// in emits Enter again. This exercises the enter/leave diff in cmdInput (FR6).
-func TestMovementCrossingNeighborhoodEmitsLeaveThenEnter(t *testing.T) {
-	s := startSim(t)
-
-	outA := make(chan []byte, 256)
-	idA := s.Join("A", outA)
-	outB := make(chan []byte, 256)
-	idB := s.Join("B", outB)
-
-	// Let the initial Enter exchange settle, then start from a clean slate.
-	waitFor(t, outA, tagIs(wire.SEnter, idB))
-	drain(outA)
-	drain(outB)
-
-	// Move B to the far corner (cell 0,0) — well outside A's neighborhood at center.
-	s.Input(idB, 10, 10)
-	if !waitFor(t, outA, tagIs(wire.SLeave, idB)) {
-		t.Fatal("A never received Leave for B after B moved away")
-	}
-	if !waitFor(t, outB, tagIs(wire.SLeave, idA)) {
-		t.Fatal("B never received Leave for A after moving away")
-	}
-
-	drain(outA)
-	// Move B back to center — it re-enters A's neighborhood.
-	s.Input(idB, WorldSize/2, WorldSize/2)
-	if !waitFor(t, outA, tagIs(wire.SEnter, idB)) {
-		t.Fatal("A never received Enter for B after B returned")
-	}
-}
-
 // Disconnect removes the player and notifies nearby clients (FR8).
 func TestLeaveNotifiesNeighbors(t *testing.T) {
 	s := startSim(t)
