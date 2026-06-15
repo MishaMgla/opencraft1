@@ -2,25 +2,27 @@ import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
+import type { Bounds } from './input.js';
+import type { Token } from './render.js';
 
 const MOVE_SPEED = 600; // world units / second
 const INPUT_HZ = 15;
 
-document.getElementById('name-form').addEventListener('submit', async (e) => {
+document.getElementById('name-form')!.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = document.getElementById('name').value.trim() || 'anon';
-  document.getElementById('overlay').style.display = 'none';
+  const name = (document.getElementById('name') as HTMLInputElement).value.trim() || 'anon';
+  document.getElementById('overlay')!.style.display = 'none';
   await start(name);
 });
 
-async function start(name) {
+async function start(name: string): Promise<void> {
   const r = await createRenderer();
   const input = createInput();
-  const hud = document.getElementById('hud');
+  const hud = document.getElementById('hud')!;
 
   const me = { id: 0, x: 2048, y: 2048 };
-  const bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
-  const others = new Map();
+  const bounds: Bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
+  const others = new Map<number, Token>();
 
   // E2E test hook (inert in prod). These objects are mutated in place by the
   // game loop, so exposing the references once is enough for a test to read
