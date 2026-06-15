@@ -3,7 +3,7 @@ import { worldToScreen, depth, KX, KY } from './iso.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
 
-function makeToken(name, color) {
+function makeToken(name: string, color: number): Container {
   const container = new Container();
 
   const shadow = new Graphics()
@@ -21,7 +21,24 @@ function makeToken(name, color) {
   return container;
 }
 
-export async function createRenderer() {
+export interface Token {
+  container: Container;
+  rx: number;
+  ry: number;
+  tx: number;
+  ty: number;
+}
+
+export interface Renderer {
+  app: Application;
+  addToken(id: number, name: string, color: number, x: number, y: number): Token;
+  removeToken(token: Token): void;
+  placeToken(token: Token): void;
+  setLocal(x: number, y: number): void;
+  centerCamera(x: number, y: number): void;
+}
+
+export async function createRenderer(): Promise<Renderer> {
   const app = new Application();
   await app.init({ background: '#11151c', resizeTo: window, antialias: true });
   document.body.appendChild(app.canvas);
@@ -55,10 +72,10 @@ export async function createRenderer() {
 
   return {
     app,
-    addToken(id, name, color, x, y) {
+    addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
       const container = makeToken(name, color);
       world.addChild(container);
-      const token = { container, rx: x, ry: y, tx: x, ty: y };
+      const token: Token = { container, rx: x, ry: y, tx: x, ty: y };
       this.placeToken(token);
       return token;
     },
