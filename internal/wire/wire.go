@@ -23,14 +23,20 @@ type Ent struct {
 	X, Y int16
 }
 
-func EncodeWelcome(id uint32, minX, minY, maxX, maxY int16) []byte {
-	b := make([]byte, 1+4+8)
+// EncodeWelcome carries the player's assigned id, their spawn position (x, y)
+// — which is the restored position for a returning player, or world center for
+// a new one — and the world bounds. The client must adopt x, y before it starts
+// streaming input, else its first frames would overwrite the restored position.
+func EncodeWelcome(id uint32, x, y, minX, minY, maxX, maxY int16) []byte {
+	b := make([]byte, 1+4+2+2+8)
 	b[0] = SWelcome
 	binary.LittleEndian.PutUint32(b[1:], id)
-	binary.LittleEndian.PutUint16(b[5:], uint16(minX))
-	binary.LittleEndian.PutUint16(b[7:], uint16(minY))
-	binary.LittleEndian.PutUint16(b[9:], uint16(maxX))
-	binary.LittleEndian.PutUint16(b[11:], uint16(maxY))
+	binary.LittleEndian.PutUint16(b[5:], uint16(x))
+	binary.LittleEndian.PutUint16(b[7:], uint16(y))
+	binary.LittleEndian.PutUint16(b[9:], uint16(minX))
+	binary.LittleEndian.PutUint16(b[11:], uint16(minY))
+	binary.LittleEndian.PutUint16(b[13:], uint16(maxX))
+	binary.LittleEndian.PutUint16(b[15:], uint16(maxY))
 	return b
 }
 

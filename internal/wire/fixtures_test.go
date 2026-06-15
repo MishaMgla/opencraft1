@@ -39,8 +39,8 @@ type frameCase struct {
 func canonicalServer() []frameCase {
 	enc := func(b []byte) string { return hex.EncodeToString(b) }
 	return []frameCase{
-		{"welcome", json.RawMessage(`{"type":"welcome","id":7,"minX":0,"minY":0,"maxX":4095,"maxY":4095}`),
-			enc(EncodeWelcome(7, 0, 0, 4095, 4095))},
+		{"welcome", json.RawMessage(`{"type":"welcome","id":7,"x":1000,"y":2000,"minX":0,"minY":0,"maxX":4095,"maxY":4095}`),
+			enc(EncodeWelcome(7, 1000, 2000, 0, 0, 4095, 4095))},
 		{"snapshot", json.RawMessage(`{"type":"snapshot","tick":42,"ents":[{"id":1,"x":100,"y":200},{"id":2,"x":-5,"y":4095}]}`),
 			enc(EncodeSnapshot(42, []Ent{{1, 100, 200}, {2, -5, 4095}}))},
 		{"enter", json.RawMessage(`{"type":"enter","id":9,"x":2048,"y":2048,"color":255,"name":"Zoë"}`),

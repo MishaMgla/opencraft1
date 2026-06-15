@@ -67,7 +67,7 @@ func TestEncodeEnterClampsName(t *testing.T) {
 // Encoders set the right tag byte and exact frame length. Exact-byte layout is
 // pinned by the cross-language golden fixtures (see fixtures_test.go).
 func TestEncoderTagsAndLengths(t *testing.T) {
-	if b := EncodeWelcome(1, 0, 0, 1, 1); b[0] != SWelcome || len(b) != 13 {
+	if b := EncodeWelcome(1, 0, 0, 0, 0, 1, 1); b[0] != SWelcome || len(b) != 17 {
 		t.Errorf("welcome: tag=%#x len=%d", b[0], len(b))
 	}
 	if b := EncodeSnapshot(0, []Ent{{1, 2, 3}, {4, 5, 6}}); b[0] != SSnapshot || len(b) != 7+2*8 {

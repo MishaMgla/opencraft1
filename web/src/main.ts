@@ -32,6 +32,11 @@ async function start(name: string): Promise<void> {
   const net = connect(await resolveWsUrl(), name, {
     welcome(m) {
       me.id = m.id;
+      // Adopt the server's spawn position (restored for returning players, else
+      // world center). Must happen before we stream input — the loop gates
+      // sendInput on me.id so no frame leaves until this runs.
+      me.x = m.x;
+      me.y = m.y;
       bounds.minX = m.minX;
       bounds.minY = m.minY;
       bounds.maxX = m.maxX;
@@ -81,7 +86,9 @@ async function start(name: string): Promise<void> {
     acc += dt;
     if (acc >= 1 / INPUT_HZ) {
       acc = 0;
-      net.sendInput(Math.round(me.x), Math.round(me.y));
+      // Don't stream input until Welcome has set our id + spawn position, or the
+      // first frames would overwrite a returning player's restored position.
+      if (me.id !== 0) net.sendInput(Math.round(me.x), Math.round(me.y));
     }
 
     hud.textContent = `${name} · players nearby: ${others.size}`;

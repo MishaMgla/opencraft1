@@ -233,7 +233,7 @@ func (s *Sim) Run(ctx context.Context) {
 				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
-				send(p, wire.EncodeWelcome(id, 0, 0, WorldSize-1, WorldSize-1))
+				send(p, wire.EncodeWelcome(id, p.x, p.y, 0, 0, WorldSize-1, WorldSize-1))
 				for _, oid := range grid.Neighbors(p.x, p.y) {
 					if oid == id {
 						continue

@@ -15,6 +15,8 @@ const dec = new TextDecoder();
 export interface Welcome {
   type: 'welcome';
   id: number;
+  x: number;
+  y: number;
   minX: number;
   minY: number;
   maxX: number;
@@ -77,10 +79,12 @@ export function decodeServer(view: DataView): ServerMsg {
       return {
         type: 'welcome',
         id: view.getUint32(1, true),
-        minX: view.getInt16(5, true),
-        minY: view.getInt16(7, true),
-        maxX: view.getInt16(9, true),
-        maxY: view.getInt16(11, true),
+        x: view.getInt16(5, true),
+        y: view.getInt16(7, true),
+        minX: view.getInt16(9, true),
+        minY: view.getInt16(11, true),
+        maxX: view.getInt16(13, true),
+        maxY: view.getInt16(15, true),
       };
     case S_SNAPSHOT: {
       const tick = view.getUint32(1, true);
