@@ -29,9 +29,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      # No runtime deps — Node's built-in test runner. Validates the JS protocol
-      # mirror against the same golden fixtures the Go suite generates.
-      - run: node --test test/
+      # Install the build-time TS toolchain (no runtime deps ship). `npm test`
+      # type-checks (tsc) then runs Node's built-in test runner against the
+      # emitted JS, validating the protocol mirror vs the Go golden fixtures.
+      - run: npm ci
+        working-directory: web
+      - run: npm test
         working-directory: web
 
   e2e:
@@ -47,6 +50,9 @@ jobs:
         with:
           node-version: '20'
       - run: npm ci
+        working-directory: web
+      # Compile TS -> JS so the Go FileServer can serve web/src/*.js.
+      - run: npm run build
         working-directory: web
       - run: npx playwright install --with-deps chromium
         working-directory: web
