@@ -1,5 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "tsc",
   "rewrites": [
     { "source": "/config.json", "destination": "/api/config" }
   ],

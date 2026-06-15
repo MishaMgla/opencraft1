@@ -12,6 +12,7 @@
   "devDependencies": {
     "@playwright/test": "^1.49.0",
     "@types/node": "^20.0.0",
+    "@vercel/node": "^5.8.17",
     "pixi.js": "^8.19.0",
     "typescript": "^5.8.0"
   }
