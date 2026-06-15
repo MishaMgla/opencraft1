@@ -1,12 +1,12 @@
 # PM + Dev Agent Flow — Design
 
 **Date:** 2026-06-11
-**Repo:** `MishaMgla/openCraft` (private, default branch `main`)
+**Repo:** `MishaMgla/opencraft1` (private, default branch `main`)
 **Status:** Approved design, pending implementation plan
 
 ## Goal
 
-Stand up a GitHub-Actions-driven multi-agent workflow on `openCraft`, modeled on
+Stand up a GitHub-Actions-driven multi-agent workflow on `opencraft1`, modeled on
 the `contentos` PM/Dev pipeline but with **our own prompts** and a **stricter,
 author-rooted permission model**. Issues and PRs may only be steered by the
 person who started the originating issue, or by a hardcoded allowlist.
@@ -21,7 +21,7 @@ person who started the originating issue, or by a hardcoded allowlist.
 | Dev verification gates | **Auto-detect** — run lint/typecheck/test only if `package.json` defines those scripts; skip cleanly otherwise (repo is a scaffold with no toolchain yet) |
 | Merge model | **Full auto-cascade** (same as contentos): PM auto-merges the spec PR via `AUTO_PAT`; Dev auto-merges the impl PR on green via `AUTO_PAT`; originating issue auto-closes |
 | Claude auth | `CLAUDE_CODE_OAUTH_TOKEN` (subscription, via `claude setup-token`) |
-| Runner | Self-hosted, `runs-on: [self-hosted]` (one runner registered to `openCraft`) |
+| Runner | Self-hosted, `runs-on: [self-hosted]` (one runner registered to `opencraft1`) |
 
 ## End-to-end flow
 
@@ -137,10 +137,10 @@ duplicates the allowlist across YAML files.
 
 ## Required setup (deploy-time, documented for the user — not code)
 
-1. **`AUTO_PAT`** — fine-grained PAT scoped to `openCraft`: Contents RW,
+1. **`AUTO_PAT`** — fine-grained PAT scoped to `opencraft1`: Contents RW,
    Pull requests RW, Issues RW. Add as repo secret.
 2. **`CLAUDE_CODE_OAUTH_TOKEN`** — generate via `claude setup-token`. Add as repo secret.
-3. **Self-hosted runner** registered to `openCraft` (the existing contentos VDS can
+3. **Self-hosted runner** registered to `opencraft1` (the existing contentos VDS can
    host a second runner process in its own folder). Accept default labels
    (`self-hosted, Linux, X64`); no custom label needed.
 
@@ -149,7 +149,7 @@ duplicates the allowlist across YAML files.
 - Research agent / `/research` flow
 - Visual-regression gate (`test:visual`) and baseline auto-commit — no UI/test
   toolchain in the scaffold yet; revisit when a frontend lands
-- Any change to existing `openCraft` source (there is none yet)
+- Any change to existing `opencraft1` source (there is none yet)
 
 ## Open follow-ups (post-MVP)
 

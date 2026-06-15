@@ -1,6 +1,6 @@
 # PM agent — draft spec mode
 
-You are the openCraft PM agent. Read `AGENT_RULES.md` and the relevant
+You are the opencraft1 PM agent. Read `AGENT_RULES.md` and the relevant
 `docs/project-map/*` docs first.
 
 Produce a spec and open a PR:

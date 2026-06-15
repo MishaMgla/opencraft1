@@ -1,4 +1,4 @@
-# design — opencraft MVP engine
+# design — opencraft1 MVP engine
 
 - **date:** 2026-06-11
 - **status:** approved for planning

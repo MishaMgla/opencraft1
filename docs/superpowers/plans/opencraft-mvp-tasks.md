@@ -1,10 +1,10 @@
-# opencraft MVP — Ralph Task Tracker
+# opencraft1 MVP — Ralph Task Tracker
 
 > **Single source of truth for build progress.** The orchestrator (main Claude) reads
 > this file every iteration, picks the next ready task, dispatches ONE subagent to do it,
 > verifies, then marks it done. Subagents implement; the orchestrator verifies + commits.
 >
-> **Detailed spec for every task lives in** [`2026-06-11-opencraft-mvp-engine.md`](2026-06-11-opencraft-mvp-engine.md).
+> **Detailed spec for every task lives in** [`2026-06-11-opencraft1-mvp-engine.md`](2026-06-11-opencraft1-mvp-engine.md).
 > This tracker is the orchestration index — it points each task at the exact plan section
 > that contains its code, interface, and rationale. Do not duplicate code here.
 
@@ -20,7 +20,7 @@
 4. **Orchestrator verifies independently** — re-run the verification command yourself before marking `[x]`.
 5. **Never mark `[x]` without a passing verification.** On failure: set back to `[ ]`, append a dated note under the task, let the next iteration retry.
 6. **Commit message** is given per task; use it verbatim. Record the commit hash in the task's Done note.
-7. When all tasks are `[x]`, output the completion promise: `<promise>OPENCRAFT_MVP_COMPLETE</promise>`.
+7. When all tasks are `[x]`, output the completion promise: `<promise>opencraft1_MVP_COMPLETE</promise>`.
 8. **No unsolicited tests** (`AGENT_RULES.md`): verification is build + vet + run + observe, never test-first.
 
 ---
@@ -31,15 +31,15 @@
 - **Deps:** none
 - **Files:** create `go.mod`
 - **Spec:** Plan Task 1, Step 1.
-- **Interface:** `module opencraft`, `go 1.23`.
-- **Verify:** `test -f go.mod && head -1 go.mod` shows `module opencraft`.
+- **Interface:** `module opencraft1`, `go 1.23`.
+- **Verify:** `test -f go.mod && head -1 go.mod` shows `module opencraft1`.
 - **Commit:** `chore: init go module`
 
 ### [x] T02 — Server scaffold + static page
 - **Deps:** T01
 - **Files:** create `cmd/server/main.go`, `web/index.html`
 - **Spec:** Plan Task 1, Steps 2–4. (Minimal `http.FileServer` over `web/`; placeholder HTML.)
-- **Verify:** `go build ./... && go run ./cmd/server & sleep 1 && curl -s localhost:8080 && kill %1` — prints the `opencraft scaffold ok` HTML, no build errors.
+- **Verify:** `go build ./... && go run ./cmd/server & sleep 1 && curl -s localhost:8080 && kill %1` — prints the `opencraft1 scaffold ok` HTML, no build errors.
 - **Commit:** `feat: scaffold Go server serving static web client`
 
 ### [x] T03 — Record toolchain in AGENT_RULES
@@ -191,4 +191,4 @@
 - T17 done — 83095ca — 2026-06-11
 - T18 done — 2de11cf — 2026-06-11
 
-**ALL 18 TASKS COMPLETE.** opencraft MVP engine built, verified end-to-end (Go tick server + PixiJS isometric client, real-time multiplayer over binary WebSocket). One defect found and fixed during E2E (pixi CDN import). Tracker committed separately.
+**ALL 18 TASKS COMPLETE.** opencraft1 MVP engine built, verified end-to-end (Go tick server + PixiJS isometric client, real-time multiplayer over binary WebSocket). One defect found and fixed during E2E (pixi CDN import). Tracker committed separately.

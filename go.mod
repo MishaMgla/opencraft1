@@ -1,4 +1,4 @@
-module opencraft
+module opencraft1
 
 go 1.25.0
 

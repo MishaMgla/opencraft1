@@ -8,7 +8,7 @@ terms are grouped: **product / domain** first, then **technical**, then **extern
 
 ## product / domain
 
-- **opencraft** — a multiplayer, browser-native shared 2D world rendered isometrically with symbolic graphics. MVP proves a scalable real-time movement engine; the world's purpose (build/craft/social/survival) is deliberately undecided. see [`../vision.md`](../vision.md).
+- **opencraft1** — a multiplayer, browser-native shared 2D world rendered isometrically with symbolic graphics. MVP proves a scalable real-time movement engine; the world's purpose (build/craft/social/survival) is deliberately undecided. see [`../vision.md`](../vision.md).
 - **world** — the single shared coordinate space all players inhabit. flat `(wx, wy)` world units server-side; projected to isometric only at render time.
 - **presence** — the MVP capability: join, move, and see other players move in real time. no chat, no persistence, no world interaction.
 - **token** — a player's symbolic on-screen representation: a colored shape + name label + shadow.

@@ -1,13 +1,13 @@
-# PRD — opencraft MVP: shared-world movement + presence
+# PRD — opencraft1 MVP: shared-world movement + presence
 
 - **status:** draft for build
 - **date:** 2026-06-11
 - **vision:** [`../vision.md`](../vision.md)
-- **engine design (technical):** [`../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md`](../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md)
+- **engine design (technical):** [`../superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md`](../superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md)
 
 ## 1. summary
 
-the smallest possible vertical slice of opencraft: a player opens a url, picks a name, and appears in a single shared isometric world where they can walk around and see other players moving in real time. no chat, no accounts, no world interaction.
+the smallest possible vertical slice of opencraft1: a player opens a url, picks a name, and appears in a single shared isometric world where they can walk around and see other players moving in real time. no chat, no accounts, no world interaction.
 
 the slice is deliberately tiny on _gameplay_ and deliberately serious on _engine_: it runs on a single shared world with spatial interest management, a fixed-tick server simulation, and a compact binary protocol — the architecture meant to carry thousands of concurrent players. the MVP exists to **prove that thesis**, not to be fun yet.
 

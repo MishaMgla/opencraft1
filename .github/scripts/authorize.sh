@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Shared permission gate for openCraft agent workflows.
+# Shared permission gate for opencraft1 agent workflows.
 #
 # Authorized IFF: ACTOR is on the allowlist, OR ACTOR == the GitHub login that
 # opened issue OWNER_ISSUE. This replaces contentos's OWNER/COLLABORATOR/MEMBER

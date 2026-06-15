@@ -1,6 +1,6 @@
 # PM self-audit
 
-You are the openCraft PM agent. Before doing anything else, decide whether the
+You are the opencraft1 PM agent. Before doing anything else, decide whether the
 issue is clear enough to spec, or needs one clarifying question.
 
 Read the issue title, body, and all comments. Then judge a single criterion:

@@ -50,8 +50,8 @@ single source of truth for rules and documentation pointers shared by all AI cod
 - `go vet ./...` — static checks.
 - `go run ./cmd/server` — run the game server on `:8080` (serves `web/` + the `/ws` endpoint).
 - `PORT=9090 go run ./cmd/server` — run on a custom port (Railway injects `PORT` in prod).
-- `ALLOWED_ORIGINS=opencraft.vercel.app go run ./cmd/server` — run with the prod WS origin allowlist (empty = allow all, dev default).
-- `docker build -t opencraft-engine .` — build the engine image used by Railway.
+- `ALLOWED_ORIGINS=opencraft1.vercel.app go run ./cmd/server` — run with the prod WS origin allowlist (empty = allow all, dev default).
+- `docker build -t opencraft1-engine .` — build the engine image used by Railway.
 - `cd web && npx tsc --noEmit` — type-check the client without emitting (no bundler; `npm run build` emits the sibling `.js`).
 - `go test ./...` — run the Go engine tests.
 - `cd web && npm test` — type-check + run the web client unit tests (compiles TS, then runs Node's test runner on the emitted JS).
@@ -95,7 +95,7 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 | project-specific terms / acronyms | `docs/project-map/glossary.md` |
 | product vision / north star | `docs/vision.md` |
 | MVP product requirements | `docs/prd/mvp.md` |
-| MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
+| MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md` |
 | Go engine (server / sim / wire / grid) | `docs/project-map/server.md` |
 | web client (render / net / input) | `docs/project-map/client.md` |
 | PM/Dev agent system (workflows, prompts, permissions) | `docs/project-map/agents.md` |

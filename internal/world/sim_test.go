@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"opencraft/internal/wire"
+	"opencraft1/internal/wire"
 )
 
 func TestClamp(t *testing.T) {

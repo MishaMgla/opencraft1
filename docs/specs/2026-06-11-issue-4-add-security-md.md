@@ -6,7 +6,7 @@ Add a top-level `SECURITY.md` file that tells security reporters where to submit
 
 ## Context
 
-GitHub surfaces `SECURITY.md` at the repo root as the project's security policy. Without it, reporters have no designated channel. The openCraft repository currently has no security policy file.
+GitHub surfaces `SECURITY.md` at the repo root as the project's security policy. Without it, reporters have no designated channel. The opencraft1 repository currently has no security policy file.
 
 ## Requirements
 

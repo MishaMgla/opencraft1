@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"opencraft/internal/wire"
+	"opencraft1/internal/wire"
 )
 
 const TickHz = 15
