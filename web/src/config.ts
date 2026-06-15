@@ -7,7 +7,7 @@
 // Locally the Go server serves both halves and there is no /config.json, so any
 // failure (404, network error, bad JSON, missing field) falls back to the same
 // origin. That keeps local dev zero-config and the e2e smoke test unchanged.
-export async function resolveWsUrl() {
+export async function resolveWsUrl(): Promise<string> {
   try {
     const res = await fetch('/config.json', { cache: 'no-store' });
     if (res.ok) {
