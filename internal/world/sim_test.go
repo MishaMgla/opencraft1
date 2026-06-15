@@ -60,7 +60,7 @@ func startSim(t *testing.T) *Sim {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	s := NewSim()
+	s := NewSim(nil)
 	go s.Run(ctx)
 	return s
 }
