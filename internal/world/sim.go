@@ -2,12 +2,17 @@ package world
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"opencraft/internal/wire"
 )
 
 const TickHz = 15
+
+// flushEvery is how often the sim persists all online players, bounding how
+// much position is lost if the engine dies without a graceful shutdown.
+const flushEvery = 30 * time.Second
 
 var palette = []uint32{
 	0xE6194B, 0x3CB44B, 0xFFE119, 0x4363D8,
@@ -35,14 +40,19 @@ type player struct {
 }
 
 // Sim owns all world state. It is the only goroutine that touches that state;
-// all interaction happens through the cmds channel (no locks).
+// all interaction happens through the cmds channel (no locks). store is read
+// off the sim goroutine (in Join) and written from spawned goroutines, so DB
+// I/O never blocks the tick loop. A nil store disables persistence.
 type Sim struct {
-	cmds chan any
+	cmds  chan any
+	store Store
+	done  chan struct{} // closed when Run returns (after the shutdown flush)
 }
 
 type cmdJoin struct {
 	name  string
 	out   chan []byte
+	saved *SavedPlayer // nil = brand-new player: spawn at center, derive color
 	reply chan uint32
 }
 type cmdInput struct {
@@ -55,13 +65,39 @@ type cmdPing struct {
 	t  uint32
 }
 
-func NewSim() *Sim { return &Sim{cmds: make(chan any, 1024)} }
+// NewSim creates a sim. Pass a Store to persist player positions across
+// restarts, or nil to disable persistence (local dev, tests).
+func NewSim(store Store) *Sim {
+	return &Sim{cmds: make(chan any, 1024), store: store, done: make(chan struct{})}
+}
 
-// Join registers a new player and returns its assigned id. Blocks until the
-// sim goroutine processes the join (fast). out receives encoded frames.
+// Done is closed once Run has returned, i.e. after the synchronous shutdown
+// flush completes. Callers wait on it before closing the Store / exiting so the
+// final persist isn't cut short.
+func (s *Sim) Done() <-chan struct{} { return s.done }
+
+// Join registers a player and returns its assigned id. Blocks until the sim
+// goroutine processes the join (fast). out receives encoded frames.
+//
+// The saved-position lookup happens here, on the caller's connection goroutine,
+// NOT inside the sim — so a slow DB never stalls the tick loop. A load error is
+// logged and treated as "new player" (spawn at center) so persistence trouble
+// degrades gracefully instead of blocking joins.
 func (s *Sim) Join(name string, out chan []byte) uint32 {
+	var saved *SavedPlayer
+	if s.store != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		sp, ok, err := s.store.Load(ctx, name)
+		cancel()
+		switch {
+		case err != nil:
+			log.Printf("store load %q: %v", name, err)
+		case ok:
+			saved = &sp
+		}
+	}
 	reply := make(chan uint32, 1)
-	s.cmds <- cmdJoin{name: name, out: out, reply: reply}
+	s.cmds <- cmdJoin{name: name, out: out, saved: saved, reply: reply}
 	return <-reply
 }
 
@@ -99,8 +135,68 @@ func diff(a, b []uint32) []uint32 { // returns a \ b
 	return out
 }
 
+// save persists one player asynchronously. Values are copied into a local
+// SavedPlayer before the goroutine starts, so it never touches the live *player
+// the sim mutates — no lock, no race.
+func (s *Sim) save(p *player) {
+	if s.store == nil {
+		return
+	}
+	sp := SavedPlayer{Name: p.name, X: p.x, Y: p.y, Color: p.color}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := s.store.Save(ctx, sp); err != nil {
+			log.Printf("store save %q: %v", sp.Name, err)
+		}
+	}()
+}
+
+// snapshot copies every online player's state into a detached slice the sim no
+// longer owns — safe to hand to a goroutine or block on.
+func (s *Sim) snapshot(players map[uint32]*player) []SavedPlayer {
+	out := make([]SavedPlayer, 0, len(players))
+	for _, p := range players {
+		out = append(out, SavedPlayer{Name: p.name, X: p.x, Y: p.y, Color: p.color})
+	}
+	return out
+}
+
+// flushAsync persists all online players off the sim goroutine (periodic flush).
+func (s *Sim) flushAsync(players map[uint32]*player) {
+	if s.store == nil || len(players) == 0 {
+		return
+	}
+	batch := s.snapshot(players)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		for _, sp := range batch {
+			if err := s.store.Save(ctx, sp); err != nil {
+				log.Printf("store flush %q: %v", sp.Name, err)
+			}
+		}
+	}()
+}
+
+// flushAll persists all online players synchronously (graceful shutdown).
+func (s *Sim) flushAll(players map[uint32]*player) {
+	if s.store == nil || len(players) == 0 {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for _, sp := range s.snapshot(players) {
+		if err := s.store.Save(ctx, sp); err != nil {
+			log.Printf("store shutdown flush %q: %v", sp.Name, err)
+		}
+	}
+}
+
 // Run is the simulation loop. Call in its own goroutine.
 func (s *Sim) Run(ctx context.Context) {
+	defer close(s.done)
+
 	players := map[uint32]*player{}
 	grid := NewGrid()
 	var nextID uint32 = 1
@@ -109,17 +205,32 @@ func (s *Sim) Run(ctx context.Context) {
 	ticker := time.NewTicker(time.Second / TickHz)
 	defer ticker.Stop()
 
+	flush := time.NewTicker(flushEvery)
+	defer flush.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
+			// Graceful shutdown: persist everyone synchronously before exiting,
+			// using a fresh context since ctx is already cancelled.
+			s.flushAll(players)
 			return
+
+		case <-flush.C:
+			s.flushAsync(players)
 
 		case c := <-s.cmds:
 			switch m := c.(type) {
 			case cmdJoin:
 				id := nextID
 				nextID++
-				p := &player{id: id, x: WorldSize / 2, y: WorldSize / 2, name: m.name, color: colorFor(id), out: m.out}
+				px, py := int16(WorldSize/2), int16(WorldSize/2)
+				color := colorFor(id)
+				if m.saved != nil {
+					px, py = clamp(m.saved.X), clamp(m.saved.Y)
+					color = m.saved.Color
+				}
+				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 				send(p, wire.EncodeWelcome(id, 0, 0, WorldSize-1, WorldSize-1))
@@ -186,6 +297,7 @@ func (s *Sim) Run(ctx context.Context) {
 				}
 				grid.Remove(m.id, p.x, p.y)
 				delete(players, m.id)
+				s.save(p)
 			}
 
 		case <-ticker.C:
