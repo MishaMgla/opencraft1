@@ -1,13 +1,13 @@
 # agent system — operator setup
 
-One-time setup to make the PM/Dev agents run on `MishaMgla/openCraft`.
+One-time setup to make the PM/Dev agents run on `MishaMgla/opencraft1`.
 
 ## 1. Repository secrets
 
 Add under **Settings → Secrets and variables → Actions**:
 
 - `AUTO_PAT` — a **fine-grained** personal access token scoped to the
-  `openCraft` repo with: Contents = Read/Write, Pull requests = Read/Write,
+  `opencraft1` repo with: Contents = Read/Write, Pull requests = Read/Write,
   Issues = Read/Write. Used for merges that must cascade to the next workflow
   (a `GITHUB_TOKEN` merge does not trigger new workflow runs).
 
@@ -19,13 +19,13 @@ per-call API billing.
 
 The agent jobs use `runs-on: [self-hosted]`. Register one runner to this repo:
 
-1. Visit `https://github.com/MishaMgla/openCraft/settings/actions/runners/new`.
+1. Visit `https://github.com/MishaMgla/opencraft1/settings/actions/runners/new`.
 2. On the runner machine (the existing VDS can host a second runner in its own
    folder):
    ```bash
    mkdir ~/actions-runner-opencraft && cd ~/actions-runner-opencraft
    # run the download lines shown on the page, then:
-   ./config.sh --url https://github.com/MishaMgla/openCraft --token <TOKEN>
+   ./config.sh --url https://github.com/MishaMgla/opencraft1 --token <TOKEN>
    # accept default name + labels
    sudo ./svc.sh install && sudo ./svc.sh start    # or: ./run.sh
    ```
