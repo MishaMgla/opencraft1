@@ -1,5 +1,9 @@
 node_modules/
 
+# tsc emit-in-place output (web client is compiled before serve/deploy)
+web/src/*.js
+web/test/*.js
+
 # Playwright e2e artifacts
 test-results/
 playwright-report/

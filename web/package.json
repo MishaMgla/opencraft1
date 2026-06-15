@@ -2,12 +2,18 @@
   "name": "opencraft-web",
   "private": true,
   "type": "module",
-  "description": "Web client. ES modules, no bundler. Unit tests use Node's built-in test runner (no runtime deps); e2e uses Playwright.",
+  "description": "Web client. TypeScript, ES modules, no bundler — tsc type-strips each .ts to a sibling .js. Unit tests use Node's built-in test runner; e2e uses Playwright. No runtime npm dependencies (PixiJS loads from a CDN).",
   "scripts": {
-    "test": "node --test test/",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "tsc && node --test test/",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.49.0"
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^20.0.0",
+    "@vercel/node": "^5.8.17",
+    "pixi.js": "^8.19.0",
+    "typescript": "^5.8.0"
   }
 }

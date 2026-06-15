@@ -45,7 +45,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: node --test test/
+      - run: npm ci
+        working-directory: web
+      - run: npm test
         working-directory: web
 
   deploy:
@@ -76,6 +78,13 @@ jobs:
 
       - name: pull vercel project settings
         run: vercel pull --yes --environment=${{ steps.target.outputs.env }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      # Compile TypeScript to sibling .js files (emit-in-place, no bundler).
+      # Must run before `vercel build` because buildCommand is empty — Vercel
+      # skips its own build phase and serves whatever files are present.
+      - name: compile typescript
+        working-directory: web
+        run: npm ci && npx tsc
 
       - name: build
         run: vercel build ${{ steps.target.outputs.flag }} --token=${{ secrets.VERCEL_TOKEN }}

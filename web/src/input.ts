@@ -1,17 +1,31 @@
 // Tracks held keys and integrates the local player's movement each frame.
 // Movement is along world axes (appears diagonal under iso) — fine for MVP.
 
-export function createInput() {
-  const keys = Object.create(null);
+export interface Vec2 {
+  x: number;
+  y: number;
+}
+export interface Bounds {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+export interface Input {
+  // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
+  step(pos: Vec2, speed: number, dt: number, bounds: Bounds): boolean;
+}
+
+export function createInput(): Input {
+  const keys: Record<string, boolean> = Object.create(null);
   window.addEventListener('keydown', (e) => (keys[e.key.toLowerCase()] = true));
   window.addEventListener('keyup', (e) => (keys[e.key.toLowerCase()] = false));
 
-  function clamp(v, lo, hi) {
+  function clamp(v: number, lo: number, hi: number): number {
     return v < lo ? lo : v > hi ? hi : v;
   }
 
   return {
-    // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
     step(pos, speed, dt, bounds) {
       let dx = 0;
       let dy = 0;
