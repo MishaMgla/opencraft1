@@ -234,11 +234,10 @@ func (s *Sim) Run(ctx context.Context) {
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 				send(p, wire.EncodeWelcome(id, p.x, p.y, 0, 0, WorldSize-1, WorldSize-1))
-				for _, oid := range grid.Neighbors(p.x, p.y) {
+				for oid, o := range players {
 					if oid == id {
 						continue
 					}
-					o := players[oid]
 					send(p, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
 					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name))
 				}
@@ -250,32 +249,8 @@ func (s *Sim) Run(ctx context.Context) {
 					continue
 				}
 				nx, ny := clamp(m.x), clamp(m.y)
-				oldN := grid.Neighbors(p.x, p.y)
 				grid.Move(p.id, p.x, p.y, nx, ny)
 				p.x, p.y = nx, ny
-				newN := grid.Neighbors(nx, ny)
-				for _, oid := range diff(newN, oldN) {
-					if oid == p.id {
-						continue
-					}
-					o := players[oid]
-					if o == nil {
-						continue
-					}
-					send(p, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
-					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name))
-				}
-				for _, oid := range diff(oldN, newN) {
-					if oid == p.id {
-						continue
-					}
-					o := players[oid]
-					if o == nil {
-						continue
-					}
-					send(p, wire.EncodeLeave(o.id))
-					send(o, wire.EncodeLeave(p.id))
-				}
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {
@@ -287,26 +262,19 @@ func (s *Sim) Run(ctx context.Context) {
 				if p == nil {
 					continue
 				}
-				for _, oid := range grid.Neighbors(p.x, p.y) {
-					if oid == m.id {
-						continue
-					}
-					if o := players[oid]; o != nil {
-						send(o, wire.EncodeLeave(m.id))
-					}
-				}
 				grid.Remove(m.id, p.x, p.y)
 				delete(players, m.id)
+				for _, o := range players {
+					send(o, wire.EncodeLeave(m.id))
+				}
 				s.save(p)
 			}
 
 		case <-ticker.C:
 			tick++
 			for _, p := range players {
-				ids := grid.Neighbors(p.x, p.y)
-				ents := make([]wire.Ent, 0, len(ids))
-				for _, oid := range ids {
-					o := players[oid]
+				ents := make([]wire.Ent, 0, len(players))
+				for _, o := range players {
 					ents = append(ents, wire.Ent{ID: o.id, X: o.x, Y: o.y})
 				}
 				send(p, wire.EncodeSnapshot(tick, ents))

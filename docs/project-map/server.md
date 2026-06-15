@@ -5,8 +5,8 @@ the authoritative real-time engine. one process, one binary.
 ## packages
 - `cmd/server/main.go` — entrypoint. starts the sim goroutine and the http server (listens on `:$PORT`, default `8080`), graceful shutdown on SIGINT.
 - `internal/wire` — binary protocol. encoders (server→client) + `ParseClient` decoder (client→server). little-endian, int16 positions. **single source of truth for the wire format; `web/src/wire.js` must mirror it byte-for-byte.**
-- `internal/world/grid.go` — uniform 16×16 spatial grid (cell 256). `Neighbors` returns the 3×3 area-of-interest.
-- `internal/world/sim.go` — the only goroutine that touches world state. 15 Hz tick. owns players, drives join/input/leave/ping via a command channel, emits per-client AoI snapshots + enter/leave events. non-blocking `send` drops oldest frames under backpressure.
+- `internal/world/grid.go` — uniform 16×16 spatial grid (cell 256). `Neighbors` returns the 3×3 area-of-interest helper retained for spatial queries.
+- `internal/world/sim.go` — the only goroutine that touches world state. 15 Hz tick. owns players, drives join/input/leave/ping via a command channel, emits full-current-map snapshots to every client, sends enter on join and leave on disconnect. non-blocking `send` drops oldest frames under backpressure.
 - `internal/server/server.go` — http mux: `/healthz` liveness, `/ws` upgrade, and `/` static files (`web/`, only when that dir exists — skipped in the Railway image). WS origin policy comes from `ALLOWED_ORIGINS` (allow-all when unset). one reader loop + one writer goroutine per connection; first frame must be Hello.
 
 ## sharp edges
