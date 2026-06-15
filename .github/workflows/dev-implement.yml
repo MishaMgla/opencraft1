@@ -13,7 +13,7 @@ jobs:
     #  (b) /approved on the issue → implement (author/allowlist gate, applied in
     #      the Authorize step below).
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       (
         (
           github.event_name == 'pull_request' &&

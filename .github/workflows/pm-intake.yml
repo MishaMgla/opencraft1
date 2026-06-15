@@ -9,7 +9,7 @@ jobs:
     # Open intake: any issue opener triggers the PM agent (bounded to
     # collaborators by the private repo). `pm:skip` opts an issue out.
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       !contains(github.event.issue.labels.*.name, 'pm:skip')
     runs-on: [self-hosted]
     permissions:

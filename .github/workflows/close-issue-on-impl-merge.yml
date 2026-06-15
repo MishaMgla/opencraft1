@@ -11,7 +11,7 @@ on:
 jobs:
   close-issue:
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.event.pull_request.head.ref, 'codex/issue-')

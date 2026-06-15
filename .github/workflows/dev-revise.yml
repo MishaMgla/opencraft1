@@ -10,7 +10,7 @@ jobs:
     # agent. Merge happens only via /merge or /approved. Authoritative author/
     # allowlist check is the Authorize step (keyed to the originating issue).
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.issue.pull_request != null &&
       github.event.comment.user.login != 'github-actions[bot]' &&
       !contains(github.event.comment.body, '<!-- agent-bot -->') &&

@@ -10,7 +10,7 @@ jobs:
     # Authorize step below. Only comments on issues (not PRs), not from the bot,
     # not /approved (that is dev-implement), not the // discuss escape hatch.
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.issue.pull_request == null &&
       github.event.comment.user.login != 'github-actions[bot]' &&
       !contains(github.event.comment.body, '<!-- agent-bot -->') &&
