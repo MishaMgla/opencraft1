@@ -1,14 +1,14 @@
-# opencraft MVP Engine Implementation Plan
+# opencraft1 MVP Engine Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the opencraft MVP — a single shared isometric world where many players join, move, and see each other move in real time.
+**Goal:** Build the opencraft1 MVP — a single shared isometric world where many players join, move, and see each other move in real time.
 
 **Architecture:** A single Go binary runs a fixed-15 Hz simulation goroutine that owns all world state, partitions players with a uniform spatial grid (area-of-interest), and pushes per-client binary snapshots over WebSocket. The browser client (PixiJS v8) renders an isometric view, computes its own movement (client-authoritative relay), and interpolates remote players. No JSON on the hot path — a custom little-endian binary protocol with int16 positions.
 
 **Tech Stack:** Go 1.23 · `github.com/coder/websocket` · PixiJS v8 (ESM via CDN) · vanilla JS, no bundler.
 
-**Source docs:** [`../../prd/mvp.md`](../../prd/mvp.md) · [`../specs/2026-06-11-opencraft-mvp-engine-design.md`](../specs/2026-06-11-opencraft-mvp-engine-design.md)
+**Source docs:** [`../../prd/mvp.md`](../../prd/mvp.md) · [`../specs/2026-06-11-opencraft1-mvp-engine-design.md`](../specs/2026-06-11-opencraft1-mvp-engine-design.md)
 
 > **Testing note:** `AGENT_RULES.md` forbids unsolicited automated tests. This plan therefore verifies with **build + vet + run + observe**, not test-first. The unit/load-test surface from the design (wire round-trips, grid math, load harness) is deferred until explicitly greenlit — see the final task.
 
@@ -19,7 +19,7 @@
 Each task owns a distinct file set with a fixed public interface, so tasks can be implemented in isolation. Dependencies only point "downward" (later tasks import earlier ones); no task needs to read another task's *internals*, only its interface (restated in each task).
 
 ```
-go.mod                          # module "opencraft", go 1.23
+go.mod                          # module "opencraft1", go 1.23
 cmd/server/main.go              # wiring: start sim goroutine + http server  (Task 1 stub → Task 5 full)
 internal/wire/wire.go           # binary protocol: encoders + client decoder  (Task 2, pure)
 internal/world/grid.go          # uniform spatial grid / area-of-interest      (Task 3, pure)
@@ -79,7 +79,7 @@ Byte 0 = message type. `i16`/`u16`/`u32` little-endian.
 
 `go.mod`:
 ```
-module opencraft
+module opencraft1
 
 go 1.23
 ```
@@ -111,8 +111,8 @@ func main() {
 ```html
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>opencraft</title></head>
-<body><p>opencraft scaffold ok</p></body>
+<head><meta charset="utf-8"><title>opencraft1</title></head>
+<body><p>opencraft1 scaffold ok</p></body>
 </html>
 ```
 
@@ -123,7 +123,7 @@ Run:
 go build ./... && go run ./cmd/server &
 sleep 1 && curl -s localhost:8080 && kill %1
 ```
-Expected: prints the `opencraft scaffold ok` HTML, no build errors.
+Expected: prints the `opencraft1 scaffold ok` HTML, no build errors.
 
 - [ ] **Step 5: Record the toolchain in `AGENT_RULES.md`**
 
@@ -418,7 +418,7 @@ import (
 	"context"
 	"time"
 
-	"opencraft/internal/wire"
+	"opencraft1/internal/wire"
 )
 
 const TickHz = 15
@@ -659,8 +659,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"opencraft/internal/wire"
-	"opencraft/internal/world"
+	"opencraft1/internal/wire"
+	"opencraft1/internal/world"
 )
 
 type Server struct {
@@ -753,8 +753,8 @@ import (
 	"os"
 	"os/signal"
 
-	"opencraft/internal/server"
-	"opencraft/internal/world"
+	"opencraft1/internal/server"
+	"opencraft1/internal/world"
 )
 
 func main() {
@@ -1252,7 +1252,7 @@ async function start(name) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>opencraft</title>
+  <title>opencraft1</title>
   <style>
     html, body { margin: 0; height: 100%; background: #11151c; overflow: hidden; font-family: system-ui, sans-serif; }
     #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #11151c; z-index: 10; }

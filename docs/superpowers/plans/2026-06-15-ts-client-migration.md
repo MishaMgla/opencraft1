@@ -67,7 +67,7 @@ This task establishes the toolchain and proves it end-to-end on the highest-valu
 Replace the file with:
 ```json
 {
-  "name": "opencraft-web",
+  "name": "opencraft1-web",
   "private": true,
   "type": "module",
   "description": "Web client. TypeScript, ES modules, no bundler — tsc type-strips each .ts to a sibling .js. Unit tests use Node's built-in test runner; e2e uses Playwright. No runtime npm dependencies (PixiJS loads from a CDN).",

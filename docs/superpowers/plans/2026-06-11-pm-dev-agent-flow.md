@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Stand up a GitHub-Actions PM+Dev agent pipeline on `MishaMgla/openCraft` where issues/PRs are steered only by the originating issue's author or a hardcoded allowlist.
+**Goal:** Stand up a GitHub-Actions PM+Dev agent pipeline on `MishaMgla/opencraft1` where issues/PRs are steered only by the originating issue's author or a hardcoded allowlist.
 
 **Architecture:** Five workflows under `.github/workflows/` invoke `anthropics/claude-code-action@v1` with prompt files. A shared `authorize.sh` resolves the originating issue's author and checks it (plus `.github/agents-allowlist.txt`) before any comment-driven agent runs. `AUTO_PAT` merges spec/impl PRs so each merge cascades to the next workflow. Verification gates auto-detect a toolchain and no-op while the repo is a scaffold.
 
@@ -12,7 +12,7 @@
 
 ## Conventions used throughout
 
-- **Repo guard:** every workflow's first `if:` clause is `github.repository == 'MishaMgla/openCraft'`.
+- **Repo guard:** every workflow's first `if:` clause is `github.repository == 'MishaMgla/opencraft1'`.
 - **Bot marker:** agent comments end with `<!-- agent-bot -->`. Workflows ignore comments containing it (loop prevention).
 - **Branches:** spec = `pm/issue-<N>-<slug>`, impl = `claude/issue-<N>-<slug>`.
 - **Runner:** `runs-on: [self-hosted]`.
@@ -238,7 +238,7 @@ git commit -m "feat: add auto-detecting run-gates verification script"
 
 ```bash
 #!/usr/bin/env bash
-# Shared permission gate for openCraft agent workflows.
+# Shared permission gate for opencraft1 agent workflows.
 #
 # Authorized IFF: ACTOR is on the allowlist, OR ACTOR == the GitHub login that
 # opened issue OWNER_ISSUE. This replaces contentos's OWNER/COLLABORATOR/MEMBER
@@ -298,7 +298,7 @@ Expected: `SYNTAX_OK`
 
 Run:
 ```bash
-( export GITHUB_OUTPUT=/dev/null GH_TOKEN=x GITHUB_REPOSITORY=MishaMgla/openCraft ACTOR=MishaMgla OWNER_ISSUE=1
+( export GITHUB_OUTPUT=/dev/null GH_TOKEN=x GITHUB_REPOSITORY=MishaMgla/opencraft1 ACTOR=MishaMgla OWNER_ISSUE=1
   bash .github/scripts/authorize.sh; echo "exit=$?" )
 ```
 Expected: `authorize: 'MishaMgla' is on the allowlist.`, `authorized=true`, `exit=0`.
@@ -307,7 +307,7 @@ Expected: `authorize: 'MishaMgla' is on the allowlist.`, `authorized=true`, `exi
 
 Run:
 ```bash
-( unset ACTOR; export GITHUB_OUTPUT=/dev/null GH_TOKEN=x GITHUB_REPOSITORY=MishaMgla/openCraft OWNER_ISSUE=1
+( unset ACTOR; export GITHUB_OUTPUT=/dev/null GH_TOKEN=x GITHUB_REPOSITORY=MishaMgla/opencraft1 OWNER_ISSUE=1
   bash .github/scripts/authorize.sh; echo "exit=$?" )
 ```
 Expected: errors with `ACTOR not set` and a non-zero `exit=`. (The author/allowlist branches are exercised live in Task 12.)
@@ -398,7 +398,7 @@ git commit -m "feat: add auto-merge-spec PAT cascade script"
 ```markdown
 # PM self-audit
 
-You are the openCraft PM agent. Before doing anything else, decide whether the
+You are the opencraft1 PM agent. Before doing anything else, decide whether the
 issue is clear enough to spec, or needs one clarifying question.
 
 Read the issue title, body, and all comments. Then judge a single criterion:
@@ -425,7 +425,7 @@ End every comment you post with `<!-- agent-bot -->`.
 ```markdown
 # PM agent — clarifying question mode
 
-You are the openCraft PM agent. Read `AGENT_RULES.md` and the relevant
+You are the opencraft1 PM agent. Read `AGENT_RULES.md` and the relevant
 `docs/project-map/*` docs before reasoning about scope.
 
 Your job in this mode: move the issue toward a clear, buildable spec by asking
@@ -448,7 +448,7 @@ Rules:
 ```markdown
 # PM agent — draft spec mode
 
-You are the openCraft PM agent. Read `AGENT_RULES.md` and the relevant
+You are the opencraft1 PM agent. Read `AGENT_RULES.md` and the relevant
 `docs/project-map/*` docs first.
 
 Produce a spec and open a PR:
@@ -477,7 +477,7 @@ merges. Use `git` + `gh` for all actions.
 ```markdown
 # PM agent — revise spec mode
 
-You are the openCraft PM agent. An open spec PR exists for this issue and the
+You are the opencraft1 PM agent. An open spec PR exists for this issue and the
 author has commented with feedback.
 
 1. Find the open spec PR: `gh pr list --search "head:pm/issue-<N>-" --state open`.
@@ -517,7 +517,7 @@ git commit -m "feat: add PM agent prompts"
 ```markdown
 # Dev agent — implement mode
 
-You are the openCraft Dev agent. Read `AGENT_RULES.md` and the relevant
+You are the opencraft1 Dev agent. Read `AGENT_RULES.md` and the relevant
 `docs/project-map/*` docs first, and follow the repo's coding style and
 documentation-maintenance protocol.
 
@@ -548,7 +548,7 @@ Use `git` + `gh` for all actions.
 ```markdown
 # Dev agent — revise mode
 
-You are the openCraft Dev agent. You are on the head branch of an open
+You are the opencraft1 Dev agent. You are on the head branch of an open
 implementation PR (`claude/issue-<N>-<slug>`) and the author has requested
 changes in a PR comment.
 
@@ -601,7 +601,7 @@ jobs:
     # Open intake: any issue opener triggers the PM agent (bounded to
     # collaborators by the private repo). `pm:skip` opts an issue out.
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       !contains(github.event.issue.labels.*.name, 'pm:skip')
     runs-on: [self-hosted]
     permissions:
@@ -707,7 +707,7 @@ jobs:
     # Authorize step below. Only comments on issues (not PRs), not from the bot,
     # not /approved (that is dev-implement), not the // discuss escape hatch.
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.issue.pull_request == null &&
       github.event.comment.user.login != 'github-actions[bot]' &&
       !contains(github.event.comment.body, '<!-- agent-bot -->') &&
@@ -896,7 +896,7 @@ jobs:
     #  (b) /approved on the issue → implement (author/allowlist gate, applied in
     #      the Authorize step below).
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       (
         (
           github.event_name == 'pull_request' &&
@@ -1115,7 +1115,7 @@ jobs:
     # agent. Merge happens only via /merge or /approved. Authoritative author/
     # allowlist check is the Authorize step (keyed to the originating issue).
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.issue.pull_request != null &&
       github.event.comment.user.login != 'github-actions[bot]' &&
       !contains(github.event.comment.body, '<!-- agent-bot -->') &&
@@ -1320,7 +1320,7 @@ on:
 jobs:
   close-issue:
     if: |
-      github.repository == 'MishaMgla/openCraft' &&
+      github.repository == 'MishaMgla/opencraft1' &&
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.repo.full_name == github.repository &&
       startsWith(github.event.pull_request.head.ref, 'claude/issue-')
@@ -1433,7 +1433,7 @@ Operator setup: `docs/agents-setup.md`.
 ```markdown
 # agent system — operator setup
 
-One-time setup to make the PM/Dev agents run on `MishaMgla/openCraft`.
+One-time setup to make the PM/Dev agents run on `MishaMgla/opencraft1`.
 
 ## 1. Repository secrets
 
@@ -1442,7 +1442,7 @@ Add under **Settings → Secrets and variables → Actions**:
 - `CLAUDE_CODE_OAUTH_TOKEN` — generate locally with `claude setup-token`
   (uses your Claude subscription; no per-call API billing).
 - `AUTO_PAT` — a **fine-grained** personal access token scoped to the
-  `openCraft` repo with: Contents = Read/Write, Pull requests = Read/Write,
+  `opencraft1` repo with: Contents = Read/Write, Pull requests = Read/Write,
   Issues = Read/Write. Used for merges that must cascade to the next workflow
   (a `GITHUB_TOKEN` merge does not trigger new workflow runs).
 
@@ -1450,13 +1450,13 @@ Add under **Settings → Secrets and variables → Actions**:
 
 The agent jobs use `runs-on: [self-hosted]`. Register one runner to this repo:
 
-1. Visit `https://github.com/MishaMgla/openCraft/settings/actions/runners/new`.
+1. Visit `https://github.com/MishaMgla/opencraft1/settings/actions/runners/new`.
 2. On the runner machine (the existing VDS can host a second runner in its own
    folder):
    ```bash
-   mkdir ~/actions-runner-opencraft && cd ~/actions-runner-opencraft
+   mkdir ~/actions-runner-opencraft1 && cd ~/actions-runner-opencraft1
    # run the download lines shown on the page, then:
-   ./config.sh --url https://github.com/MishaMgla/openCraft --token <TOKEN>
+   ./config.sh --url https://github.com/MishaMgla/opencraft1 --token <TOKEN>
    # accept default name + labels
    sudo ./svc.sh install && sudo ./svc.sh start    # or: ./run.sh
    ```
@@ -1520,7 +1520,7 @@ Review, then merge the PR (squash). Confirm `.github/workflows/*` are on `main`.
 - [ ] **Step 3: Authorized happy path**
 
 As `MishaMgla`, open a clear, tiny issue (e.g. "Add a CONTRIBUTING.md with a one-line intro").
-Expected sequence (watch `gh run list --repo MishaMgla/openCraft`):
+Expected sequence (watch `gh run list --repo MishaMgla/opencraft1`):
 - PM Intake runs → spec PR `pm/issue-<N>-*` opened → auto-merged.
 - Dev Implement runs → impl PR `claude/issue-<N>-*` opened → gate skips (no
   toolchain) → auto-merged.

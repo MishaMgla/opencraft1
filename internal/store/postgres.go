@@ -11,7 +11,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"opencraft/internal/world"
+	"opencraft1/internal/world"
 )
 
 // Postgres persists player state in the public.player_state table. The pool is

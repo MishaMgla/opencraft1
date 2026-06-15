@@ -1,4 +1,4 @@
-# Build the opencraft engine (cmd/server) as a static binary, then run it on a
+# Build the opencraft1 engine (cmd/server) as a static binary, then run it on a
 # minimal image. The client is deployed separately to Vercel, so no web/ assets
 # are copied — server.go skips static serving when web/ is absent.
 FROM golang:1.25-alpine AS build

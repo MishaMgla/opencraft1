@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the opencraft repo deployable as two independent halves — the static client on Vercel and the Go engine on Railway — wired across origins by a runtime `/config.json` fetch, an env-gated WS origin allowlist, and `PORT`/`/healthz` for the host.
+**Goal:** Make the opencraft1 repo deployable as two independent halves — the static client on Vercel and the Go engine on Railway — wired across origins by a runtime `/config.json` fetch, an env-gated WS origin allowlist, and `PORT`/`/healthz` for the host.
 
 **Architecture:** The Go engine stays a single stateful process; this is a deployment split, not horizontal scaling. The client fetches `/config.json` (a Vercel function returning `$WS_URL`) to learn the `wss://` engine URL, falling back to same-origin so local single-process dev is unchanged. The engine reads `PORT`, exposes `/healthz`, and restricts WS origins via `ALLOWED_ORIGINS` (allow-all when unset, for dev).
 
@@ -112,8 +112,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"opencraft/internal/wire"
-	"opencraft/internal/world"
+	"opencraft1/internal/wire"
+	"opencraft1/internal/world"
 )
 ```
 
@@ -129,8 +129,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"opencraft/internal/wire"
-	"opencraft/internal/world"
+	"opencraft1/internal/wire"
+	"opencraft1/internal/world"
 )
 ```
 
@@ -159,7 +159,7 @@ func New(sim *world.Sim) *Server {
 }
 
 // acceptOptions builds the WebSocket accept policy from ALLOWED_ORIGINS.
-// When set (comma-separated host patterns, e.g. "opencraft.vercel.app,*.vercel.app"),
+// When set (comma-separated host patterns, e.g. "opencraft1.vercel.app,*.vercel.app"),
 // only those origins may open a socket. When empty — the local dev case where the
 // engine serves the client itself — all origins are allowed.
 func acceptOptions() *websocket.AcceptOptions {
@@ -413,7 +413,7 @@ git commit -m "feat(client): add Vercel /config.json function + rewrite for WS_U
 - [ ] **Step 1: Create `Dockerfile` (repo root)**
 
 ```dockerfile
-# Build the opencraft engine (cmd/server) as a static binary, then run it on a
+# Build the opencraft1 engine (cmd/server) as a static binary, then run it on a
 # minimal image. The client is deployed separately to Vercel, so no web/ assets
 # are copied — server.go skips static serving when web/ is absent.
 FROM golang:1.23-alpine AS build
@@ -433,7 +433,7 @@ CMD ["/app/server"]
 
 - [ ] **Step 2: Verify the image builds and the binary runs (if Docker is available)**
 
-Run: `docker build -t opencraft-engine . && docker run --rm -e PORT=8080 -p 8080:8080 -d --name oc-test opencraft-engine`
+Run: `docker build -t opencraft1-engine . && docker run --rm -e PORT=8080 -p 8080:8080 -d --name oc-test opencraft1-engine`
 Then: `sleep 1 && curl -sS http://localhost:8080/healthz`
 Expected: `ok`. Clean up: `docker rm -f oc-test`.
 
@@ -464,7 +464,7 @@ Expected: `ok` then `404` — confirms `/healthz` works and static serving is co
 - [ ] **Step 5: Create `.env.example` (repo root)**
 
 ```bash
-# opencraft engine (server). Local dev needs none of these — defaults are
+# opencraft1 engine (server). Local dev needs none of these — defaults are
 # dev-friendly. Railway sets PORT automatically.
 
 # Port the engine listens on. Default 8080.
@@ -472,13 +472,13 @@ PORT=8080
 
 # Comma-separated WebSocket origin allowlist (host patterns). Empty = allow all
 # (local dev). In production set to the Vercel client domain(s), e.g.
-# opencraft.vercel.app or *.vercel.app
+# opencraft1.vercel.app or *.vercel.app
 ALLOWED_ORIGINS=
 
 # --- client (Vercel) ---
 # Set in the Vercel project dashboard, NOT in this server env. WS_URL is the
 # wss:// engine endpoint the /config.json function returns, e.g.
-#   wss://opencraft-engine.up.railway.app/ws
+#   wss://opencraft1-engine.up.railway.app/ws
 # WS_URL=
 ```
 
@@ -574,8 +574,8 @@ In `## development commands`, after the `go run ./cmd/server` line, add:
 
 ```markdown
 - `PORT=9090 go run ./cmd/server` — run on a custom port (Railway injects `PORT` in prod).
-- `ALLOWED_ORIGINS=opencraft.vercel.app go run ./cmd/server` — run with the prod WS origin allowlist (empty = allow all, dev default).
-- `docker build -t opencraft-engine .` — build the engine image used by Railway.
+- `ALLOWED_ORIGINS=opencraft1.vercel.app go run ./cmd/server` — run with the prod WS origin allowlist (empty = allow all, dev default).
+- `docker build -t opencraft1-engine .` — build the engine image used by Railway.
 ```
 
 Then add a new subsection immediately after the `## development commands` list:
@@ -599,7 +599,7 @@ config files: `Dockerfile` + `railway.json` (engine), `web/vercel.json` + `web/a
 ```markdown
 # deploy runbook — split client/server
 
-opencraft deploys as two independent halves:
+opencraft1 deploys as two independent halves:
 
 - **client** (`web/`, static ES modules + PixiJS) → **Vercel**
 - **engine** (`cmd/server`, Go tick server) → **Railway**
@@ -610,20 +610,20 @@ local dev is unaffected: `go run ./cmd/server` serves both halves on `:8080`, an
 
 1. create a Railway project and a service from this repo. Railway reads `railway.json` → builds the `Dockerfile`.
 2. the healthcheck path is `/healthz` (already set in `railway.json`). `PORT` is injected by Railway — the engine reads it automatically.
-3. generate a public domain for the service (Railway → service → Settings → Networking → Generate Domain). Note it, e.g. `opencraft-engine.up.railway.app`.
+3. generate a public domain for the service (Railway → service → Settings → Networking → Generate Domain). Note it, e.g. `opencraft1-engine.up.railway.app`.
 4. set the WS origin allowlist **after** you know the Vercel domain (step 2.4). For now leave `ALLOWED_ORIGINS` empty or set a placeholder; you will update it.
 5. confirm liveness: `curl https://<railway-domain>/healthz` → `ok`.
 
 ## 2. deploy the client to Vercel
 
 1. import the repo into Vercel. Set **Root Directory = `web`** (the client lives there). Framework preset: **Other** (no bundler).
-2. set the project env var `WS_URL` = `wss://<railway-domain>/ws` (from step 1.3), e.g. `wss://opencraft-engine.up.railway.app/ws`.
+2. set the project env var `WS_URL` = `wss://<railway-domain>/ws` (from step 1.3), e.g. `wss://opencraft1-engine.up.railway.app/ws`.
 3. deploy. Vercel serves `web/` statically and exposes `web/api/config.js`; `web/vercel.json` rewrites `/config.json` → `/api/config`.
-4. note the Vercel domain, e.g. `opencraft.vercel.app`.
+4. note the Vercel domain, e.g. `opencraft1.vercel.app`.
 
 ## 3. wire the origin allowlist
 
-1. back in Railway, set `ALLOWED_ORIGINS` to the Vercel host(s): `opencraft.vercel.app`. add `*.vercel.app` too if preview deployments should connect.
+1. back in Railway, set `ALLOWED_ORIGINS` to the Vercel host(s): `opencraft1.vercel.app`. add `*.vercel.app` too if preview deployments should connect.
 2. Railway redeploys. the engine now rejects WS upgrades from any other origin.
 
 ## 4. smoke test (cross-origin)
@@ -634,7 +634,7 @@ local dev is unaffected: `go run ./cmd/server` serves both halves on `:8080`, an
 
 ## troubleshooting
 
-- **WS fails / 403 on upgrade:** `ALLOWED_ORIGINS` doesn't include the exact Vercel host (scheme-less, e.g. `opencraft.vercel.app`). Update it and redeploy.
+- **WS fails / 403 on upgrade:** `ALLOWED_ORIGINS` doesn't include the exact Vercel host (scheme-less, e.g. `opencraft1.vercel.app`). Update it and redeploy.
 - **client tries `ws://<vercel-host>/ws`:** `/config.json` isn't returning a `wsUrl` — check `WS_URL` is set in Vercel and the rewrite/function deployed. The client falls back to same-origin only when the fetch fails.
 - **mixed-content blocked:** `WS_URL` must be `wss://` (not `ws://`) for an HTTPS client.
 - **healthcheck failing on Railway:** confirm the service listens on `$PORT` (it does by default) and that `/healthz` returns `ok`.

@@ -23,7 +23,7 @@ The agent jobs use `runs-on: [self-hosted]`. Register one runner to this repo:
 2. On the runner machine (the existing VDS can host a second runner in its own
    folder):
    ```bash
-   mkdir ~/actions-runner-opencraft && cd ~/actions-runner-opencraft
+   mkdir ~/actions-runner-opencraft1 && cd ~/actions-runner-opencraft1
    # run the download lines shown on the page, then:
    ./config.sh --url https://github.com/MishaMgla/opencraft1 --token <TOKEN>
    # accept default name + labels

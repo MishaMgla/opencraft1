@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"opencraft/internal/server"
-	"opencraft/internal/store"
-	"opencraft/internal/world"
+	"opencraft1/internal/server"
+	"opencraft1/internal/store"
+	"opencraft1/internal/world"
 )
 
 func main() {

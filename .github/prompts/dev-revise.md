@@ -1,6 +1,6 @@
 # Dev agent — revise mode
 
-You are the openCraft Dev agent. You are on the head branch of an open
+You are the opencraft1 Dev agent. You are on the head branch of an open
 implementation PR (`codex/issue-<N>-<slug>`) and the author has requested
 changes in a PR comment.
 

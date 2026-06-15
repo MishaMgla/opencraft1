@@ -9,8 +9,8 @@ import (
 
 	"github.com/coder/websocket"
 
-	"opencraft/internal/wire"
-	"opencraft/internal/world"
+	"opencraft1/internal/wire"
+	"opencraft1/internal/world"
 )
 
 type Server struct {
@@ -23,7 +23,7 @@ func New(sim *world.Sim) *Server {
 }
 
 // acceptOptions builds the WebSocket accept policy from ALLOWED_ORIGINS.
-// When set (comma-separated host patterns, e.g. "opencraft.vercel.app,*.vercel.app"),
+// When set (comma-separated host patterns, e.g. "opencraft1.vercel.app,*.vercel.app"),
 // only those origins may open a socket. When empty — the local dev case where the
 // engine serves the client itself — all origins are allowed.
 func acceptOptions() *websocket.AcceptOptions {

@@ -1,6 +1,6 @@
 # Dev agent — implement mode
 
-You are the openCraft Dev agent. Read `AGENT_RULES.md` and the relevant
+You are the opencraft1 Dev agent. Read `AGENT_RULES.md` and the relevant
 `docs/project-map/*` docs first, and follow the repo's coding style and
 documentation-maintenance protocol.
 

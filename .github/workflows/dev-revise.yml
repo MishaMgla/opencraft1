@@ -84,6 +84,20 @@ jobs:
             echo "mode=revise" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Verification gate (mode=merge)
+        if: steps.mode.outputs.mode == 'merge'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH=${{ steps.pr.outputs.branch }}
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+          if ! .github/scripts/run-gates.sh; then
+            gh pr comment ${{ steps.pr.outputs.pr }} --repo ${{ github.repository }} --body "🤖 Not merging — verification gate failed (tests red on the PR head). Fix CI, then comment \`/merge\` again.
+          <sub>🤖 Dev · gate</sub><!-- agent-bot -->"
+            exit 1
+          fi
+
       - name: Merge PR (mode=merge)
         if: steps.mode.outputs.mode == 'merge'
         env:
