@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,10 @@ import (
 type Server struct {
 	sim        *world.Sim
 	acceptOpts *websocket.AcceptOptions
+}
+
+type healthResponse struct {
+	Status string `json:"status"`
 }
 
 func New(sim *world.Sim) *Server {
@@ -43,8 +48,14 @@ func acceptOptions() *websocket.AcceptOptions {
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		body, err := json.Marshal(healthResponse{Status: "ok"})
+		if err != nil {
+			http.Error(w, "failed to encode health response", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
+		_, _ = w.Write(body)
 	})
 	mux.HandleFunc("/ws", s.handleWS)
 	// Serve the static client only when web/ is present (local dev). The Railway
