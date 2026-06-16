@@ -86,7 +86,7 @@ jobs:
           # Authorization: pull_request path always ok; comment path needs auth=true.
           if [ "${{ github.event_name }}" = "issue_comment" ] && [ "${{ steps.auth.outputs.authorized }}" != "true" ]; then
             gh issue comment "${{ steps.resolve.outputs.issue }}" --repo ${{ github.repository }} \
-              --body "🤖 Only the issue author or an allowlisted maintainer can /approved this issue. Ignoring.
+              --body "🤖 Only a maintainer with write access (or an allowlisted maintainer) can /approved this issue. Ignoring.
           <sub>🤖 Dev · auth</sub><!-- agent-bot -->"
             echo "proceed=false" >> "$GITHUB_OUTPUT"; exit 0
           fi
