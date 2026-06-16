@@ -9,6 +9,12 @@ auto-applied — a maintainer applies it with an admin token:
 
 Implements Phase 0.3/0.4 of [`../../docs/security-implementation-plan.md`](../../docs/security-implementation-plan.md).
 
+> **plan requirement.** Rulesets / branch protection are **disabled on a free private repo** — GitHub
+> returns `403 "Upgrade to GitHub Pro or make this repository public"`. They are free on **public** repos
+> (and available on Pro/Team for private). So this ruleset **activates at the moment the repo goes public**,
+> which is exactly when its protection is needed; until then it stays config-as-doc and `apply-ruleset.sh`
+> will fail with that 403. Enforcement therefore can't be smoke-tested while the repo is free+private.
+
 ## what it enforces on `main`
 
 - **PR required** (no direct pushes), **linear history**, **no force-push**, **no branch deletion**.
