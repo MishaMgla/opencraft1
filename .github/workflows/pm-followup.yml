@@ -44,7 +44,7 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} \
             --repo ${{ github.repository }} \
-            --body "🤖 Only the issue author or an allowlisted maintainer can steer this issue's agent. Ignoring this comment.
+            --body "🤖 Only a maintainer with write access (or an allowlisted maintainer) can steer this issue's agent. Ignoring this comment.
           <sub>🤖 PM · auth</sub><!-- agent-bot -->"
 
       - name: Configure git
