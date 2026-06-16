@@ -1,0 +1,38 @@
+{
+  "name": "main protection",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/main"],
+      "exclude": []
+    }
+  },
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" },
+    { "type": "required_linear_history" },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "require_code_owner_review": true,
+        "require_last_push_approval": false,
+        "dismiss_stale_reviews_on_push": true,
+        "required_review_thread_resolution": false
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": false,
+        "required_status_checks": [
+          { "context": "go engine" },
+          { "context": "web client" },
+          { "context": "browser e2e" }
+        ]
+      }
+    }
+  ],
+  "bypass_actors": []
+}
