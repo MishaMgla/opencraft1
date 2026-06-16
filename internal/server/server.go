@@ -16,6 +16,7 @@ import (
 
 type Server struct {
 	sim        *world.Sim
+	buildInfo  BuildInfo
 	acceptOpts *websocket.AcceptOptions
 }
 
@@ -23,8 +24,13 @@ type healthResponse struct {
 	Status string `json:"status"`
 }
 
-func New(sim *world.Sim) *Server {
-	return &Server{sim: sim, acceptOpts: acceptOptions()}
+type BuildInfo struct {
+	CommitSHA      string `json:"commit_sha"`
+	BuildTimestamp string `json:"build_timestamp"`
+}
+
+func New(sim *world.Sim, buildInfo BuildInfo) *Server {
+	return &Server{sim: sim, buildInfo: buildInfo, acceptOpts: acceptOptions()}
 }
 
 // acceptOptions builds the WebSocket accept policy from ALLOWED_ORIGINS.
@@ -57,6 +63,7 @@ func (s *Server) Handler() http.Handler {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(body)
 	})
+	mux.HandleFunc("/version", s.handleVersion)
 	mux.HandleFunc("/ws", s.handleWS)
 	// Serve the static client only when web/ is present (local dev). The Railway
 	// engine image carries no client assets — the client is served from Vercel —
@@ -65,6 +72,18 @@ func (s *Server) Handler() http.Handler {
 		mux.Handle("/", http.FileServer(http.Dir("web")))
 	}
 	return mux
+}
+
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.Header().Set("Allow", http.MethodGet)
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(s.buildInfo)
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {

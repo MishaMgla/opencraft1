@@ -50,6 +50,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-16: add engine `/version` endpoint — returns deployed commit SHA and build timestamp as JSON, with Railway Docker builds stamping metadata via ldflags.
 - 2026-06-15: make current-map player visibility global — server snapshots now include every connected player, movement no longer hides players by grid distance, and leave events fire on disconnect/session exit.
 - 2026-06-15: web client migrated to TypeScript (tsc type-strip, no bundler; emitted `.js` are gitignored build artifacts). Local dev/e2e now require `cd web && npm run build` first.
 - 2026-06-14: split deployment (branch `split-deployment`) — static client → Vercel, Go engine → Railway. client resolves the engine `wss://` URL at runtime via `/config.json` (Vercel function from `WS_URL`, `web/api/config.js` + `web/vercel.json`), falling back to same-origin so local dev is unchanged. engine reads `PORT`, adds `/healthz`, and gates WS origins on `ALLOWED_ORIGINS` (allow-all when unset). adds `Dockerfile`, `railway.json`, `.env.example`, and the `docs/deploy.md` runbook. no wire-format or engine-logic change.

@@ -3,10 +3,13 @@
 # are copied — server.go skips static serving when web/ is absent.
 FROM golang:1.25-alpine AS build
 WORKDIR /src
+ARG RAILWAY_GIT_COMMIT_SHA
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /out/server ./cmd/server
+RUN CGO_ENABLED=0 go build \
+  -ldflags="-X main.commitSHA=${RAILWAY_GIT_COMMIT_SHA:-unknown} -X main.buildTimestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  -o /out/server ./cmd/server
 
 FROM alpine:3.20
 WORKDIR /app
