@@ -1,0 +1,122 @@
+# security implementation plan
+
+rollout of [`security-architecture.md`](security-architecture.md), in dependency order. each item lists
+**what** to change, **where**, and a **done-check**. one PR per item where practical.
+
+> **gate:** the repo must **not** be flipped to public until **Phase 0 is complete and verified**. Phase 0
+> closes the exploits that exist the instant an untrusted user can open an issue (T1–T4).
+
+current stack the plan edits: self-hosted runner; `codex exec --model gpt-5.5` for PM + dev; workflows
+`pm-intake.yml`, `pm-followup.yml`, `dev-implement.yml`, `dev-revise.yml`, `close-issue-on-impl-merge.yml`;
+gate `.github/scripts/authorize.sh` + `.github/agents-allowlist.txt`; spec branches `pm/issue-*`, impl
+branches `codex/issue-*`.
+
+---
+
+## Phase 0 — blocks going public (must-have)
+
+**0.1 — kill issue-author self-authorization** *(T1)*
+- where: `.github/scripts/authorize.sh`, all four agent workflows.
+- change: remove the `OWNER==ACTOR` branch as a privilege grant. authorization to advance to dev =
+  allowlist OR API permission `∈ {admin, write}`, checked **at execution time** for every privileged
+  command (`/approved`, `/merge`). conversation (PM) stays open to anyone but never escalates privilege.
+- done-check: a throwaway non-collaborator account commenting `/approved` on its own issue does **not**
+  trigger `dev-implement`; an allowlisted/write user still does.
+
+**0.2 — secret segmentation** *(T3)*
+- where: every workflow `env:` / `secrets:` usage; new `deploy.yml`.
+- change: untrusted jobs (PM, security) get **zero secrets**; dev job gets **no prod secrets**; move all
+  prod secrets (Supabase, deploy) into a single deploy job. add explicit per-job `permissions:` (least
+  privilege); remove repo-wide secret exposure.
+- done-check: `grep` shows no prod secret referenced in PM/dev jobs; deploy job is the only consumer.
+
+**0.3 — branch-protection ruleset on `main`** *(T4, wall)*
+- where: GitHub repo ruleset (config-as-doc; record the intended ruleset in this repo).
+- change: no direct push; PR required; required status checks incl. the capability gate (0.5); linear
+  history; no force-push; **no bot/admin/Actions bypass**; signed/bot-identity commits.
+- done-check: a direct push to `main` is rejected; a PR without passing checks cannot merge; bot cannot
+  bypass.
+
+**0.4 — CODEOWNERS guardrail denylist + least-privilege tokens** *(T4, #8/#9)*
+- where: `.github/CODEOWNERS`; ruleset; all workflow `permissions:` blocks.
+- change: require **code-owner review** on guardrail paths (`.github/**`, agent prompts, `authorize.sh`,
+  allowlist, ruleset/env config, `*deploy*`/`*secret*`/auth/CORS, dep manifests/lockfiles); protect the
+  ownership files themselves. remove `checks:`/`statuses: write` from agent jobs; pin expected check
+  identity.
+- done-check: an agent PR touching `.github/workflows/**` is blocked pending human review and cannot
+  automerge.
+
+**0.5 — capability diff-gate (KEYSTONE)** *(#3/#4)*
+- where: new required workflow `policy-gate.yml` + `.github/policy/` rules.
+- change: on every agent PR, run `gitleaks` (no secrets added) + `semgrep` (no new egress / `curl|bash` /
+  eval / subprocess / dynamic import) + dependency-allowlist & lockfile-diff gate + path/capability
+  classifier. **default-deny ambiguity.** emit the Tier (A/B); Tier B → require human. make it a
+  **required, non-bypassable** check in the ruleset.
+- done-check: a PR adding `fetch(env.SECRET)` or a new dependency fails the gate; a docs-only PR passes as
+  Tier A.
+
+---
+
+## Phase 1 — plane split & runner hardening
+
+**1.1 — split billing across planes** *(#5)*
+- change: untrusted PM/security → metered **OpenAI API key + small model** (new secret, scoped, spend-
+  capped); trusted dev → keep the **Codex subscription session**, on a **separate runner label**. untrusted
+  jobs physically cannot reach the Codex session.
+- done-check: PM job has no access to the Codex session/creds; dev job runs on the `trusted` runner only.
+
+**1.2 — disposable, egress-restricted runners** *(#6, T7)*
+- change: one **disposable VM per job** (not just `--ephemeral` process); egress allowlist (enumerate real
+  GitHub/registry endpoints); `actions/checkout` `persist-credentials: false` on untrusted jobs; **no cache
+  shared between untrusted and trusted jobs**.
+- done-check: a job cannot reach an arbitrary external host; VM is destroyed post-job; no cross-plane cache.
+
+**1.3 — security agent → structured verdict + deterministic dispatcher** *(#12/#14)*
+- change: security agent emits `{verdict∈enum, confidence, reason, sensitive_paths[]}` only; a **code**
+  dispatcher maps enum→action (label/close/lock). agent has **no write capability**. PRD/verdict carry
+  taint + provenance (quoted source refs).
+- done-check: agent output that says "close all issues" does nothing unless the enum maps to it; dispatcher
+  is the only writer.
+
+---
+
+## Phase 2 — tiering & deploy
+
+**2.1 — capability Tier A/B classifier wired to merge** *(#4)*
+- change: the gate's Tier output drives automerge eligibility; Tier A auto-merges, Tier B → `needs-human`.
+- done-check: Tier A feature auto-merges end-to-end; Tier B halts for review.
+
+**2.2 — decouple deploy, OIDC, build-without-secrets, human gate first** *(#10)*
+- where: new `deploy.yml` + GitHub Environment.
+- change: deploy separate from merge; OIDC short-lived creds; build without prod secrets, inject at hosting
+  platform; environment protection with a **human approval gate initially** (relax to wait-timer/branch-
+  restriction only once 0.5 is proven).
+- done-check: a merge to `main` does not auto-deploy; deploy requires the gate; build job holds no prod
+  secrets.
+
+---
+
+## Phase 3 — abuse / PM controls & observability
+
+**3.1 — PM sprawl & abuse controls** *(#11)*
+- change: bounded rounds → `needs-human`; structured PRD-complete checklist gate; dedupe; per-author +
+  global rate limits; cost circuit-breaker (daily metered-spend cap → freeze + alert); third-party comments
+  gated on write-permission; metered key treated as burnable (caps, rotation).
+- done-check: an issue can't loop forever; a duplicate is linked+closed; spend cap trips the freeze.
+
+**3.2 — observability, kill switch, alerts, new-account friction** *(#13/#15/#16)*
+- change: Langfuse tracing with redaction + retention + **no tracing of secret jobs**; `agents:freeze`
+  kill switch checked first by every workflow; Telegram alerts on block/policy-fail/Tier-B/merge/deploy/
+  cost-breach; new/zero-rep accounts → discussion-only until trust accrues.
+- done-check: setting `agents:freeze` halts all agent workflows; traces contain no secrets; a brand-new
+  account's issue does not auto-advance to dev.
+
+---
+
+## sequencing notes
+
+- 0.5 (keystone) and 0.3/0.4 (ruleset) are mutually reinforcing — land them together; a gate that the bot
+  can bypass is worthless.
+- Phase 1.1 depends on 0.2 (secret segmentation) being in place so the metered key is scoped from day one.
+- treat the capability taxonomy (0.5) as an owned, versioned artifact; review it whenever a new attack class
+  appears. it is the thing attackers will probe.
