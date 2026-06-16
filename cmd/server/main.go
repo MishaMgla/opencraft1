@@ -6,12 +6,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime/debug"
+	"strings"
 	"syscall"
 	"time"
 
 	"opencraft1/internal/server"
 	"opencraft1/internal/store"
 	"opencraft1/internal/world"
+)
+
+var (
+	commitSHA      = "unknown"
+	buildTimestamp = ""
 )
 
 func main() {
@@ -45,7 +52,7 @@ func main() {
 	}
 	addr := ":" + port
 
-	httpSrv := &http.Server{Addr: addr, Handler: server.New(sim).Handler()}
+	httpSrv := &http.Server{Addr: addr, Handler: server.New(sim, versionInfo()).Handler()}
 	go func() {
 		log.Printf("listening on %s", addr)
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -64,4 +71,47 @@ func main() {
 	case <-time.After(12 * time.Second):
 		log.Println("shutdown flush timed out")
 	}
+}
+
+func versionInfo() server.BuildInfo {
+	sha := strings.TrimSpace(commitSHA)
+	if sha == "" || sha == "unknown" {
+		sha = vcsRevision()
+	}
+	if sha == "" {
+		sha = "unknown"
+	}
+
+	timestamp := strings.TrimSpace(buildTimestamp)
+	if timestamp == "" || timestamp == "unknown" {
+		timestamp = executableTimestamp()
+	}
+
+	return server.BuildInfo{
+		CommitSHA:      sha,
+		BuildTimestamp: timestamp,
+	}
+}
+
+func vcsRevision() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return ""
+	}
+	for _, setting := range info.Settings {
+		if setting.Key == "vcs.revision" {
+			return setting.Value
+		}
+	}
+	return ""
+}
+
+func executableTimestamp() string {
+	path, err := os.Executable()
+	if err == nil {
+		if st, err := os.Stat(path); err == nil {
+			return st.ModTime().UTC().Format(time.RFC3339)
+		}
+	}
+	return time.Now().UTC().Format(time.RFC3339)
 }
