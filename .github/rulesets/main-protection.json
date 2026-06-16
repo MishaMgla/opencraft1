@@ -29,7 +29,8 @@
         "required_status_checks": [
           { "context": "go engine" },
           { "context": "web client" },
-          { "context": "browser e2e" }
+          { "context": "browser e2e" },
+          { "context": "capability-gate" }
         ]
       }
     }

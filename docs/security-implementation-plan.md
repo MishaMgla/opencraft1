@@ -47,13 +47,17 @@ branches `codex/issue-*`.
   automerge.
 
 **0.5 — capability diff-gate (KEYSTONE)** *(#3/#4)*
-- where: new required workflow `policy-gate.yml` + `.github/policy/` rules.
-- change: on every agent PR, run `gitleaks` (no secrets added) + `semgrep` (no new egress / `curl|bash` /
-  eval / subprocess / dynamic import) + dependency-allowlist & lockfile-diff gate + path/capability
-  classifier. **default-deny ambiguity.** emit the Tier (A/B); Tier B → require human. make it a
-  **required, non-bypassable** check in the ruleset.
-- done-check: a PR adding `fetch(env.SECRET)` or a new dependency fails the gate; a docs-only PR passes as
-  Tier A.
+- where: `.github/scripts/capability-gate.sh` + `.github/workflows/policy-gate.yml`.
+- change: on every PR, classify the *diff's* capabilities (path denylist + content signals: deps, outbound
+  network, dynamic exec, secret-like identifiers, external URLs, diff size). **default-deny ambiguity** →
+  Tier B fails the check; Tier A passes. Registered in the ruleset `required_status_checks` as
+  `capability-gate`. Runs on the untrusted `pull_request` event (read-only, no secrets).
+- status: **classifier + check shipped** (v1, heuristic). done-check met — verified: docs-only / ordinary
+  feature / `author`-path → Tier A (pass); new dependency / `fetch(process.env.SECRET)` / workflow edit /
+  external URL / >600-line diff → Tier B (fail).
+- follow-up (not in this step): (a) wire the existing automerge paths (`auto-merge-spec.sh`,
+  dev-implement) to refuse Tier B; (b) harden with `gitleaks` + `semgrep` to catch what regex misses
+  (Layer #6: auth-in-app-code, RLS, symlinks).
 
 ---
 

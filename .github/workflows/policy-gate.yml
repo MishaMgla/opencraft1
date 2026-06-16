@@ -1,0 +1,44 @@
+name: capability-gate
+
+# The keystone (docs/security-architecture.md #3/#4): classify every PR by the
+# CAPABILITIES its diff introduces. Tier A passes (auto-merge eligible); Tier B
+# fails (human required). Runs on the untrusted `pull_request` event — read-only
+# token, no secrets — so it is safe against fork PRs and prompt-injected diffs.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write   # best-effort labeling only; downgraded to read on forks
+
+jobs:
+  capability-gate:
+    name: capability-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify diff
+        id: gate
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: .github/scripts/capability-gate.sh
+
+      # Best-effort: mirror the tier onto a label. Skipped on fork PRs (the
+      # default token is read-only there); never fails the gate.
+      - name: Label tier
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          TIER: ${{ steps.gate.outputs.tier }}
+        run: |
+          [ -z "${TIER:-}" ] && exit 0
+          if [ "$TIER" = "A" ]; then ADD="auto:tier-a"; RM="needs-human"; else ADD="needs-human"; RM="auto:tier-a"; fi
+          gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --add-label "$ADD" 2>/dev/null || true
+          gh pr edit "$PR" --repo "$GITHUB_REPOSITORY" --remove-label "$RM" 2>/dev/null || true
