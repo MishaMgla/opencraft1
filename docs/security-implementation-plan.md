@@ -24,11 +24,19 @@ branches `codex/issue-*`.
   trigger `dev-implement`; an allowlisted/write user still does.
 
 **0.2 — secret segmentation** *(T3)*
-- where: every workflow `env:` / `secrets:` usage; new `deploy.yml`.
-- change: untrusted jobs (PM, security) get **zero secrets**; dev job gets **no prod secrets**; move all
-  prod secrets (Supabase, deploy) into a single deploy job. add explicit per-job `permissions:` (least
-  privilege); remove repo-wide secret exposure.
-- done-check: `grep` shows no prod secret referenced in PM/dev jobs; deploy job is the only consumer.
+- finding (audited): prod-deploy secrets are **already segmented** — `VERCEL_*` live only in
+  `deploy-client.yml` (a standalone `push`-triggered job); **no agent workflow references Vercel / Supabase
+  / Railway secrets**. The only prod-grade credential co-resident with agent execution is **`AUTO_PAT`** (a
+  real-user PAT used so the merge cascades to downstream workflows), present in all four agent workflows.
+- shipped: `.github/scripts/check-secret-segmentation.sh` + `.github/workflows/secret-segmentation.yml` —
+  a deterministic guard that **fails CI if an agent workflow gains a prod secret**, locking in the
+  invariant. It warns (does not fail) on the `AUTO_PAT` exception. Verified: current tree passes; an
+  injected `secrets.SUPABASE_*` fails it.
+- follow-up (delicate — do **with** Phase 1.2, with testing, not blind): isolate `AUTO_PAT` into a no-agent
+  merge job/workflow so the privileged PAT never co-resides with untrusted-input agent execution. Coupled
+  to ephemeral runners (1.2), since a persistent runner is the real exfil window. Also add explicit
+  least-privilege per-job `permissions:` and drop unused `id-token: write`.
+- done-check: guard green on every PR; (follow-up) `grep` shows no `AUTO_PAT` in any agent-execution job.
 
 **0.3 — branch-protection ruleset on `main`** *(T4, wall)*
 - where: GitHub repo ruleset (config-as-doc; record the intended ruleset in this repo).
