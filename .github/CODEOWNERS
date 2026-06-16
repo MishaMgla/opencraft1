@@ -1,0 +1,30 @@
+# CODEOWNERS — guardrail paths.
+#
+# Changes to these paths require a code-owner review and must never auto-merge.
+# This is the deterministic Tier-B forcing function from
+# docs/security-architecture.md (#8, T4): a bot cannot satisfy a human owner's
+# review, so any agent PR touching its own cage is hard-blocked.
+#
+# Enforcement: this file is INERT on its own. It only bites once the
+# "main protection" ruleset (.github/rulesets/main-protection.json) is applied
+# with `require_code_owner_review: true`. Apply via .github/scripts/apply-ruleset.sh.
+#
+# Non-guardrail paths have no owner here, so ordinary feature PRs still need
+# zero approvals and stay auto-mergeable — autonomy is preserved.
+
+# The agent cage itself: every workflow, script, prompt, allowlist, ruleset.
+/.github/                                @MishaMgla
+
+# Security design of record + rollout plan.
+/docs/security-architecture.md           @MishaMgla
+/docs/security-implementation-plan.md    @MishaMgla
+
+# Deploy / infra / secrets surface.
+/Dockerfile                              @MishaMgla
+/docs/deploy.md                          @MishaMgla
+
+# Dependency manifests & lockfiles (supply-chain surface).
+/go.mod                                  @MishaMgla
+/go.sum                                  @MishaMgla
+/web/package.json                        @MishaMgla
+/web/package-lock.json                   @MishaMgla
