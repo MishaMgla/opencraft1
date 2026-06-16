@@ -50,6 +50,29 @@ so this is a one-time step. To re-auth or rotate, re-run `codex login`.
 `close-issue-on-impl-merge.yml` runs on `ubuntu-latest` (no agent), so it needs
 no self-hosted runner.
 
+### 2b. Build toolchains (required by the verification gate)
+
+Before merging, the Dev agent runs `.github/scripts/run-gates.sh`, which builds
+and tests the project's real suites. It **fails closed**: if the repo declares a
+toolchain but the tool is missing on the runner, that is a gate _failure_, not a
+skip — so the agent's auto-merge is correctly blocked rather than merging
+unverified code. The runner therefore needs every toolchain the repo uses:
+
+- **Go** — matches `go.mod` (CI pins `1.25`; see `.github/workflows/test.yml`).
+  Without it, the gate reports _"go.mod present but 'go' is not installed"_ and
+  **no Go change can ever auto-merge** — `dev-implement`/`dev-revise` runs end in
+  `failure` even when the agent's diff is correct. Install so `go` is on the
+  runner service user's PATH (e.g. the official tarball into `/usr/local/go`).
+- **Node + npm** — runs the `web/` unit suite (`npm ci && npm test`). Node is
+  already needed for the Codex CLI in step 2a, so npm is usually present.
+
+After installing, confirm as the runner's OS user: `go version` and `npm -v`.
+
+> Note: impl PRs are opened by `github-actions[bot]`, so the `pull_request`
+> `tests` workflow lands in `action_required` and does not run Go CI on the PR
+> itself — the gate above is the agents' only pre-merge Go check, which is why
+> the runner must have Go. Hosted Go CI only runs unattended on `push` to `main`.
+
 ## 3. Allowlist
 
 Edit `.github/agents-allowlist.txt` — one GitHub username per line — to grant
