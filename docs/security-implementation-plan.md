@@ -95,8 +95,18 @@ branches `codex/issue-*`.
 ## Phase 2 — tiering & deploy
 
 **2.1 — capability Tier A/B classifier wired to merge** *(#4)*
-- change: the gate's Tier output drives automerge eligibility; Tier A auto-merges, Tier B → `needs-human`.
-- done-check: Tier A feature auto-merges end-to-end; Tier B halts for review.
+- shipped: `dev-implement.yml` runs `.github/scripts/capability-gate-pr.sh` **inline** before "Auto-merge
+  on green" (agent PRs open with `GITHUB_TOKEN`, which does NOT trigger the `pull_request` policy-gate, so
+  the gate must run in-job like `run-gates.sh`). Tier A → auto-merge; Tier B → `needs-human` label + comment,
+  **no auto-merge** (fail-closed: empty/error tier also holds).
+- deliberately NOT gated: the markdown **spec-PR** auto-merge (`auto-merge-spec.sh`) — PRDs are prose and
+  trip content signals (the security doc itself classifies Tier B), and they carry no executable risk;
+  gating them would freeze the cascade. The human `/merge` path (`dev-revise`) is left as-is (a write-access
+  maintainer is already the human in the loop).
+- follow-up: add a `docs/**` / prose exemption to the content signals so docs PRs aren't needlessly Tier B;
+  optionally annotate (not block) `dev-revise`.
+- done-check: an impl PR with a clean diff auto-merges; one adding a dep / outbound call / secret ref gets
+  `needs-human` and is not auto-merged. Classifier verified on real commit ranges.
 
 **2.2 — decouple deploy, OIDC, build-without-secrets, human gate first** *(#10)*
 - where: new `deploy.yml` + GitHub Environment.
