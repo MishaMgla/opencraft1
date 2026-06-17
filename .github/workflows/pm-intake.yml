@@ -28,7 +28,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Phase 3.1 (control #11): rate limit / daily cap / new-account friction /
+      # dedupe for the open intake. proceed=false skips the agent run.
+      - name: Abuse gate
+        id: abuse
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.issue.user.login }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/abuse-gate.sh
+
       - name: Build prompt
+        if: steps.abuse.outputs.proceed == 'true'
         id: load
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
@@ -52,6 +63,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run Codex (PM agent)
+        if: steps.abuse.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -68,7 +80,7 @@ jobs:
             "$PROMPT"
 
       - name: Auto-merge spec PR (PAT cascade to dev-implement)
-        if: success()
+        if: success() && steps.abuse.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ secrets.AUTO_PAT }}
           ISSUE: ${{ github.event.issue.number }}

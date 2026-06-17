@@ -111,10 +111,20 @@ branches `codex/issue-*`.
 ## Phase 3 — abuse / PM controls & observability
 
 **3.1 — PM sprawl & abuse controls** *(#11)*
-- change: bounded rounds → `needs-human`; structured PRD-complete checklist gate; dedupe; per-author +
-  global rate limits; cost circuit-breaker (daily metered-spend cap → freeze + alert); third-party comments
-  gated on write-permission; metered key treated as burnable (caps, rotation).
-- done-check: an issue can't loop forever; a duplicate is linked+closed; spend cap trips the freeze.
+- shipped: `.github/scripts/abuse-gate.sh`, wired into `pm-intake` (the open, unauthenticated entry point —
+  it runs the agent on every new issue from anyone). Enforces, all **fail-open** on API error:
+  per-author **rate limit** (issues/24h) → skip + `rate-limited`; **daily intake cap** (runs/day, the
+  cost/abuse breaker — subscription has no $ meter) → skip + `needs-human`; **new-account friction**
+  (account age < N days) → `discussion-only` label (PM still answers = discussion); **dedupe**
+  (title-overlap with an open issue) → non-blocking `possible-duplicate` comment. Thresholds tunable via
+  env (`NEW_ACCOUNT_DAYS=30`, `AUTHOR_ISSUES_24H=5`, `DAILY_INTAKE_CAP=50`).
+- remaining: bounded PM **conversation rounds** in `pm-followup` (cap bot replies → `needs-human`) —
+  meaningful once PM conversation is opened to non-write issue authors (today `pm-followup` is write-gated
+  by `authorize.sh`); the structured PRD-complete checklist gate; honoring `discussion-only` in the dev
+  advance path; closing (not just flagging) confirmed duplicates.
+- done-check: a flood of issues from one author is rate-limited; >cap runs/day pauses intake; a brand-new
+  account's issue is `discussion-only`; a near-duplicate is flagged. Verified the gate's branches with a
+  stubbed `gh`.
 
 **3.2 — observability, kill switch, alerts, new-account friction** *(#13/#15/#16)*
 - change: Langfuse tracing with redaction + retention + **no tracing of secret jobs**; `agents:freeze`
