@@ -73,8 +73,8 @@ two ideas carry the design.
 ```
 issue / comment  (UNTRUSTED text)
       │
-      ▼  UNTRUSTED PLANE  · no secrets · read-only token · ephemeral runner · egress allowlist
-      │                   · no web/file tools · metered OpenAI API key + small model (NOT the Codex session)
+      ▼  UNTRUSTED PLANE  · no app/prod secrets · read-only token · ephemeral runner · egress allowlist
+      │                   · no web/file tools · Codex session present (gpt-5.4) — isolation (#6) protects it
  ┌──────────────────────────────────────────────────────────────────┐
  │ security-audit agent  → structured verdict {enum, confidence, …}  │
  │ PM agent              → bounded discussion → structured PRD (tainted, carries provenance) │
@@ -87,14 +87,14 @@ issue / comment  (UNTRUSTED text)
  │   · path policy · dedupe · rate limit · permission re-check       │
  └──────────────────────────────────────────────────────────────────┘
       │   PRD that passes → spec PR on pm/issue-* branch
-      ▼  TRUSTED DEV PLANE · daily cron · Codex session · NO prod secrets · sandboxed · egress-restricted
+      ▼  TRUSTED DEV PLANE · daily cron · Codex session (gpt-5.5) · NO prod secrets · sandboxed · egress-restricted
  ┌──────────────────────────────────────────────────────────────────┐
  │ dev agent implements against the tainted spec → impl PR (codex/issue-*) │
  └──────────────────────────────────────────────────────────────────┘
       │   branch protection + required checks + capability diff-gate (all deterministic, non-bypassable)
       ▼
    merge to main   ──DECOUPLED──▶   DEPLOY PLANE · the ONLY secret-bearing job
-                                    · OIDC short-lived creds · build without prod secrets
+                                    · GitHub Environment secrets (scoped to this job) · build w/o prod secrets
                                     · env protection (human gate initially)
 ```
 
@@ -128,10 +128,13 @@ grouped by the layer they live in. the implementation order is in the companion 
    - **Tier B (human required):** anything else, or capability-gate confidence below threshold.
 
 ### planes, runner, billing
-5. **plane-split billing** (resolves the session-credential risk *and* the cost goal). the **Codex
-   subscription session lives only on the trusted dev runner**; the untrusted PM/security classifier runs on
-   a **cheap metered OpenAI API key + a small model** (classification spend is tiny). the expensive dev work
-   stays on subscription.
+5. **Codex subscription everywhere + model tiering** (owner decision, 2026-06: no metered API key). Every
+   agent — PM, security, dev — runs on the **Codex subscription session**. Cost is managed by **model tier**,
+   not by billing plane: **PM + security → `gpt-5.4`** (cheaper); **dev → `gpt-5.5`**. The consequence: the
+   subscription session *is* present in the untrusted PM/security jobs, so it is a high-value credential
+   there — its protection rests **entirely on runner isolation (#6)**: ephemeral disposable runner + egress
+   allowlist mean a prompt injection can neither persist nor exfiltrate the session. **#6 is therefore the
+   sole control standing between an injected PM prompt and the Codex credential — it must be solid.**
 6. **runner hardening.** self-hosted stays (subscription billing; public-repo runner minutes are free under
    2026 pricing) but becomes **a disposable VM per job**, not just an `--ephemeral` runner *process*.
    egress allowlist (enumerate the real endpoints — `api.github.com`, `objects.githubusercontent.com`,
@@ -160,8 +163,10 @@ grouped by the layer they live in. the implementation order is in the companion 
 
 ### deploy
 10. **decouple deploy from merge.** merge ≠ deploy. deploy is a separate workflow in the deploy plane (the
-    only secret-bearing job). use **OIDC short-lived creds**, **build without prod secrets**, inject runtime
-    secrets at the hosting platform. environment protection rules can be non-human (wait timer, deployment-
+    only secret-bearing job). deploy secrets live in a **GitHub Environment** (owner decision, 2026-06: no
+    OIDC — Environment secrets are acceptable), exposed **only** to the deploy job that references that
+    environment, gated by the environment's protection rules. (OIDC short-lived creds remain a future
+    nice-to-have, not required.) environment protection rules can be non-human (wait timer, deployment-
     branch restriction) **but those govern *when/where*, not *whether the diff is safe*** — so zero-human
     deploy is defensible **only if the capability gate (#3) is excellent**. start with a human deploy gate;
     drop it once the gate has earned trust.
