@@ -24,7 +24,10 @@ Implements Phase 0.3/0.4 of [`../../docs/security-implementation-plan.md`](../..
   Tier-B forcing function (#8, T4).
 - **Required status checks: intentionally NONE** (see the deadlock note below). Agent PRs are gated by the
   *inline* `run-gates.sh` + `capability-gate-pr.sh` in `dev-implement` instead.
-- **No bypass** (`bypass_actors: []`) — not even admins or Actions. The bot cannot merge around the gate.
+- **Bypass = Repository admin only** (`bypass_actors: [RepositoryRole admin]`). The human owner can merge
+  guardrail PRs (a solo owner can't approve their own PR, so they'd otherwise be locked out of `.github`
+  changes). The **bot stays caged**: its merge identity is a repo-scoped GitHub App token, which is *not* an
+  admin role, so it cannot bypass — it can only auto-merge non-guardrail Tier-A PRs (0 approvals, no owner).
 
 ## deliberate choices / tradeoffs (review before applying)
 
