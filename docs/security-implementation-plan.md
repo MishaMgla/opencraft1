@@ -77,11 +77,17 @@ branches `codex/issue-*`.
   jobs physically cannot reach the Codex session.
 - done-check: PM job has no access to the Codex session/creds; dev job runs on the `trusted` runner only.
 
-**1.2 — disposable, egress-restricted runners** *(#6, T7)*
-- change: one **disposable VM per job** (not just `--ephemeral` process); egress allowlist (enumerate real
-  GitHub/registry endpoints); `actions/checkout` `persist-credentials: false` on untrusted jobs; **no cache
-  shared between untrusted and trusted jobs**.
-- done-check: a job cannot reach an arbitrary external host; VM is destroyed post-job; no cross-plane cache.
+**1.2 — disposable, egress-restricted runners** *(#6, T7)* — now **load-bearing** (after 1.1 the Codex
+session lives in untrusted PM jobs; isolation is its only protection).
+- host-side runbook shipped: [`runner-hardening.md`](runner-hardening.md) — (1) `--ephemeral` registration,
+  (2) disposable VM/container per job with the Codex session kept outside job reach, (3) default-deny egress
+  allowlist (GitHub `meta` API + codex/npm/Go/playwright endpoints). This runs on the **runner host**, not
+  in the repo.
+- repo-side note: the read-only guards (`policy-gate`, `secret-segmentation`) already use
+  `persist-credentials: false`; the **agent jobs cannot** (they push branches/PRs) — their isolation is
+  layers 1–3, not credential-dropping. The `AUTO_PAT` isolation (0.2 follow-up) belongs with this phase.
+- done-check: a job cannot reach an arbitrary external host; VM/runner destroyed post-job; no cross-plane
+  cache; a job container cannot read the Codex session or Docker socket.
 
 **1.3 — security agent → structured verdict + deterministic dispatcher** *(#12/#14)*
 - change: security agent emits `{verdict∈enum, confidence, reason, sensitive_paths[]}` only; a **code**
