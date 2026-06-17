@@ -14,6 +14,7 @@ jobs:
     #      the Authorize step below).
     if: |
       github.repository == 'MishaMgla/opencraft1' &&
+      vars.AGENTS_FREEZE != 'true' &&
       (
         (
           github.event_name == 'pull_request' &&

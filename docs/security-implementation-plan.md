@@ -133,11 +133,15 @@ OIDC**; deploy secrets live in a GitHub Environment.
 - done-check: an issue can't loop forever; a duplicate is linked+closed; spend cap trips the freeze.
 
 **3.2 — observability, kill switch, alerts, new-account friction** *(#13/#15/#16)*
-- change: Langfuse tracing with redaction + retention + **no tracing of secret jobs**; `agents:freeze`
-  kill switch checked first by every workflow; Telegram alerts on block/policy-fail/Tier-B/merge/deploy/
-  cost-breach; new/zero-rep accounts → discussion-only until trust accrues.
-- done-check: setting `agents:freeze` halts all agent workflows; traces contain no secrets; a brand-new
-  account's issue does not auto-advance to dev.
+- shipped: **kill switch** — repo Actions variable `AGENTS_FREEZE`; each agent workflow gates its job on
+  `vars.AGENTS_FREEZE != 'true'` (protective workflows policy-gate / secret-segmentation / tests stay
+  running). `gh variable set AGENTS_FREEZE --body true` halts all agents. See
+  [`agents-killswitch.md`](agents-killswitch.md).
+- remaining: Langfuse tracing with redaction + retention + **no tracing of secret jobs**; Telegram alerts on
+  block/policy-fail/Tier-B/merge/deploy/cost-breach; new/zero-rep accounts → discussion-only until trust
+  accrues.
+- done-check: setting `AGENTS_FREEZE=true` halts all agent workflows; (remaining) traces contain no secrets;
+  a brand-new account's issue does not auto-advance to dev.
 
 ---
 
