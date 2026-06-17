@@ -71,11 +71,15 @@ branches `codex/issue-*`.
 
 ## Phase 1 — plane split & runner hardening
 
-**1.1 — split billing across planes** *(#5)*
-- change: untrusted PM/security → metered **OpenAI API key + small model** (new secret, scoped, spend-
-  capped); trusted dev → keep the **Codex subscription session**, on a **separate runner label**. untrusted
-  jobs physically cannot reach the Codex session.
-- done-check: PM job has no access to the Codex session/creds; dev job runs on the `trusted` runner only.
+**1.1 — Codex subscription everywhere + model tiering** *(#5)* — owner decision (2026-06): **no metered API
+key**; keep the Codex subscription for all agents and economize by model tier.
+- shipped: PM (`pm-intake`, `pm-followup`) and the future security agent → **`gpt-5.4`**; dev
+  (`dev-implement`, `dev-revise`) stays **`gpt-5.5`**.
+- consequence: the subscription session is now present in the untrusted PM/security jobs, so it is a
+  high-value credential there. Its sole protection is **runner isolation (1.2)** — ephemeral + egress
+  allowlist — so 1.2 is now load-bearing, not optional.
+- done-check: PM runs on `gpt-5.4`, dev on `gpt-5.5`; (after 1.2) an injected PM prompt cannot persist or
+  exfiltrate the session.
 
 **1.2 — disposable, egress-restricted runners** *(#6, T7)*
 - change: one **disposable VM per job** (not just `--ephemeral` process); egress allowlist (enumerate real
@@ -98,13 +102,15 @@ branches `codex/issue-*`.
 - change: the gate's Tier output drives automerge eligibility; Tier A auto-merges, Tier B → `needs-human`.
 - done-check: Tier A feature auto-merges end-to-end; Tier B halts for review.
 
-**2.2 — decouple deploy, OIDC, build-without-secrets, human gate first** *(#10)*
-- where: new `deploy.yml` + GitHub Environment.
-- change: deploy separate from merge; OIDC short-lived creds; build without prod secrets, inject at hosting
-  platform; environment protection with a **human approval gate initially** (relax to wait-timer/branch-
-  restriction only once 0.5 is proven).
-- done-check: a merge to `main` does not auto-deploy; deploy requires the gate; build job holds no prod
-  secrets.
+**2.2 — decouple deploy, Environment secrets, human gate first** *(#10)* — owner decision (2026-06): **no
+OIDC**; deploy secrets live in a GitHub Environment.
+- where: new `deploy.yml` (or keep `deploy-client.yml`) bound to a protected GitHub **Environment**.
+- change: deploy separate from merge; deploy secrets stored as **Environment secrets**, exposed **only** to
+  the deploy job that references that environment; environment protection with a **human approval gate
+  initially** (relax to wait-timer / branch-restriction once the capability gate is proven). OIDC remains a
+  future nice-to-have, not required.
+- done-check: a merge to `main` does not auto-deploy; deploy requires the environment gate; no agent job
+  can read the Environment secrets.
 
 ---
 

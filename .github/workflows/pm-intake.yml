@@ -61,7 +61,7 @@ jobs:
           gh auth setup-git
           codex exec \
             --cd "$GITHUB_WORKSPACE" \
-            --model gpt-5.5 \
+            --model gpt-5.4 \
             -c model_reasoning_effort="medium" \
             --sandbox danger-full-access \
             --skip-git-repo-check \
