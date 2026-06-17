@@ -22,8 +22,8 @@ Implements Phase 0.3/0.4 of [`../../docs/security-implementation-plan.md`](../..
   [`../CODEOWNERS`](../CODEOWNERS), any PR touching a guardrail path (`.github/**`, security docs,
   Dockerfile, dependency manifests) needs the owner's approval and cannot auto-merge. This is the
   Tier-B forcing function (#8, T4).
-- **Required status checks**: `go engine`, `web client`, `browser e2e` (the `tests` jobs) and
-  `capability-gate` (the keystone diff-gate — Tier B fails the check, blocking auto-merge).
+- **Required status checks: intentionally NONE** (see the deadlock note below). Agent PRs are gated by the
+  *inline* `run-gates.sh` + `capability-gate-pr.sh` in `dev-implement` instead.
 - **No bypass** (`bypass_actors: []`) — not even admins or Actions. The bot cannot merge around the gate.
 
 ## deliberate choices / tradeoffs (review before applying)
@@ -38,9 +38,14 @@ Implements Phase 0.3/0.4 of [`../../docs/security-implementation-plan.md`](../..
 - **`strict_required_status_checks_policy: false`** — avoids forcing every autonomous PR to rebase on the
   latest `main` before merge (churn under concurrent agent PRs). Flip to `true` for stricter safety once
   the merge cadence is understood.
-- **`capability-gate` is now required** — the keystone check (Phase 0.5, `.github/workflows/policy-gate.yml`)
-  exists and runs on every PR, so it is listed in `required_status_checks`. It only *blocks* once this
-  ruleset is applied (i.e. at the public flip).
+- **`required_status_checks` removed — DEADLOCK avoidance.** The agents create PRs with `GITHUB_TOKEN`, and
+  GitHub does **not** start `pull_request` workflow runs for `GITHUB_TOKEN`-created events. So `tests` and
+  `capability-gate` never run on agent PRs → a required check would sit "pending" forever → the bot's
+  auto-merge (and the whole cascade) would be **permanently blocked**. Agent PRs are instead gated *inline*
+  in `dev-implement` (`run-gates.sh` + `capability-gate-pr.sh`) before the AUTO_PAT merge. **To make
+  required checks safe, agent PRs must first be created by an identity that triggers workflows — a GitHub
+  App token (not `GITHUB_TOKEN`, and not `AUTO_PAT`, which must not be exposed to the agent).** Re-add the
+  `required_status_checks` rule once that lands.
 
 ## not applied by automation, by design
 
