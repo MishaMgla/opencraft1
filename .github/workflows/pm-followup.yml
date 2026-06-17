@@ -11,6 +11,7 @@ jobs:
     # not /approved (that is dev-implement), not the // discuss escape hatch.
     if: |
       github.repository == 'MishaMgla/opencraft1' &&
+      vars.AGENTS_FREEZE != 'true' &&
       github.event.issue.pull_request == null &&
       github.event.comment.user.login != 'github-actions[bot]' &&
       !contains(github.event.comment.body, '<!-- agent-bot -->') &&

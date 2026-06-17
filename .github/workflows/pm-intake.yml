@@ -10,6 +10,7 @@ jobs:
     # collaborators by the private repo). `pm:skip` opts an issue out.
     if: |
       github.repository == 'MishaMgla/opencraft1' &&
+      vars.AGENTS_FREEZE != 'true' &&
       !contains(github.event.issue.labels.*.name, 'pm:skip')
     runs-on: [self-hosted]
     permissions:
