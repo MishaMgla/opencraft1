@@ -63,9 +63,15 @@ branches `codex/issue-*`.
 - status: **classifier + check shipped** (v1, heuristic). done-check met — verified: docs-only / ordinary
   feature / `author`-path → Tier A (pass); new dependency / `fetch(process.env.SECRET)` / workflow edit /
   external URL / >600-line diff → Tier B (fail).
-- follow-up (not in this step): (a) wire the existing automerge paths (`auto-merge-spec.sh`,
-  dev-implement) to refuse Tier B; (b) harden with `gitleaks` + `semgrep` to catch what regex misses
-  (Layer #6: auth-in-app-code, RLS, symlinks).
+- tuned: content signals now scan **code lines only** — prose files (`.md`/`.txt`/`.rst`,
+  `LICENSE`/`NOTICE`/`CHANGELOG`) are exempt, because documentation legitimately *describes* attack
+  patterns (this repo's own security docs mention `process.env`, `fetch(`, `SECRET`, external URLs). PATH
+  signals still apply to every file, so a `.md` under a denylisted path is still flagged.
+- follow-up: (a) 2.1 done (dev-implement refuses Tier B); (b) harden with `gitleaks` + `semgrep` for what
+  regex misses (auth-in-app-code, RLS, symlinks). **Caveat for whoever adds them:** the security docs
+  contain *example* secrets/URLs, so a naive `gitleaks`/`semgrep` run will flag them — ship a
+  `.gitleaks.toml` / semgrep allowlist that excludes `docs/**` and `*.md` (mirror the prose exemption above)
+  before making either a required check.
 
 ---
 

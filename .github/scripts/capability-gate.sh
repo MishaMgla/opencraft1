@@ -35,13 +35,28 @@ else
 fi
 
 FILES="$(printf '%s\n' "$DIFF" | sed -nE 's;^\+\+\+ b/;;p')"
-ADDED="$(printf '%s\n' "$DIFF" | grep -E '^\+' | grep -vE '^\+\+\+' || true)"
-ADDED_COUNT="$(printf '%s\n' "$ADDED" | grep -c . || true)"
 FILE_COUNT="$(printf '%s\n' "$FILES" | grep -c . || true)"
+
+# Added CODE lines only: added lines from non-prose files. Prose files
+# (.md/.mdx/.txt/.rst, LICENSE/NOTICE/CHANGELOG) are exempt from CONTENT signals
+# because documentation legitimately *describes* attack patterns — this repo's own
+# security docs mention process.env, fetch(, SECRET, external URLs. PATH signals
+# still apply to every file, so a prose file under a denylisted path is still flagged.
+ADDED_CODE="$(printf '%s\n' "$DIFF" | awk '
+  /^diff --git/  { f=""; next }
+  /^\+\+\+ b\//  { f=substr($0,7); next }
+  /^\+\+\+ /     { f=""; next }
+  /^(---|@@)/    { next }
+  /^\+/ {
+    if (f != "" && f !~ /\.(md|mdx|markdown|txt|rst)$/ && f !~ /(^|\/)(LICENSE|NOTICE|CHANGELOG)/)
+      print substr($0,2)
+  }
+')"
+CODE_COUNT="$(printf '%s\n' "$ADDED_CODE" | grep -c . || true)"
 
 reasons=()
 match_path() { printf '%s\n' "$FILES" | grep -qiE "$1"; }
-match_add()  { printf '%s\n' "$ADDED" | grep -qiE "$1"; }
+match_add()  { printf '%s\n' "$ADDED_CODE" | grep -qiE "$1"; }
 
 # --- path-based signals (strongest; least false-prone) ---
 match_path '(^|/)\.github/' \
@@ -64,15 +79,15 @@ match_add 'exec\.Command|child_process|subprocess|os\.system|\beval\(|new Functi
   && reasons+=("adds dynamic exec / subprocess")
 match_add 'SECRET|TOKEN|API[_-]?KEY|_KEY\b|PASSWORD|PRIVATE_KEY|SERVICE_ROLE|CREDENTIAL' \
   && reasons+=("references a secret-like identifier")
-if printf '%s\n' "$ADDED" | grep -oiE 'https?://[a-z0-9._-]+' \
+if printf '%s\n' "$ADDED_CODE" | grep -oiE 'https?://[a-z0-9._-]+' \
      | grep -viE '(github\.com|githubusercontent|localhost|127\.0\.0\.1|example\.(com|org)|opencraft1\.(com|vercel\.app)|pixijs|jsdelivr|unpkg)' \
      | grep -q .; then
   reasons+=("adds an external URL literal")
 fi
 
-# --- size envelope ---
-if [ "${ADDED_COUNT:-0}" -gt "$MAX_ADDED_LINES" ]; then
-  reasons+=("large diff: $ADDED_COUNT added lines > $MAX_ADDED_LINES")
+# --- size envelope (code lines only; large docs-only PRs are not a risk) ---
+if [ "${CODE_COUNT:-0}" -gt "$MAX_ADDED_LINES" ]; then
+  reasons+=("large diff: $CODE_COUNT added code lines > $MAX_ADDED_LINES")
 fi
 
 # --- verdict ---
@@ -88,7 +103,7 @@ if [ "${#reasons[@]}" -eq 0 ]; then TIER=A; else TIER=B; fi
     for r in "${reasons[@]}"; do echo "- $r"; done
   fi
   echo
-  echo "_Heuristic gate v1 (docs/security-architecture.md #3/#4). ${ADDED_COUNT:-0} added lines across ${FILE_COUNT:-0} files._"
+  echo "_Heuristic gate v1 (docs/security-architecture.md #3/#4). ${CODE_COUNT:-0} added code lines (prose exempt) across ${FILE_COUNT:-0} files._"
 } | tee -a "${GITHUB_STEP_SUMMARY:-/dev/null}"
 
 [ -n "${GITHUB_OUTPUT:-}" ] && echo "tier=$TIER" >> "$GITHUB_OUTPUT"
