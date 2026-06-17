@@ -185,8 +185,30 @@ jobs:
         if: steps.implpr.outputs.gate == 'true'
         run: .github/scripts/run-gates.sh
 
-      - name: Auto-merge on green
+      # Keystone (docs/security-architecture.md #3/#4): classify the impl diff's
+      # capabilities INLINE — agent PRs are opened with GITHUB_TOKEN, which does
+      # not trigger the pull_request policy-gate workflow, so the gate that guards
+      # auto-merge must run here, like run-gates.sh. Tier B holds for a human.
+      - name: Capability gate (Tier)
+        id: capgate
         if: steps.implpr.outputs.gate == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/capability-gate-pr.sh ${{ steps.implpr.outputs.pr }}
+
+      - name: Hold Tier B for human
+        if: steps.implpr.outputs.gate == 'true' && steps.capgate.outputs.tier != 'A'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=${{ steps.implpr.outputs.pr }}
+          gh pr edit "$PR" --repo ${{ github.repository }} --add-label needs-human || true
+          gh pr comment "$PR" --repo ${{ github.repository }} --body "🤖 Capability gate: **Tier B** — this diff introduces capabilities that need human review before merge (see the run summary). Not auto-merging. A maintainer can review and merge.
+          <sub>🤖 Dev · capability-gate</sub><!-- agent-bot -->"
+
+      - name: Auto-merge on green
+        if: steps.implpr.outputs.gate == 'true' && steps.capgate.outputs.tier == 'A'
         env:
           GH_TOKEN: ${{ secrets.AUTO_PAT }}
         run: |
