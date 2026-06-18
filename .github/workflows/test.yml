@@ -1,0 +1,64 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  go:
+    name: go engine
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - run: go build ./...
+      - run: go vet ./...
+      # Includes the cross-language golden check: TestWireFixtures fails if any
+      # encoder drifts from the committed web/test/wire_fixtures.json.
+      - run: go test ./...
+
+  web:
+    name: web client
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Install the build-time TS toolchain (no runtime deps ship). `npm test`
+      # type-checks (tsc) then runs Node's built-in test runner against the
+      # emitted JS, validating the protocol mirror vs the Go golden fixtures.
+      - run: npm ci
+        working-directory: web
+      - run: npm test
+        working-directory: web
+
+  e2e:
+    name: browser e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+        working-directory: web
+      # Compile TS -> JS so the Go FileServer can serve web/src/*.js.
+      - run: npm run build
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+      # Playwright's webServer boots `go run ./cmd/server` (from the repo root)
+      # and waits for :8080, then drives headless Chromium through the real
+      # load -> join -> move path. Catches browser-runtime wiring bugs (module
+      # load, pixi CDN load, WebSocket handshake) the unit suites can't see.
+      - run: npx playwright test
+        working-directory: web

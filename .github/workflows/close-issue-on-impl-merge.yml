@@ -1,0 +1,49 @@
+name: Close issue on impl PR merge
+
+# When a Dev-opened impl PR (head codex/issue-<N>-*) merges into main, close
+# the originating issue #<N>. A dedicated workflow because GitHub ignores
+# `closes #N` keywords from bot-authored PRs without write access.
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  close-issue:
+    if: |
+      github.repository == 'MishaMgla/opencraft1' &&
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'codex/issue-')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: read
+
+    steps:
+      - name: Resolve issue number from branch name
+        id: resolve
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          ISSUE=$(echo "$BRANCH" | sed -nE 's|^codex/issue-([0-9]+)-.*|\1|p')
+          if [ -z "$ISSUE" ]; then
+            echo "Could not parse issue number from branch '$BRANCH'; nothing to close." >&2
+            exit 0
+          fi
+          echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+
+      - name: Close issue (idempotent)
+        if: steps.resolve.outputs.issue != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE: ${{ steps.resolve.outputs.issue }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          STATE=$(gh issue view "$ISSUE" --repo ${{ github.repository }} --json state --jq .state 2>/dev/null || echo "MISSING")
+          if [ "$STATE" = "MISSING" ]; then echo "Issue #$ISSUE not found; skipping."; exit 0; fi
+          if [ "$STATE" = "CLOSED" ]; then echo "Issue #$ISSUE already closed; skipping."; exit 0; fi
+          gh issue close "$ISSUE" --repo ${{ github.repository }} \
+            --reason completed \
+            --comment "🤖 Closed automatically — implementation PR $PR_URL merged to main.
+          <sub>🤖 Dev · auto-close</sub><!-- agent-bot -->"

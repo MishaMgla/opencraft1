@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>opencraft1</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #11151c; overflow: hidden; font-family: system-ui, sans-serif; }
+    #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #11151c; z-index: 10; }
+    #name-form { display: flex; gap: 8px; }
+    #name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
+    #name { background: #0c0f14; color: #cfe; }
+    button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
+    #hud { position: fixed; top: 8px; left: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+  </style>
+</head>
+<body>
+  <div id="overlay">
+    <form id="name-form">
+      <input id="name" placeholder="your name" maxlength="16" autocomplete="off" autofocus />
+      <button type="submit">enter world</button>
+    </form>
+  </div>
+  <div id="hud"></div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
