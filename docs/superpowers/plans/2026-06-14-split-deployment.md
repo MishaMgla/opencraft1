@@ -1,5 +1,7 @@
 # Split Deployment (Vercel client / Railway server) Implementation Plan
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Make the opencraft1 repo deployable as two independent halves — the static client on Vercel and the Go engine on Railway — wired across origins by a runtime `/config.json` fetch, an env-gated WS origin allowlist, and `PORT`/`/healthz` for the host.

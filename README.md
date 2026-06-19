@@ -15,7 +15,7 @@ the bet: **build the scalable real-time engine first, decide what the world is _
 |---|---|
 | the product vision / north star | [`docs/vision.md`](docs/vision.md) |
 | the MVP scope & requirements (PRD) | [`docs/prd/mvp.md`](docs/prd/mvp.md) |
-| the MVP engine architecture | [`docs/superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md`](docs/superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md) |
+| the MVP engine architecture | [`docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md`](docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md) |
 | rules for working in this repo | [`AGENT_RULES.md`](AGENT_RULES.md) |
 | repo navigation hub | [`docs/project-map/README.md`](docs/project-map/README.md) |
 

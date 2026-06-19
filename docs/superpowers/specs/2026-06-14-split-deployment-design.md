@@ -1,8 +1,10 @@
 # split deployment: client (Vercel) / server (Railway) — design
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 **status:** approved, pre-implementation
 **date:** 2026-06-14
-**supersedes nothing.** extends the MVP engine (`2026-06-11-opencraft1-mvp-engine-design.md`) with a deployment topology. no engine-logic or wire-format changes.
+**supersedes nothing.** extends the MVP engine (`2026-06-11-opencraft-mvp-engine-design.md`) with a deployment topology. no engine-logic or wire-format changes.
 
 ## problem
 

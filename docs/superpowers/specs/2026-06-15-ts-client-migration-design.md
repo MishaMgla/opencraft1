@@ -1,5 +1,7 @@
 # typescript migration of the web client — design
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 **status:** approved, pre-implementation
 **date:** 2026-06-15
 **scope:** `web/` client only. the Go engine (`cmd/`, `internal/`) is untouched.

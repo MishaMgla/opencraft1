@@ -1,5 +1,7 @@
 # PM + Dev Agent Flow — Design
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 **Date:** 2026-06-11
 **Repo:** `MishaMgla/opencraft1` (private, default branch `main`)
 **Status:** Approved design, pending implementation plan

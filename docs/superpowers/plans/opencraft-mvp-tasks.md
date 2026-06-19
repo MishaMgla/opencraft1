@@ -1,5 +1,7 @@
 # opencraft1 MVP — Ralph Task Tracker
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 > **Single source of truth for build progress.** The orchestrator (main Claude) reads
 > this file every iteration, picks the next ready task, dispatches ONE subagent to do it,
 > verifies, then marks it done. Subagents implement; the orchestrator verifies + commits.

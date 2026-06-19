@@ -1,5 +1,7 @@
 # Nearby player visible
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 ## Goal
 
 Make every connected player visible to every other connected player anywhere within the current map bounds.

@@ -60,10 +60,6 @@ single source of truth for rules and documentation pointers shared by all AI cod
 - `cd web && npm run test:e2e` — run the browser smoke test (boots the Go server + headless Chromium; needs `npx playwright install chromium` once).
 - `go test ./internal/wire -update` — regenerate the shared Go↔JS protocol golden fixtures after a wire-format change (then run both suites).
 
-- `tsx scripts/build-index.ts` regenerates `docs/project-map/index/*.json` from `src/`. it has no npm dependencies but is TypeScript, so it needs a TS runner (`tsx`, or Node ≥22.6 with `--experimental-strip-types`); this repo is on Node 20 with no runner installed, so it does not run yet. once a `package.json` and toolchain exist, alias it as `yarn index` and add a `yarn index:check` that rebuilds + fails on drift.
-
-> the generator produces empty results until `src/app`, `src/components/ui`, and `src/` exist; the committed index files are hand-seeded with that empty output for now.
-
 ## deployment & environment
 
 split deployment: static client → Vercel, Go engine → Railway. full runbook in `docs/deploy.md`.
@@ -74,7 +70,9 @@ split deployment: static client → Vercel, Go engine → Railway. full runbook 
 | `ALLOWED_ORIGINS` | engine | comma-separated WS origin host patterns; empty = allow all (dev). set to the Vercel host(s) in prod. |
 | `WS_URL` | client (Vercel) | `wss://` engine endpoint returned by `/config.json`, e.g. `wss://<service>.up.railway.app/ws`. |
 
-config files: `Dockerfile` + `railway.json` (engine), `web/vercel.json` + `web/api/config.js` (client). document new vars in `.env.example`.
+config files: `Dockerfile` + `railway.json` (engine), `web/vercel.json` + `web/api/config.ts` (client). document new vars in `.env.example`.
+
+runtime config bridge (client): the browser fetches `/config.json`, which `web/vercel.json` rewrites to the `web/api/config.ts` serverless function; that function returns `{ wsUrl: WS_URL }`. `web/src/config.ts` (`resolveWsUrl()`, called from `web/src/main.ts`) consumes it, falling back to same-origin `ws://<host>/ws` when `/config.json` is absent (local single-process dev). this is two halves of one mechanism — do not mistake `web/api/config.ts` and `web/src/config.ts` for duplicate/dead config.
 
 ## common pitfalls
 
@@ -91,11 +89,10 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 | task area | read this |
 |---|---|
 | repo overview | `docs/project-map/README.md` |
-| look up routes, pages, components, exported symbols | `docs/project-map/index/README.md` (machine-readable JSON) |
 | project-specific terms / acronyms | `docs/project-map/glossary.md` |
 | product vision / north star | `docs/vision.md` |
 | MVP product requirements | `docs/prd/mvp.md` |
-| MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md` |
+| MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
 | Go engine (server / sim / wire / grid) | `docs/project-map/server.md` |
 | web client (render / net / input) | `docs/project-map/client.md` |
 | PM/Dev agent system (workflows, prompts, permissions) | `docs/project-map/agents.md` |

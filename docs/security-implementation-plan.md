@@ -6,6 +6,11 @@ rollout of [`security-architecture.md`](security-architecture.md), in dependency
 > **gate:** the repo must **not** be flipped to public until **Phase 0 is complete and verified**. Phase 0
 > closes the exploits that exist the instant an untrusted user can open an issue (T1–T4).
 
+> **canonical source.** the threat model (T1–T7), the keystone, and the control taxonomy are defined once in
+> [`security-architecture.md`](security-architecture.md). this plan only **references** those `T#` tags and
+> controls by number; it does not redefine them. if the model changes, edit the architecture doc — not here —
+> to avoid the two drifting apart.
+
 current stack the plan edits: self-hosted runner; `codex exec --model gpt-5.5` for PM + dev; workflows
 `pm-intake.yml`, `pm-followup.yml`, `dev-implement.yml`, `dev-revise.yml`, `close-issue-on-impl-merge.yml`;
 gate `.github/scripts/authorize.sh` + `.github/agents-allowlist.txt`; spec branches `pm/issue-*`, impl

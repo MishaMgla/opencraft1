@@ -1,5 +1,7 @@
 # PM + Dev Agent Flow Implementation Plan
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Stand up a GitHub-Actions PM+Dev agent pipeline on `MishaMgla/opencraft1` where issues/PRs are steered only by the originating issue's author or a hardcoded allowlist.
