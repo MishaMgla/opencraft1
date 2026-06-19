@@ -1,5 +1,7 @@
 # opencraft1 MVP Engine Implementation Plan
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build the opencraft1 MVP — a single shared isometric world where many players join, move, and see each other move in real time.
@@ -8,7 +10,7 @@
 
 **Tech Stack:** Go 1.23 · `github.com/coder/websocket` · PixiJS v8 (ESM via CDN) · vanilla JS, no bundler.
 
-**Source docs:** [`../../prd/mvp.md`](../../prd/mvp.md) · [`../specs/2026-06-11-opencraft1-mvp-engine-design.md`](../specs/2026-06-11-opencraft1-mvp-engine-design.md)
+**Source docs:** [`../../prd/mvp.md`](../../prd/mvp.md) · [`../specs/2026-06-11-opencraft-mvp-engine-design.md`](../specs/2026-06-11-opencraft-mvp-engine-design.md)
 
 > **Testing note:** `AGENT_RULES.md` forbids unsolicited automated tests. This plan therefore verifies with **build + vet + run + observe**, not test-first. The unit/load-test surface from the design (wire round-trips, grid math, load harness) is deferred until explicitly greenlit — see the final task.
 

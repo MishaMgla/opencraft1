@@ -1,5 +1,7 @@
 # design — opencraft1 MVP engine
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 - **date:** 2026-06-11
 - **status:** approved for planning
 - **product context:** [`../../vision.md`](../../vision.md) · [`../../prd/mvp.md`](../../prd/mvp.md)

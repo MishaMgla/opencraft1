@@ -3,7 +3,7 @@
 - **status:** draft for build
 - **date:** 2026-06-11
 - **vision:** [`../vision.md`](../vision.md)
-- **engine design (technical):** [`../superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md`](../superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md)
+- **engine design (technical):** [`../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md`](../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md)
 
 ## 1. summary
 

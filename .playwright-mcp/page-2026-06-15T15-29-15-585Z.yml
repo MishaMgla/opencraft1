@@ -1,3 +1,0 @@
-- generic [ref=e3]:
-  - textbox "your name" [active] [ref=e4]
-  - button "enter world" [ref=e5] [cursor=pointer]

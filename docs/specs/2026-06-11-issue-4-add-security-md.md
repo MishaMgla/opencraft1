@@ -1,5 +1,7 @@
 # spec: Add SECURITY.md with a one-line policy (#4)
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 ## Goal
 
 Add a top-level `SECURITY.md` file that tells security reporters where to submit vulnerability reports.

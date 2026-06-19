@@ -1,5 +1,7 @@
 # TypeScript Client Migration Implementation Plan
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Migrate the `web/` client from JavaScript to TypeScript using `tsc` as a 1:1 type-strip compiler, with no bundler and no runtime dependencies, leaving the Go engine, deploy topology, and wire protocol untouched.

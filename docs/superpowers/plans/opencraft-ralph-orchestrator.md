@@ -1,5 +1,7 @@
 # opencraft1 MVP — Ralph Orchestrator Prompt
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 This is the prompt fed back to the main session each Ralph iteration. The main process
 is the **orchestrator**: it does NOT write feature code itself — it dispatches one
 subagent per task, verifies the result, and commits. Launch with the command at the bottom.

@@ -1,6 +1,6 @@
 # opencraft1 — product vision
 
-> north-star description. the "why" and the long shape. the MVP scope lives in [`prd/mvp.md`](prd/mvp.md); the engine design lives in [`superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md`](superpowers/specs/2026-06-11-opencraft1-mvp-engine-design.md).
+> north-star description. the "why" and the long shape. the MVP scope lives in [`prd/mvp.md`](prd/mvp.md); the engine design lives in [`superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md`](superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md).
 
 ## one line
 

@@ -1,5 +1,7 @@
 # Return JSON from /healthz endpoint
 
+> **Status:** implemented — historical record of work already merged to `main`. Kept for design rationale; **not** active instructions.
+
 ## Goal
 
 Change the `/healthz` liveness endpoint to return a small JSON response while preserving its successful health-check semantics.

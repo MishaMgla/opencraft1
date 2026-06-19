@@ -8,6 +8,9 @@ web/test/*.js
 test-results/
 playwright-report/
 
+# Playwright-MCP session dumps (console logs + page snapshots)
+.playwright-mcp/
+
 .env
 .env.*
 !.env.example
