@@ -15,25 +15,28 @@
 ╚═══════════════════════════════════════════════════════════════════════════════════════╝
 
 
+
     ╭──────────────────────────────────────────────────────────────────────╮
-    │ ▌ half game ::: half open experiment letting strangers build           │
-    │ ▌             together.                                                 │
+    │  half game                                                           │
+    │  half open experiment letting strangers built together.              │
     ╰──────────────────────────────────────────────────────────────────────╯
 
        ┌─[ play  ]──▶  opencraft1.com
        │              https://opencraft1.com
        │
-       └─[ build ]──▶  open an issue : no fork, no setup, just write
-                      an idea to an issue.
-                      https://github.com/MishaMgla/opencraft1/issues/new
+       └─[ build ]──▶  open an issue : no fork, no setup,
+                       just write an idea to an issue.
+                       https://github.com/MishaMgla/opencraft1/issues/new
+
 
 
     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
     █▓▒░                          H O W   T O                            ░▒▓█
     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 
-       you don't send code. you send an _idea_, and a couple of AI agents
-       argue it into existence.
+       you don't send code.
+       you send an idea,
+       and a couple of AI agents argue it into existence.
 
     ╭─ example ────────────────────────────────────────────────────────────╮
     │                                                                       │
@@ -51,9 +54,10 @@
 
        under the hood that's a pipeline you can watch happen in public:
 
-       ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
-         your idea ──▶ [ pm agent ] ──▶ spec ──▶ [ dev agent ] ──▶ PR ──▶ ✓ green ──▶ live
-       ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+your idea ──▶ [ pm agent ] ──▶ spec ──▶ [ dev agent ] ──▶ PR ──▶ ✓ green ──▶ live
+┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄       
+
 
 
     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
@@ -70,9 +74,7 @@
     ├─◆─[ the client ]
     │   a vanilla browser app with ZERO runtime dependencies.
     │   pixijs (webgl/webgpu) draws the world; plain DOM draws the HUD.
-    │   ▶ https://pixijs.com
     │
     └─◆─[ the agents ]
         Codex-based PM + Dev agents living in GitHub Actions.
-        the full machinery ▶ docs/project-map/agents.md
 ```
