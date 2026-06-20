@@ -8,8 +8,11 @@ Add under **Settings → Secrets and variables → Actions**:
 
 - `AUTO_PAT` — a **fine-grained** personal access token scoped to the
   `opencraft1` repo with: Contents = Read/Write, Pull requests = Read/Write,
-  Issues = Read/Write. Used for merges that must cascade to the next workflow
-  (a `GITHUB_TOKEN` merge does not trigger new workflow runs).
+  Issues = Read/Write, **Variables = Read/Write**. Used for merges that must
+  cascade to the next workflow (a `GITHUB_TOKEN` merge does not trigger new
+  workflow runs), and for the quota-recovery flow to toggle the
+  `AGENTS_QUOTA_FREEZE` Actions variable (`GITHUB_TOKEN` cannot manage
+  variables). See [`agents-quota-recovery.md`](agents-quota-recovery.md).
 
 The agents authenticate to Codex via a ChatGPT subscription stored **on the
 runner** (step 2), so no model API key is kept as a repo secret and there is no

@@ -12,11 +12,27 @@ Each agent workflow (`pm-intake`, `pm-followup`, `dev-implement`, `dev-revise`) 
 if: |
   github.repository == 'MishaMgla/opencraft1' &&
   vars.AGENTS_FREEZE != 'true' &&
-  ...
+  (
+    github.event_name == 'workflow_dispatch' ||           # quota-recovery resume
+    ( vars.AGENTS_QUOTA_FREEZE != 'true' && ... )          # normal event triggers
+  )
 ```
 
-When `AGENTS_FREEZE == 'true'`, those jobs are skipped — **no agent (codex) runs, no comment, no merge.**
-Unset/anything-else → agents run normally (fail-safe default).
+When `AGENTS_FREEZE == 'true'`, those jobs are skipped — **no agent (codex) runs, no comment, no merge** —
+including the quota-recovery resume path. Unset/anything-else → agents run normally (fail-safe default).
+
+### `AGENTS_FREEZE` vs `AGENTS_QUOTA_FREEZE`
+
+There are **two** freeze variables, and they are not interchangeable:
+
+- **`AGENTS_FREEZE`** — the **manual** operator kill switch (this doc). Highest priority; blocks everything,
+  including resume. **Only a human sets or clears it.** The automated recovery flow never touches it.
+- **`AGENTS_QUOTA_FREEZE`** — set automatically when a Codex run hits the subscription usage limit, and
+  cleared automatically by `agents-recover.yml` once quota returns. It pauses normal event triggers but is
+  bypassed by the recovery `workflow_dispatch` resume. See
+  [`agents-quota-recovery.md`](agents-quota-recovery.md).
+
+Keeping them separate means the recovery cron can never override an operator's incident freeze.
 
 The protective workflows — `policy-gate` (capability gate), `secret-segmentation`, and `tests` — are
 **deliberately not** frozen: they only inspect PRs and must keep running even during a freeze.

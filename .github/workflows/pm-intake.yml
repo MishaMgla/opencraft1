@@ -3,15 +3,35 @@ name: PM Intake
 on:
   issues:
     types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue number to (re)run intake on — quota-recovery resume entrypoint"
+        required: false
+      pr:
+        description: "Unused for this stage (kept uniform across agent workflows)"
+        required: false
+      comment_body:
+        description: "Unused for this stage"
+        required: false
 
 jobs:
   pm-intake:
     # Open intake: any issue opener triggers the PM agent (bounded to
     # collaborators by the private repo). `pm:skip` opts an issue out.
+    # workflow_dispatch is the quota-recovery resume entrypoint: pre-authorized,
+    # skips the intake-time abuse/security gates (already passed), and bypasses
+    # the AGENTS_FREEZE gate so recovery runs while the freeze is being lifted.
     if: |
       github.repository == 'MishaMgla/opencraft1' &&
       vars.AGENTS_FREEZE != 'true' &&
-      !contains(github.event.issue.labels.*.name, 'pm:skip')
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          vars.AGENTS_QUOTA_FREEZE != 'true' &&
+          !contains(github.event.issue.labels.*.name, 'pm:skip')
+        )
+      )
     runs-on: [self-hosted]
     permissions:
       contents: write
@@ -33,6 +53,7 @@ jobs:
       # dedupe for the open intake. proceed=false skips the agent run.
       - name: Abuse gate
         id: abuse
+        if: github.event_name != 'workflow_dispatch'
         env:
           ISSUE: ${{ github.event.issue.number }}
           ACTOR: ${{ github.event.issue.user.login }}
@@ -75,13 +96,37 @@ jobs:
           VERDICT_FILE: ${{ runner.temp }}/verdict.json
         run: .github/scripts/security-dispatch.sh
 
+      # Normalize the trigger: resolve the issue number and an effective proceed
+      # flag for both the issues-opened path (gated by abuse+security) and the
+      # workflow_dispatch resume path (pre-authorized).
+      - name: Resolve context
+        id: ctx
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ISSUE="${{ inputs.issue }}"
+            [ -n "$ISSUE" ] || { echo "workflow_dispatch resume requires an 'issue' input; aborting." >&2; exit 1; }
+            echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "issue=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+            if [ "${{ steps.abuse.outputs.proceed }}" = "true" ] && [ "${{ steps.security.outputs.proceed }}" = "true" ]; then
+              echo "proceed=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "proceed=false" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
       - name: Build prompt
-        if: steps.abuse.outputs.proceed == 'true' && steps.security.outputs.proceed == 'true'
+        if: steps.ctx.outputs.proceed == 'true'
         id: load
         env:
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          ISSUE=${{ steps.ctx.outputs.issue }}
+          # Fetch title/body via gh so this works on both the event and resume paths.
+          DATA=$(gh issue view "$ISSUE" --json title,body)
+          ISSUE_TITLE=$(echo "$DATA" | jq -r '.title')
+          ISSUE_BODY=$(echo "$DATA" | jq -r '.body')
           {
             echo 'prompt<<PROMPT_EOF'
             cat .github/prompts/pm-system.md
@@ -89,26 +134,26 @@ jobs:
             echo '---'
             echo ''
             echo "RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            echo "ISSUE NUMBER: ${{ github.event.issue.number }}"
+            echo "ISSUE NUMBER: $ISSUE"
             echo "ISSUE TITLE: $ISSUE_TITLE"
             echo ''
             echo "ISSUE BODY:"
             echo "$ISSUE_BODY"
             echo ''
-            echo "ACTION: run the self-audit at .github/prompts/self-audit.md. If AMBIGUOUS INTENT fires, post ONE clarifying question on issue #${{ github.event.issue.number }}. Otherwise follow .github/prompts/pm-draft-spec.md to draft and open the spec PR directly. Use gh + git."
+            echo "ACTION: run the self-audit at .github/prompts/self-audit.md. If PRODUCT SCOPE fires, follow the redirect-mode section of .github/prompts/pm-system.md and post ONE kind redirect on issue #$ISSUE (do not draft, do not close). Else if AMBIGUOUS INTENT fires, post ONE clarifying question on issue #$ISSUE. Otherwise follow .github/prompts/pm-draft-spec.md to draft and open the spec PR directly. Use gh + git."
             echo 'PROMPT_EOF'
           } >> "$GITHUB_OUTPUT"
 
       - name: Run Codex (PM agent)
-        if: steps.abuse.outputs.proceed == 'true' && steps.security.outputs.proceed == 'true'
+        id: codex
+        if: steps.ctx.outputs.proceed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROMPT: ${{ steps.load.outputs.prompt }}
         run: |
-          command -v codex >/dev/null || { echo "::error::codex CLI not installed/authenticated on the self-hosted runner — see docs/agents-setup.md"; exit 1; }
           gh auth setup-git
-          codex exec \
+          .github/scripts/run-codex.sh \
             --cd "$GITHUB_WORKSPACE" \
             --model gpt-5.4 \
             -c model_reasoning_effort="medium" \
@@ -116,11 +161,24 @@ jobs:
             --skip-git-repo-check \
             "$PROMPT"
 
+      # Quota block: mark the issue + freeze; agents-recover.yml resumes this
+      # stage once quota returns. Wrapper exits 0, so the steps below skip and
+      # failure() does not fire.
+      - name: Mark quota block & freeze
+        if: steps.codex.outputs.quota_blocked == 'true'
+        env:
+          STAGE: pm-intake
+          ISSUE: ${{ steps.ctx.outputs.issue }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FREEZE_TOKEN: ${{ secrets.AUTO_PAT }}
+        run: .github/scripts/mark-quota-blocked.sh
+
       - name: Auto-merge spec PR (PAT cascade to dev-implement)
-        if: success() && steps.abuse.outputs.proceed == 'true' && steps.security.outputs.proceed == 'true'
+        if: success() && steps.ctx.outputs.proceed == 'true' && steps.codex.outputs.quota_blocked != 'true'
         env:
           GH_TOKEN: ${{ secrets.AUTO_PAT }}
-          ISSUE: ${{ github.event.issue.number }}
+          ISSUE: ${{ steps.ctx.outputs.issue }}
         run: .github/scripts/auto-merge-spec.sh
 
       - name: Post failure comment on error
@@ -128,7 +186,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} \
+          gh issue comment ${{ steps.ctx.outputs.issue || github.event.issue.number }} \
             --repo ${{ github.repository }} \
             --body "🤖 PM intake failed. See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           <sub>🤖 PM · auto-error</sub><!-- agent-bot -->"

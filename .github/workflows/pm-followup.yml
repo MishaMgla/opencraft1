@@ -3,21 +3,40 @@ name: PM Followup
 on:
   issue_comment:
     types: [created]
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue number — quota-recovery resume entrypoint"
+        required: false
+      pr:
+        description: "Unused for this stage (kept uniform across agent workflows)"
+        required: false
+      comment_body:
+        description: "The triggering comment body to replay on resume"
+        required: false
 
 jobs:
   pm-followup:
     # Cheap inline pre-filter; authoritative author/allowlist check is the
     # Authorize step below. Only comments on issues (not PRs), not from the bot,
     # not /approved (that is dev-implement), not the // discuss escape hatch.
+    # workflow_dispatch is the quota-recovery resume entrypoint: pre-authorized
+    # and bypasses the AGENTS_FREEZE gate.
     if: |
       github.repository == 'MishaMgla/opencraft1' &&
       vars.AGENTS_FREEZE != 'true' &&
-      github.event.issue.pull_request == null &&
-      github.event.comment.user.login != 'github-actions[bot]' &&
-      !contains(github.event.comment.body, '<!-- agent-bot -->') &&
-      !startsWith(github.event.comment.body, '/approved') &&
-      !startsWith(github.event.comment.body, '//') &&
-      !contains(github.event.issue.labels.*.name, 'pm:skip')
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          vars.AGENTS_QUOTA_FREEZE != 'true' &&
+          github.event.issue.pull_request == null &&
+          github.event.comment.user.login != 'github-actions[bot]' &&
+          !contains(github.event.comment.body, '<!-- agent-bot -->') &&
+          !startsWith(github.event.comment.body, '/approved') &&
+          !startsWith(github.event.comment.body, '//') &&
+          !contains(github.event.issue.labels.*.name, 'pm:skip')
+        )
+      )
     runs-on: [self-hosted]
     permissions:
       contents: write
@@ -32,6 +51,7 @@ jobs:
 
       - name: Authorize
         id: auth
+        if: github.event_name != 'workflow_dispatch'
         env:
           ACTOR: ${{ github.event.comment.user.login }}
           OWNER_ISSUE: ${{ github.event.issue.number }}
@@ -39,7 +59,7 @@ jobs:
         run: .github/scripts/authorize.sh
 
       - name: Reject unauthorized commenter
-        if: steps.auth.outputs.authorized != 'true'
+        if: github.event_name != 'workflow_dispatch' && steps.auth.outputs.authorized != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -48,20 +68,35 @@ jobs:
             --body "🤖 Only a maintainer with write access (or an allowlisted maintainer) can steer this issue's agent. Ignoring this comment.
           <sub>🤖 PM · auth</sub><!-- agent-bot -->"
 
+      # Normalize trigger: issue number + effective authorization. The resume
+      # (workflow_dispatch) path is pre-authorized.
+      - name: Resolve context
+        id: ctx
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ISSUE="${{ inputs.issue }}"
+            [ -n "$ISSUE" ] || { echo "resume requires an 'issue' input; aborting." >&2; exit 1; }
+            echo "issue=$ISSUE" >> "$GITHUB_OUTPUT"
+            echo "authorized=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "issue=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+            echo "authorized=${{ steps.auth.outputs.authorized }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure git
-        if: steps.auth.outputs.authorized == 'true'
+        if: steps.ctx.outputs.authorized == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Decide mode (draft / revise / question)
         id: mode
-        if: steps.auth.outputs.authorized == 'true'
+        if: steps.ctx.outputs.authorized == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_BODY: ${{ github.event.comment.body || inputs.comment_body }}
         run: |
-          ISSUE=${{ github.event.issue.number }}
+          ISSUE=${{ steps.ctx.outputs.issue }}
           OPEN_SPEC=$(gh pr list --repo ${{ github.repository }} \
             --search "head:pm/issue-$ISSUE-" --state open --json number --jq '.[0].number // ""')
           if [[ "$COMMENT_BODY" == /ready* ]]; then
@@ -74,11 +109,11 @@ jobs:
 
       - name: Skip /ready if spec PR already exists
         id: spec_check
-        if: steps.auth.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft'
+        if: steps.ctx.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ISSUE=${{ github.event.issue.number }}
+          ISSUE=${{ steps.ctx.outputs.issue }}
           EXISTING=$(gh pr list --repo ${{ github.repository }} \
             --search "head:pm/issue-$ISSUE-" --state all --json number --jq '.[0].number // ""')
           if [ -n "$EXISTING" ]; then
@@ -92,10 +127,10 @@ jobs:
 
       - name: Build prompt
         id: load
-        if: steps.auth.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
+        if: steps.ctx.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_BODY: ${{ github.event.comment.body || inputs.comment_body }}
         run: |
           MODE="${{ steps.mode.outputs.mode }}"
           case "$MODE" in
@@ -103,7 +138,7 @@ jobs:
             revise)   PROMPT_FILE=.github/prompts/pm-revise-spec.md ;;
             question) PROMPT_FILE=.github/prompts/pm-system.md ;;
           esac
-          ISSUE=${{ github.event.issue.number }}
+          ISSUE=${{ steps.ctx.outputs.issue }}
           COMMENTS=$(gh issue view "$ISSUE" --comments --json title,body,comments)
           {
             echo 'prompt<<PROMPT_EOF'
@@ -123,15 +158,15 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Run Codex (PM agent)
-        if: steps.auth.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
+        id: codex
+        if: steps.ctx.outputs.authorized == 'true' && steps.spec_check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROMPT: ${{ steps.load.outputs.prompt }}
         run: |
-          command -v codex >/dev/null || { echo "::error::codex CLI not installed/authenticated on the self-hosted runner — see docs/agents-setup.md"; exit 1; }
           gh auth setup-git
-          codex exec \
+          .github/scripts/run-codex.sh \
             --cd "$GITHUB_WORKSPACE" \
             --model gpt-5.4 \
             -c model_reasoning_effort="medium" \
@@ -139,11 +174,24 @@ jobs:
             --skip-git-repo-check \
             "$PROMPT"
 
+      # Quota block: mark + freeze; agents-recover.yml replays this comment on
+      # resume. Wrapper exits 0, so the steps below skip and failure() is silent.
+      - name: Mark quota block & freeze
+        if: steps.codex.outputs.quota_blocked == 'true'
+        env:
+          STAGE: pm-followup
+          ISSUE: ${{ steps.ctx.outputs.issue }}
+          COMMENT_BODY: ${{ github.event.comment.body || inputs.comment_body }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FREEZE_TOKEN: ${{ secrets.AUTO_PAT }}
+        run: .github/scripts/mark-quota-blocked.sh
+
       - name: Auto-merge spec PR (PAT cascade)
-        if: success() && steps.auth.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft' && steps.spec_check.outputs.skip != 'true'
+        if: success() && steps.ctx.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft' && steps.spec_check.outputs.skip != 'true' && steps.codex.outputs.quota_blocked != 'true'
         env:
           GH_TOKEN: ${{ secrets.AUTO_PAT }}
-          ISSUE: ${{ github.event.issue.number }}
+          ISSUE: ${{ steps.ctx.outputs.issue }}
         run: .github/scripts/auto-merge-spec.sh
 
       - name: Post failure comment on error
@@ -151,7 +199,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} \
+          gh issue comment ${{ steps.ctx.outputs.issue || github.event.issue.number }} \
             --repo ${{ github.repository }} \
             --body "🤖 PM followup failed (mode=${{ steps.mode.outputs.mode || 'unknown' }}). See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           <sub>🤖 PM · auto-error</sub><!-- agent-bot -->"

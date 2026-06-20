@@ -7,10 +7,12 @@ is pre-authenticated with a ChatGPT subscription — see `docs/agents-setup.md`.
 
 ## flow
 
-1. **Issue opened** → `pm-intake.yml` runs the PM agent. It either asks one
-   clarifying question or drafts a spec to `docs/specs/<date>-issue-<N>-<slug>.md`
-   on branch `pm/issue-<N>-<slug>`, opens a spec PR, and auto-merges it
-   (`AUTO_PAT`), which cascades to dev-implement.
+1. **Issue opened** → `pm-intake.yml` runs the PM agent. Its self-audit
+   (`self-audit.md`) picks one of three modes: **redirect** (out of product
+   scope — see below), **question** (one clarifying question), or **draft** (write
+   a spec to `docs/specs/<date>-issue-<N>-<slug>.md` on branch
+   `pm/issue-<N>-<slug>`, open a spec PR, auto-merge with `AUTO_PAT`, cascading to
+   dev-implement).
 2. **Issue comment** → `pm-followup.yml` runs the PM agent to answer, draft
    (`/ready`), or revise the open spec.
 3. **Spec PR merged** (or `/approved` on the issue) → `dev-implement.yml` runs
@@ -27,6 +29,18 @@ may steer issue N (and its `pm/issue-N-*` / `codex/issue-N-*` PRs) only if they
 authored issue N or appear in `.github/agents-allowlist.txt`. Opening an issue is
 open to any collaborator (the repo is private). Spec-merge → dev-implement is
 gated by write-access-to-merge, not the author check.
+
+## product-scope guardrail
+
+Distinct from the security classifier (spam / abuse / injection / malicious code,
+which closes/locks). This is a **soft product** guardrail: issues should improve
+the game, not start over. If an ask is teardown/pivot (rebuild from scratch, wipe
+the codebase, swap to a different project), the PM enters **redirect mode** — it
+posts one kind comment that affirms the interest, explains opencraft1 grows
+additively on its engine, and proposes a concrete game-improving alternative. It
+never closes, locks, or labels, and never drafts a spec for the teardown ask. The
+rule lives in `AGENT_RULES.md` ("product scope"); the logic is in `self-audit.md`
++ `pm-system.md` (redirect mode), with a backstop check in `pm-draft-spec.md`.
 
 ## escape hatches
 
