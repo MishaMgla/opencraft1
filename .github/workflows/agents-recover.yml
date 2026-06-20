@@ -1,0 +1,73 @@
+name: Agents Recover
+
+# Recovers work stranded when Codex's subscription quota was exhausted. While the
+# pipeline is frozen (vars.AGENTS_FREEZE == 'true'), this cron probes whether
+# quota is back with one cheap read-only Codex call; when it is, it re-dispatches
+# every quota-blocked item to its agent workflow and lifts the freeze.
+# See docs/superpowers/specs/2026-06-20-codex-quota-recovery-design.md.
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  recover:
+    if: github.repository == 'MishaMgla/opencraft1'
+    runs-on: [self-hosted]
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+      actions: write   # to re-dispatch agent workflows (workflow_dispatch)
+    steps:
+      - uses: actions/checkout@v6
+
+      # Recover only when the QUOTA freeze is active, and never while the operator's
+      # manual AGENTS_FREEZE kill switch is on (recovery must not override an
+      # incident freeze). Manual runs are allowed through for testing the probe.
+      - name: Gate on freeze state
+        id: gate
+        run: |
+          if [ "${{ vars.AGENTS_FREEZE }}" = "true" ]; then
+            echo "Manual AGENTS_FREEZE is on — operator is in control; not recovering."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ vars.AGENTS_QUOTA_FREEZE }}" = "true" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Pipeline not quota-frozen — nothing to recover."
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Cheapest possible Codex call; the wrapper classifies a quota block and
+      # exposes quota_blocked. continue-on-error so we can branch on the outcome
+      # (a hard error, e.g. codex missing, must not look like "quota back").
+      - name: Probe Codex quota
+        id: probe
+        if: steps.gate.outputs.proceed == 'true'
+        continue-on-error: true
+        run: |
+          .github/scripts/run-codex.sh --sandbox read-only --skip-git-repo-check \
+            --model gpt-5.4 "Reply with the single word: OK"
+
+      - name: Decide recovery
+        id: decide
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          if [ "${{ steps.probe.outputs.quota_blocked }}" = "true" ]; then
+            echo "Still quota-blocked — waiting for the next tick."
+            echo "recover=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ steps.probe.outcome }}" = "success" ]; then
+            echo "Probe succeeded — quota is back."
+            echo "recover=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Probe errored for a non-quota reason — not recovering this tick."
+            echo "recover=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Re-dispatch stranded stages and unfreeze
+        if: steps.decide.outputs.recover == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FREEZE_TOKEN: ${{ secrets.AUTO_PAT }}
+        run: .github/scripts/recover-dispatch.sh

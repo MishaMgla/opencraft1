@@ -45,8 +45,11 @@ the 429-retry-exhausted string (preferring the `--json` error event).
 ## Decisions (from brainstorming)
 
 1. **Recovery trigger:** scheduled cron, auto-resume (no human in the loop).
-2. **Auto-freeze:** on detection, set `AGENTS_FREEZE=true` (the existing
-   kill-switch all four workflows already gate on); recovery clears it.
+2. **Auto-freeze:** on detection, set a **dedicated** `AGENTS_QUOTA_FREEZE=true`
+   variable; recovery clears it. (Implementation note: this is intentionally NOT
+   the manual `AGENTS_FREEZE` kill-switch — the recovery cron clears the quota
+   freeze automatically, and must never be able to lift an operator's incident
+   freeze. Workflows gate on both; the manual switch also blocks the resume path.)
 3. **Refactor scope:** extract each stage's codex-running core into a
    dispatchable path so the recovery job can re-run it directly. Implemented as
    a **dual-trigger refactor** (native event + `workflow_dispatch`) per
@@ -101,8 +104,8 @@ When a workflow sees `quota_blocked=true`, it:
   - `<!-- agents:resume v1 {"stage":"dev-implement","issue":42} -->`
   - `<!-- agents:resume v1 {"stage":"dev-revise","pr":51,"comment_body":"…"} -->`
 - Adds an `agents:quota-blocked` label (human visibility / filtering).
-- Sets `AGENTS_FREEZE=true` via `gh variable set`, instantly pausing all four
-  event-triggered workflows so nothing else burns into the wall.
+- Sets `AGENTS_QUOTA_FREEZE=true` via `gh variable set`, instantly pausing all four
+  event-triggered workflows so nothing else burns into the wall (the manual `AGENTS_FREEZE` kill switch is left untouched).
 
 ### 3. Dispatchable resume entrypoint (the extracted core)
 
@@ -112,7 +115,7 @@ refactored to read from **either** the event payload or the dispatch inputs.
 The codex-running core becomes reachable by both the native event and a direct
 dispatch.
 
-- The `workflow_dispatch` path is **not** gated by `AGENTS_FREEZE`, so recovery
+- The `workflow_dispatch` path is **not** gated by `AGENTS_QUOTA_FREEZE`, so recovery
   can re-run stages while freeze is still being lifted.
 - Existing per-stage gating (pm-intake's abuse/security gates, dev-implement's
   capability gate + auto-merge, the duplicate-PR guard) is preserved as-is.
@@ -120,7 +123,7 @@ dispatch.
 ### 4. Recovery cron — `.github/workflows/agents-recover.yml`
 
 - `on: schedule` (~every 30 min) + `workflow_dispatch` (manual kick).
-- Early-exits unless `AGENTS_FREEZE == 'true'` — silent during normal operation.
+- Early-exits unless `AGENTS_QUOTA_FREEZE == 'true'` (and only while manual `AGENTS_FREEZE` is off) — silent during normal operation.
 - **Probe:** cheapest possible `codex exec --sandbox read-only "reply OK"`,
   classified via the same wrapper. Still blocked → exit, wait for next tick.
   Succeeds → quota is back.
@@ -129,7 +132,7 @@ dispatch.
   2. `gh workflow run <stage>` for each stranded item with its recorded inputs.
   3. Remove the marker comment + `agents:quota-blocked` label per item, only
      after a successful dispatch.
-  4. Finally clear `AGENTS_FREEZE` (re-enable normal event triggers).
+  4. Finally clear `AGENTS_QUOTA_FREEZE` (re-enable normal event triggers).
 
 ## Data flow
 
@@ -137,16 +140,16 @@ dispatch.
 issue/PR event ──> stage workflow ──> run-codex.sh
                                         │
                   quota_blocked=true ───┼──> write resume marker + label
-                                        │     set AGENTS_FREEZE=true  ──> pipeline paused
+                                        │     set AGENTS_QUOTA_FREEZE=true  ──> pipeline paused
                   genuine failure ──────┴──> existing failure comment (no marker)
 
-cron (30m) ──> AGENTS_FREEZE==true? ──no──> exit
+cron (30m) ──> AGENTS_QUOTA_FREEZE==true? ──no──> exit
                        │ yes
                        ├─ probe (cheap codex) still blocked? ──yes──> exit
                        │                                       no
                        ├─ for each resume marker: gh workflow run <stage>(inputs)
                        ├─ remove marker + label
-                       └─ clear AGENTS_FREEZE ──> normal triggers resume
+                       └─ clear AGENTS_QUOTA_FREEZE ──> normal triggers resume
 ```
 
 ## Error handling & edge cases
@@ -162,11 +165,11 @@ cron (30m) ──> AGENTS_FREEZE==true? ──no──> exit
   scheduling is deliberately **out of v1** (YAGNI).
 - **Probe cost:** one minimal read-only call per tick while blocked; negligible.
 - **Unfreeze ordering:** dispatch stranded stages (dispatch path ignores freeze),
-  then clear `AGENTS_FREEZE` last, so event triggers don't re-fire mid-recovery.
+  then clear `AGENTS_QUOTA_FREEZE` last, so event triggers don't re-fire mid-recovery.
 
 ## Setup prerequisite
 
-Toggling `AGENTS_FREEZE` requires a token with **`variables: write`** scope.
+Toggling `AGENTS_QUOTA_FREEZE` requires a token with **`variables: write`** scope.
 Verify the existing `AUTO_PAT` has it; otherwise grant it or add a dedicated
 `FREEZE_PAT` secret. This is a deployment prerequisite, not a code change.
 
@@ -182,6 +185,6 @@ Verify the existing `AUTO_PAT` has it; otherwise grant it or add a dedicated
   quota signature and a genuine-failure log (fixture-driven; no live Codex).
 - Dispatch path: `workflow_dispatch` each refactored workflow manually with
   sample inputs and confirm it resolves context identically to the event path.
-- Recovery cron: `workflow_dispatch` with `AGENTS_FREEZE=true` and a seeded
+- Recovery cron: `workflow_dispatch` with `AGENTS_QUOTA_FREEZE=true` and a seeded
   marker; confirm probe → dispatch → marker cleanup → unfreeze.
 ```

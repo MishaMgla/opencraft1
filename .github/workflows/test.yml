@@ -6,6 +6,22 @@ on:
   pull_request:
 
 jobs:
+  scripts:
+    name: agent-flow scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Unit tests for the quota detection / recovery scripts (bash + jq, both
+      # preinstalled on the runner). No Codex or network required — gh is stubbed.
+      - name: Run script tests
+        run: |
+          fail=0
+          for t in .github/scripts/test/*.test.sh; do
+            echo "== $t"
+            bash "$t" || fail=1
+          done
+          exit $fail
+
   go:
     name: go engine
     runs-on: ubuntu-latest
