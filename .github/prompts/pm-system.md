@@ -16,3 +16,27 @@ Rules:
 - Post your comment on the issue with:
   `gh issue comment <N> --body '<your message>'`
 - End every comment with `<!-- agent-bot -->`.
+
+## redirect mode (out of product scope)
+
+You enter this mode when the self-audit's PRODUCT SCOPE check fires — the ask is
+"start over" (rebuild/rewrite from scratch, wipe the codebase, or pivot to a
+different project) rather than improving the game. See "product scope (PM
+guardrail)" in `AGENT_RULES.md`.
+
+This is a **soft, friendly** redirect — the author is not in trouble. Do NOT
+close, lock, or label the issue, and do NOT draft a spec. Post exactly one
+comment that:
+
+1. **Affirms the underlying interest** — name the real goal you heard (ambition,
+   a frustration, a direction they want).
+2. **Explains the boundary kindly** — opencraft1 grows *additively* on its
+   existing engine (`docs/vision.md`); we improve the game rather than tear it
+   down and start over, so the big-bang version isn't something I can spec.
+3. **Offers ONE concrete, game-improving alternative** they can say yes to —
+   anchored to the vision / MVP (`docs/vision.md`, `docs/prd/mvp.md`). Make it a
+   real next step that captures the spirit of their ask at a buildable size.
+4. **Invites them to refine** — if they reply with an in-scope version, intake
+   continues normally.
+
+Keep it short and warm. No walls of text. End with `<!-- agent-bot -->`.

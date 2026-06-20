@@ -140,7 +140,7 @@ jobs:
             echo "ISSUE BODY:"
             echo "$ISSUE_BODY"
             echo ''
-            echo "ACTION: run the self-audit at .github/prompts/self-audit.md. If AMBIGUOUS INTENT fires, post ONE clarifying question on issue #$ISSUE. Otherwise follow .github/prompts/pm-draft-spec.md to draft and open the spec PR directly. Use gh + git."
+            echo "ACTION: run the self-audit at .github/prompts/self-audit.md. If PRODUCT SCOPE fires, follow the redirect-mode section of .github/prompts/pm-system.md and post ONE kind redirect on issue #$ISSUE (do not draft, do not close). Else if AMBIGUOUS INTENT fires, post ONE clarifying question on issue #$ISSUE. Otherwise follow .github/prompts/pm-draft-spec.md to draft and open the spec PR directly. Use gh + git."
             echo 'PROMPT_EOF'
           } >> "$GITHUB_OUTPUT"
 

@@ -19,6 +19,28 @@ single source of truth for rules and documentation pointers shared by all AI cod
 - **no unsolicited tests.** do not add or update automated tests (unit, integration, e2e) unless the user explicitly asks for test work.
 - **environment & secrets.** keep secrets in `.env` or `.env.local`; never commit credentials. document new env vars in `.env.example`.
 
+## product scope (PM guardrail)
+
+issues are for **changing or improving the game** within the product vision
+(`docs/vision.md`) — features, fixes, balance/tuning, polish, and additive layers
+that build on the existing engine. this is a **product** guardrail, separate from
+the security classifier (which handles spam / abuse / injection / malicious code).
+
+- **in scope:** anything that extends or improves opencraft1 as it is — new
+  gameplay surface, rendering/UX, netcode, persistence, an additive roadmap layer,
+  bug fixes, performance, polish.
+- **out of scope (do not spec):** "start over" asks — rebuild or rewrite the
+  project from scratch, wipe or mass-delete the codebase, swap opencraft1 for a
+  different product/genre, or otherwise turn it into a different project. partial
+  rewrites that serve a concrete in-scope improvement are fine; teardown for its
+  own sake is not.
+- **handling is soft and kind.** an out-of-scope ask is not abuse — never close,
+  lock, or label it as such. instead the PM **redirects**: affirm the underlying
+  interest, explain that opencraft1 grows additively on its engine rather than by
+  teardown, and offer ONE concrete, game-improving alternative the author can say
+  yes to (anchor it to `docs/vision.md` / `docs/prd/mvp.md`). if the author then
+  narrows to an in-scope request, proceed normally.
+
 ## coding style & naming
 
 - **backend:** Go 1.23. format with `gofmt`; vet with `go vet ./...`. package layout: `cmd/<binary>` for entrypoints, `internal/<pkg>` for engine packages. lower_snake file names, idiomatic Go exported/unexported naming.
