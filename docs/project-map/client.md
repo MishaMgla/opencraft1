@@ -4,16 +4,17 @@ TypeScript source compiled in-place to ESM by `tsc` (no bundler). Emitted `.js` 
 
 ## modules (`web/src/`)
 - `iso.ts` — isometric projection (`worldToScreen`, `depth`). the only place that knows the camera is iso; the server is projection-agnostic.
-- `wire.ts` — binary codec mirroring `internal/wire`. **must stay byte-for-byte in sync with the Go side.**
-- `net.ts` — WebSocket connect, send Hello/Input, dispatch decoded frames to handlers.
+- `wire.ts` — binary codec mirroring `internal/wire`, including movement, paint, and shake frames. **must stay byte-for-byte in sync with the Go side.**
+- `net.ts` — WebSocket connect, send Hello/Input/Paint, dispatch decoded frames to handlers.
 - `config.ts` — resolves the engine WebSocket URL: fetches `/config.json` (served by a Vercel function from `WS_URL` in the split deploy) and falls back to same-origin `ws(s)://${location.host}/ws` (scheme matched to the page) on any failure, so local single-process dev is zero-config.
-- `input.ts` — keyboard state → local movement integration (client-authoritative).
-- `render.ts` — PixiJS app (loaded from the jsdelivr prebuilt ESM bundle): static iso floor, player tokens (shape + shadow + label), depth-sorted by world position, camera follow.
+- `input.ts` — keyboard state → local movement integration (client-authoritative), plus a one-shot `Space` paint action latch.
+- `render.ts` — PixiJS app (loaded from the jsdelivr prebuilt ESM bundle): static iso floor, shared painted tile overlays, player tokens (shape + shadow + label), one-shot shake offsets, depth-sorted by world position, camera follow.
 - `main.ts` — orchestration: name-entry → connect → per-frame loop (move, interpolate remotes, center camera, rate-limited input send). resolves the socket URL via `config.ts` (`resolveWsUrl()`) before connecting. exposes live `{me, others, bounds}` on `window.__game` when `window.__E2E` is set, for the Playwright smoke test (`web/e2e/`); inert otherwise.
 - `index.html` — name-entry overlay + top-left HUD + fixed bottom-left GitHub repository link + module entry.
 
 ## sharp edges
 - remote players are smoothed toward the latest snapshot (`rx += (tx-rx)*0.2`); not time-based interpolation — good enough for MVP.
 - input is sent at ~15 Hz as an absolute position; the render loop runs at display refresh.
+- `Space` sends one paint request for the local player's current server-side tile; paint/shake visibility comes back through server broadcasts rather than local-only prediction.
 - WASD moves along world axes, which look diagonal under iso (acceptable for MVP).
 - the production engine URL comes from Vercel's `WS_URL` env via `/config.json`; there is no client rebuild on URL change. `web/api/config.js` + `web/vercel.json` wire this up — see `docs/deploy.md`.

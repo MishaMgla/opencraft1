@@ -9,12 +9,15 @@ const (
 	CHello = 0x01 // client -> server
 	CInput = 0x02
 	CPing  = 0x03
+	CPaint = 0x04
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
 	SEnter    = 0x83
 	SLeave    = 0x84
 	SPong     = 0x85
+	SPaint    = 0x86
+	SShake    = 0x87
 )
 
 // Ent is a minimal entity record carried in snapshots.
@@ -85,6 +88,23 @@ func EncodePong(t uint32) []byte {
 	return b
 }
 
+func EncodePaint(x, y int16, color, ownerID uint32) []byte {
+	b := make([]byte, 1+2+2+4+4)
+	b[0] = SPaint
+	binary.LittleEndian.PutUint16(b[1:], uint16(x))
+	binary.LittleEndian.PutUint16(b[3:], uint16(y))
+	binary.LittleEndian.PutUint32(b[5:], color)
+	binary.LittleEndian.PutUint32(b[9:], ownerID)
+	return b
+}
+
+func EncodeShake(id uint32) []byte {
+	b := make([]byte, 1+4)
+	b[0] = SShake
+	binary.LittleEndian.PutUint32(b[1:], id)
+	return b
+}
+
 // ClientMsg is a decoded client->server frame. Only fields relevant to Type are set.
 type ClientMsg struct {
 	Type byte
@@ -120,6 +140,8 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 			return ClientMsg{}, false
 		}
 		return ClientMsg{Type: CPing, T: binary.LittleEndian.Uint32(b[1:])}, true
+	case CPaint:
+		return ClientMsg{Type: CPaint}, true
 	}
 	return ClientMsg{}, false
 }

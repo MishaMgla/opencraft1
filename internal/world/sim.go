@@ -9,6 +9,7 @@ import (
 )
 
 const TickHz = 15
+const PaintTileSize int16 = 128
 
 // flushEvery is how often the sim persists all online players, bounding how
 // much position is lost if the engine dies without a graceful shutdown.
@@ -32,11 +33,22 @@ func clamp(v int16) int16 {
 }
 
 type player struct {
-	id    uint32
-	x, y  int16
-	name  string
-	color uint32
-	out   chan []byte
+	id            uint32
+	x, y          int16
+	name          string
+	color         uint32
+	out           chan []byte
+	lastPaintTile tileKey
+}
+
+type tileKey struct {
+	x, y int16
+}
+
+type paintedTile struct {
+	x, y    int16
+	color   uint32
+	ownerID uint32
 }
 
 // Sim owns all world state. It is the only goroutine that touches that state;
@@ -64,6 +76,7 @@ type cmdPing struct {
 	id uint32
 	t  uint32
 }
+type cmdPaint struct{ id uint32 }
 
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
@@ -104,6 +117,7 @@ func (s *Sim) Join(name string, out chan []byte) uint32 {
 func (s *Sim) Input(id uint32, x, y int16) { s.cmds <- cmdInput{id, x, y} }
 func (s *Sim) Leave(id uint32)             { s.cmds <- cmdLeave{id} }
 func (s *Sim) Ping(id uint32, t uint32)    { s.cmds <- cmdPing{id, t} }
+func (s *Sim) Paint(id uint32)             { s.cmds <- cmdPaint{id} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -133,6 +147,13 @@ func diff(a, b []uint32) []uint32 { // returns a \ b
 		}
 	}
 	return out
+}
+
+func paintTileFor(x, y int16) tileKey {
+	return tileKey{
+		x: (clamp(x) / PaintTileSize) * PaintTileSize,
+		y: (clamp(y) / PaintTileSize) * PaintTileSize,
+	}
 }
 
 // save persists one player asynchronously. Values are copied into a local
@@ -198,6 +219,7 @@ func (s *Sim) Run(ctx context.Context) {
 	defer close(s.done)
 
 	players := map[uint32]*player{}
+	painted := map[tileKey]paintedTile{}
 	grid := NewGrid()
 	var nextID uint32 = 1
 	var tick uint32
@@ -230,10 +252,13 @@ func (s *Sim) Run(ctx context.Context) {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
-				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out}
+				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out, lastPaintTile: paintTileFor(px, py)}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 				send(p, wire.EncodeWelcome(id, p.x, p.y, 0, 0, WorldSize-1, WorldSize-1))
+				for _, tile := range painted {
+					send(p, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+				}
 				for oid, o := range players {
 					if oid == id {
 						continue
@@ -251,6 +276,27 @@ func (s *Sim) Run(ctx context.Context) {
 				nx, ny := clamp(m.x), clamp(m.y)
 				grid.Move(p.id, p.x, p.y, nx, ny)
 				p.x, p.y = nx, ny
+				tile := paintTileFor(nx, ny)
+				if tile != p.lastPaintTile {
+					p.lastPaintTile = tile
+					if paintedTile, ok := painted[tile]; ok && paintedTile.ownerID != p.id {
+						for _, o := range players {
+							send(o, wire.EncodeShake(p.id))
+						}
+					}
+				}
+
+			case cmdPaint:
+				p := players[m.id]
+				if p == nil {
+					continue
+				}
+				key := paintTileFor(p.x, p.y)
+				tile := paintedTile{x: key.x, y: key.y, color: p.color, ownerID: p.id}
+				painted[key] = tile
+				for _, o := range players {
+					send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+				}
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {
