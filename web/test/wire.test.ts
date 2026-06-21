@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { encodeHello, encodeInput, decodeServer } from '../src/wire.js';
+import { encodeHello, encodeInput, encodePaint, decodeServer } from '../src/wire.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixtures = JSON.parse(readFileSync(join(here, 'wire_fixtures.json'), 'utf8'));
@@ -62,6 +62,18 @@ test('decode pong matches golden', () => {
   assert.deepEqual(decodeServer(view), f.decoded);
 });
 
+test('decode paint matches golden', () => {
+  const f = server.paint;
+  const view = new DataView(hexToBytes(f.hex).buffer);
+  assert.deepEqual(decodeServer(view), f.decoded);
+});
+
+test('decode shake matches golden', () => {
+  const f = server.shake;
+  const view = new DataView(hexToBytes(f.hex).buffer);
+  assert.deepEqual(decodeServer(view), f.decoded);
+});
+
 // --- client -> server: TS-encoded bytes must equal the golden the Go parser reads ---
 
 test('encode hello matches golden bytes', () => {
@@ -71,6 +83,10 @@ test('encode hello matches golden bytes', () => {
 test('encode input matches golden bytes (negative x)', () => {
   const { x, y } = client.input.decoded;
   assert.equal(bytesToHex(encodeInput(x, y)), client.input.hex);
+});
+
+test('encode paint matches golden bytes', () => {
+  assert.equal(bytesToHex(encodePaint()), client.paint.hex);
 });
 
 // Names longer than 255 bytes must be capped to fit the single length byte,

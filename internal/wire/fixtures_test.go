@@ -25,9 +25,9 @@ const fixturesPath = "../../web/test/wire_fixtures.json"
 // fixtureFile is the on-disk schema. `decoded` mirrors the object shape the JS
 // decoder/encoder uses; `hex` is the wire bytes.
 type fixtureFile struct {
-	Comment string        `json:"_comment"`
-	Server  []frameCase   `json:"server"` // server->client: Go encodes, JS decodes
-	Client  []frameCase   `json:"client"` // client->server: JS encodes, Go parses
+	Comment string      `json:"_comment"`
+	Server  []frameCase `json:"server"` // server->client: Go encodes, JS decodes
+	Client  []frameCase `json:"client"` // client->server: JS encodes, Go parses
 }
 
 type frameCase struct {
@@ -47,6 +47,9 @@ func canonicalServer() []frameCase {
 			enc(EncodeEnter(9, 2048, 2048, 0x0000FF, "Zoë"))},
 		{"leave", json.RawMessage(`{"type":"leave","id":9}`), enc(EncodeLeave(9))},
 		{"pong", json.RawMessage(`{"type":"pong","t":123456}`), enc(EncodePong(123456))},
+		{"paint", json.RawMessage(`{"type":"paint","x":2048,"y":2176,"color":3978315,"ownerId":3}`),
+			enc(EncodePaint(2048, 2176, 0x3CB44B, 3))},
+		{"shake", json.RawMessage(`{"type":"shake","id":5}`), enc(EncodeShake(5))},
 	}
 }
 
@@ -56,9 +59,11 @@ func canonicalServer() []frameCase {
 func canonicalClient() []frameCase {
 	hello := append([]byte{CHello, 3}, []byte("Bob")...)
 	input := []byte{CInput, 0x2e, 0xfb, 0x09, 0x03} // x=-1234, y=777
+	paint := []byte{CPaint}
 	return []frameCase{
 		{"hello", json.RawMessage(`{"type":1,"name":"Bob"}`), hex.EncodeToString(hello)},
 		{"input", json.RawMessage(`{"type":2,"x":-1234,"y":777}`), hex.EncodeToString(input)},
+		{"paint", json.RawMessage(`{"type":4}`), hex.EncodeToString(paint)},
 	}
 }
 
@@ -121,6 +126,10 @@ func TestWireFixtures(t *testing.T) {
 		case "input":
 			if msg.Type != CInput || msg.X != -1234 || msg.Y != 777 {
 				t.Fatalf("input parsed to %+v", msg)
+			}
+		case "paint":
+			if msg.Type != CPaint {
+				t.Fatalf("paint parsed to %+v", msg)
 			}
 		}
 	}

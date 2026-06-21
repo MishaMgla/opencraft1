@@ -62,6 +62,25 @@
         "t": 123456
       },
       "hex": "8540e20100"
+    },
+    {
+      "name": "paint",
+      "decoded": {
+        "type": "paint",
+        "x": 2048,
+        "y": 2176,
+        "color": 3978315,
+        "ownerId": 3
+      },
+      "hex": "86000880084bb43c0003000000"
+    },
+    {
+      "name": "shake",
+      "decoded": {
+        "type": "shake",
+        "id": 5
+      },
+      "hex": "8705000000"
     }
   ],
   "client": [
@@ -81,6 +100,13 @@
         "y": 777
       },
       "hex": "022efb0903"
+    },
+    {
+      "name": "paint",
+      "decoded": {
+        "type": 4
+      },
+      "hex": "04"
     }
   ]
 }

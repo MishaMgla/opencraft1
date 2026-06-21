@@ -17,18 +17,38 @@ export interface Input {
   consumePaint(): boolean;
 }
 
-export function createInput(): Input {
+type KeyboardTarget = Pick<Window, 'addEventListener'>;
+
+function isPaintKey(e: KeyboardEvent): boolean {
+  return e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+}
+
+export function createInput(target: KeyboardTarget = window): Input {
   const keys: Record<string, boolean> = Object.create(null);
   let paintRequested = false;
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-      e.preventDefault();
-      if (!e.repeat) paintRequested = true;
-      return;
-    }
-    keys[e.key.toLowerCase()] = true;
-  });
-  window.addEventListener('keyup', (e) => (keys[e.key.toLowerCase()] = false));
+  target.addEventListener(
+    'keydown',
+    (e) => {
+      if (isPaintKey(e)) {
+        e.preventDefault();
+        if (!e.repeat) paintRequested = true;
+        return;
+      }
+      keys[e.key.toLowerCase()] = true;
+    },
+    { capture: true },
+  );
+  target.addEventListener(
+    'keyup',
+    (e) => {
+      if (isPaintKey(e)) {
+        e.preventDefault();
+        return;
+      }
+      keys[e.key.toLowerCase()] = false;
+    },
+    { capture: true },
+  );
 
   function clamp(v: number, lo: number, hi: number): number {
     return v < lo ? lo : v > hi ? hi : v;
