@@ -7,6 +7,9 @@ import type { Token } from './render.js';
 
 const MOVE_SPEED = 600; // world units / second
 const INPUT_HZ = 15;
+const ZOOM_STEP = 0.1;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 1.5;
 
 document.getElementById('name-form')!.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -18,7 +21,21 @@ document.getElementById('name-form')!.addEventListener('submit', async (e) => {
 async function start(name: string): Promise<void> {
   const r = await createRenderer();
   const input = createInput();
-  const hud = document.getElementById('hud')!;
+  const hudStatus = document.getElementById('hud-status')!;
+  const zoomOutButton = document.getElementById('zoom-out') as HTMLButtonElement;
+  const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
+  let zoom = 1;
+
+  function setZoom(nextZoom: number): void {
+    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(nextZoom.toFixed(2))));
+    r.setZoom(zoom);
+    zoomOutButton.disabled = zoom <= MIN_ZOOM;
+    zoomInButton.disabled = zoom >= MAX_ZOOM;
+  }
+
+  zoomOutButton.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
+  zoomInButton.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
+  setZoom(zoom);
 
   const me = { id: 0, x: 2048, y: 2048 };
   const bounds: Bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
@@ -106,6 +123,6 @@ async function start(name: string): Promise<void> {
       if (me.id !== 0) net.sendInput(Math.round(me.x), Math.round(me.y));
     }
 
-    hud.textContent = `${name} · players nearby: ${others.size}`;
+    hudStatus.textContent = `${name} · players nearby: ${others.size}`;
   });
 }

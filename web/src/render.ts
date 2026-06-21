@@ -44,6 +44,7 @@ export interface Renderer {
   paintTile(x: number, y: number, color: number): void;
   shakeLocal(): void;
   shakeToken(token: Token): void;
+  setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
 }
 
@@ -159,10 +160,13 @@ export async function createRenderer(): Promise<Renderer> {
     shakeToken(token) {
       shakeToken(token);
     },
+    setZoom(scale) {
+      world.scale.set(scale);
+    },
     centerCamera(x, y) {
       const p = worldToScreen(x, y);
-      world.x = app.screen.width / 2 - p.x;
-      world.y = app.screen.height / 2 - p.y;
+      world.x = app.screen.width / 2 - p.x * world.scale.x;
+      world.y = app.screen.height / 2 - p.y * world.scale.y;
     },
   };
 }
