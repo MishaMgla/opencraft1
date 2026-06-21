@@ -62,14 +62,18 @@ jobs:
         run: .github/scripts/authorize.sh
 
       # Who may steer via a comment, layered:
-      #   maintainer    -> everything (incl. /ready, which auto-merges the spec).
-      #   issue author  -> PM DISCUSSION only (question/revise). NOT /ready.
+      #   maintainer    -> everything.
+      #   issue author  -> full PM flow: question/revise, AND a spec the agent
+      #                    self-drafts auto-merges (cascading into dev-implement).
       #   anyone else   -> rejected.
-      # WHY author-discussion is safe on a public repo: pm-intake already runs the
-      # PM agent on any opener's text, so letting the author answer follow-ups adds
-      # no new capability. It does NOT reach dev-implement (/approved is filtered
-      # out of this job entirely) or the auto-merge (/ready stays maintainer-only),
-      # so the T1 dev-flow self-authorization threat is unchanged.
+      # T1 ACCEPTED (was: "self-authorization threat unchanged"): the author path
+      # now DOES reach the auto-merge — a self-drafted spec PR cascades into
+      # dev-implement with no maintainer /ready (see "Auto-merge spec PR" below).
+      # This deliberately drops the maintainer-only auto-merge gate that previously
+      # contained the T1 dev-flow self-authorization threat. Residual guards: the
+      # abuse/rate-limit gate on the author path (abuse-gate.sh) and the
+      # run-gates/capability checks downstream in dev-implement. /approved is still
+      # filtered out of this job entirely.
       - name: Resolve effective authorization
         id: authz
         if: github.event_name != 'workflow_dispatch'
@@ -77,15 +81,13 @@ jobs:
           IS_MAINTAINER: ${{ steps.auth.outputs.authorized }}
           COMMENTER: ${{ github.event.comment.user.login }}
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
-          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
+          # Under B-naive the author path reaches auto-merge anyway, so /ready is
+          # no longer a maintainer-privileged action — author == author for any body.
           if [ "$IS_MAINTAINER" = "true" ]; then
             echo "role=maintainer" >> "$GITHUB_OUTPUT"
           elif [ "$COMMENTER" = "$ISSUE_AUTHOR" ]; then
-            case "$COMMENT_BODY" in
-              /ready*) echo "role=author-ready" >> "$GITHUB_OUTPUT" ;;  # privileged: needs maintainer
-              *)       echo "role=author"       >> "$GITHUB_OUTPUT" ;;
-            esac
+            echo "role=author" >> "$GITHUB_OUTPUT"
           else
             echo "role=none" >> "$GITHUB_OUTPUT"
           fi
@@ -100,16 +102,6 @@ jobs:
           ACTOR: ${{ github.event.comment.user.login }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/abuse-gate.sh
-
-      - name: Reject /ready from non-maintainer
-        if: github.event_name != 'workflow_dispatch' && steps.authz.outputs.role == 'author-ready'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh issue comment ${{ github.event.issue.number }} \
-            --repo ${{ github.repository }} \
-            --body "🤖 \`/ready\` drafts the spec and auto-merges it, so only a maintainer (or allowlisted maintainer) can run it. Keep refining this issue in the comments — the PM agent will respond — and a maintainer will \`/ready\` it.
-          <sub>🤖 PM · auth</sub><!-- agent-bot -->"
 
       - name: Reject unauthorized commenter
         if: github.event_name != 'workflow_dispatch' && steps.authz.outputs.role == 'none'
