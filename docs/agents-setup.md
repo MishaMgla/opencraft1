@@ -53,6 +53,25 @@ so this is a one-time step. To re-auth or rotate, re-run `codex login`.
 `close-issue-on-impl-merge.yml` runs on `ubuntu-latest` (no agent), so it needs
 no self-hosted runner.
 
+### 2b. Go toolchain (required for the verification gate)
+
+`run-gates.sh` **fails closed** when `go.mod` is present but `go` is not on the
+runner's PATH (`go.mod present but 'go' is not installed … cannot verify`), so any
+impl PR touching `internal/**.go` never auto-merges until Go is installed. Install
+the version in `go.mod` (currently `go 1.25.0`; a newer 1.x also works) and make it
+reachable from the runner service's PATH — the simplest is a symlink into
+`/usr/local/bin` (already on the systemd service PATH, same as `node`):
+
+```bash
+GO_VER=1.25.0
+curl -fsSL "https://go.dev/dl/go${GO_VER}.linux-amd64.tar.gz" -o /tmp/go.tgz
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf /tmp/go.tgz
+sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
+sudo ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+# verify under the runner's PATH (no service restart needed — resolved per-command):
+env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin sh -c 'go version'
+```
+
 ## 3. Allowlist
 
 Edit `.github/agents-allowlist.txt` — one GitHub username per line — to grant
