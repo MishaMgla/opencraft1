@@ -11,7 +11,12 @@
     #name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
     #name { background: #0c0f14; color: #cfe; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
-    #hud { position: fixed; top: 8px; left: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+    #hud { position: fixed; top: 8px; left: 8px; display: flex; align-items: center; gap: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+    #hud .hint { opacity: 0.78; }
+    #hud .zoom-controls { display: inline-flex; gap: 4px; }
+    #hud .hud-zoom { width: 24px; height: 24px; padding: 0; border-radius: 4px; border: 1px solid rgba(159, 182, 196, 0.28); background: rgba(12, 15, 20, 0.62); color: #c8d8e1; font: 600 15px/1 system-ui; cursor: pointer; }
+    #hud .hud-zoom:hover:not(:disabled) { background: rgba(42, 51, 64, 0.72); color: #ffffff; }
+    #hud .hud-zoom:disabled { opacity: 0.38; cursor: default; }
     #gh-link { position: fixed; bottom: 8px; left: 8px; z-index: 5; color: #9fb6c4; text-decoration: none; font: 13px system-ui; opacity: 0.7; }
     #gh-link:hover { opacity: 1; text-decoration: underline; }
   </style>
@@ -23,7 +28,14 @@
       <button type="submit">enter world</button>
     </form>
   </div>
-  <div id="hud"></div>
+  <div id="hud">
+    <span id="hud-status"></span>
+    <span class="hint">Space: color cell</span>
+    <span class="zoom-controls" aria-label="Viewport zoom">
+      <button id="zoom-out" class="hud-zoom" type="button" aria-label="Zoom out">-</button>
+      <button id="zoom-in" class="hud-zoom" type="button" aria-label="Zoom in">+</button>
+    </span>
+  </div>
   <a id="gh-link" href="https://github.com/MishaMgla/opencraft1/" target="_blank" rel="noopener noreferrer">GitHub</a>
   <script type="module" src="./src/main.js"></script>
 </body>

@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-21 (branch `codex/issue-42-game-viewport`): add subtle top-left HUD viewport zoom buttons plus an always-visible `Space` paint hint (issue #42).
 - 2026-06-21 (branch `codex/issue-43-space-paint-shake`): add session-scoped shared tile painting on `Space` plus one-shot avatar shake when players enter another player's painted tile (issue #43).
 - 2026-06-21: add a minimal fixed bottom-left GitHub repository link over the web game viewport (issue #37).
 - 2026-06-20 (branch `chore/cruft-audit-cleanup`): PM product-scope guardrail — the PM agent now softly redirects "start over" issues (rebuild from scratch, wipe the codebase, pivot to a different project) toward a concrete game-improving alternative instead of drafting a spec, and never closes/locks them (that stays the security classifier's job). Rule in `AGENT_RULES.md` ("product scope"); new redirect mode in `self-audit.md` + `pm-system.md`, backstop in `pm-draft-spec.md`; intake `ACTION` line updated.
