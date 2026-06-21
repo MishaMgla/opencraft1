@@ -63,6 +63,17 @@ async function start(name: string): Promise<void> {
         }
       }
     },
+    paint(m) {
+      r.paintTile(m.x, m.y, m.color);
+    },
+    shake(m) {
+      if (m.id === me.id) {
+        r.shakeLocal();
+        return;
+      }
+      const o = others.get(m.id);
+      if (o) r.shakeToken(o);
+    },
   });
 
   let last = performance.now();
@@ -73,6 +84,10 @@ async function start(name: string): Promise<void> {
     last = now;
 
     input.step(me, MOVE_SPEED, dt, bounds);
+    if (me.id !== 0 && input.consumePaint()) {
+      net.sendInput(Math.round(me.x), Math.round(me.y));
+      net.sendPaint();
+    }
     r.setLocal(me.x, me.y);
 
     for (const o of others.values()) {

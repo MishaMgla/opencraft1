@@ -14,11 +14,20 @@ export interface Bounds {
 export interface Input {
   // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
   step(pos: Vec2, speed: number, dt: number, bounds: Bounds): boolean;
+  consumePaint(): boolean;
 }
 
 export function createInput(): Input {
   const keys: Record<string, boolean> = Object.create(null);
-  window.addEventListener('keydown', (e) => (keys[e.key.toLowerCase()] = true));
+  let paintRequested = false;
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      if (!e.repeat) paintRequested = true;
+      return;
+    }
+    keys[e.key.toLowerCase()] = true;
+  });
   window.addEventListener('keyup', (e) => (keys[e.key.toLowerCase()] = false));
 
   function clamp(v: number, lo: number, hi: number): number {
@@ -42,6 +51,11 @@ export function createInput(): Input {
         return true;
       }
       return false;
+    },
+    consumePaint() {
+      if (!paintRequested) return false;
+      paintRequested = false;
+      return true;
     },
   };
 }

@@ -140,6 +140,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		switch m.Type {
 		case wire.CInput:
 			s.sim.Input(id, m.X, m.Y)
+		case wire.CPaint:
+			s.sim.Paint(id)
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
 		}

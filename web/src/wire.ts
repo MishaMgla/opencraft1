@@ -2,12 +2,15 @@
 
 const C_HELLO = 0x01;
 const C_INPUT = 0x02;
+const C_PAINT = 0x04;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
 const S_ENTER = 0x83;
 const S_LEAVE = 0x84;
 const S_PONG = 0x85;
+const S_PAINT = 0x86;
+const S_SHAKE = 0x87;
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -48,10 +51,21 @@ export interface Pong {
   type: 'pong';
   t: number;
 }
+export interface Paint {
+  type: 'paint';
+  x: number;
+  y: number;
+  color: number;
+  ownerId: number;
+}
+export interface Shake {
+  type: 'shake';
+  id: number;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | Unknown;
 
 export function encodeHello(name: string): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -69,6 +83,12 @@ export function encodeInput(x: number, y: number): ArrayBuffer {
   v.setInt16(1, x, true);
   v.setInt16(3, y, true);
   return b;
+}
+
+export function encodePaint(): ArrayBuffer {
+  const b = new Uint8Array(1);
+  b[0] = C_PAINT;
+  return b.buffer;
 }
 
 // view is a DataView over the received ArrayBuffer.
@@ -114,6 +134,16 @@ export function decodeServer(view: DataView): ServerMsg {
       return { type: 'leave', id: view.getUint32(1, true) };
     case S_PONG:
       return { type: 'pong', t: view.getUint32(1, true) };
+    case S_PAINT:
+      return {
+        type: 'paint',
+        x: view.getInt16(1, true),
+        y: view.getInt16(3, true),
+        color: view.getUint32(5, true),
+        ownerId: view.getUint32(9, true),
+      };
+    case S_SHAKE:
+      return { type: 'shake', id: view.getUint32(1, true) };
   }
   return { type: 'unknown' };
 }
