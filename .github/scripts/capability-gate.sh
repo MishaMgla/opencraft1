@@ -77,8 +77,17 @@ match_add '\b(curl|wget)\b|fetch\(|http\.(Get|Post|NewRequest)|axios|requests\.(
   && reasons+=("adds an outbound network call")
 match_add 'exec\.Command|child_process|subprocess|os\.system|\beval\(|new Function\(|vm\.runIn' \
   && reasons+=("adds dynamic exec / subprocess")
-match_add 'SECRET|TOKEN|API[_-]?KEY|_KEY\b|PASSWORD|PRIVATE_KEY|SERVICE_ROLE|CREDENTIAL' \
-  && reasons+=("references a secret-like identifier")
+# Case-SENSITIVE (note: NOT match_add, which is grep -i): real secret identifiers
+# follow the SCREAMING_SNAKE env convention (GITHUB_TOKEN, API_KEY, *_SECRET), so
+# matching uppercase-only lets domain nouns through — notably the game's `Token`
+# sprite type (shakeToken/makeTokenState), which the old case-insensitive `TOKEN`
+# flagged on every gameplay PR. No `\b`: `_` is a regex word char, so `\bTOKEN\b`
+# would miss GITHUB_TOKEN. Dropped the bare `_KEY` signal (collided with keyboard
+# key constants like SPACE_KEY); API[_-]?KEY still covers real API keys.
+if printf '%s\n' "$ADDED_CODE" \
+     | grep -qE 'SECRET|TOKEN|API[_-]?KEY|PASSWORD|PRIVATE_KEY|SERVICE_ROLE|CREDENTIAL'; then
+  reasons+=("references a secret-like identifier")
+fi
 if printf '%s\n' "$ADDED_CODE" | grep -oiE 'https?://[a-z0-9._-]+' \
      | grep -viE '(github\.com|githubusercontent|localhost|127\.0\.0\.1|example\.(com|org)|opencraft1\.(com|vercel\.app)|pixijs|jsdelivr|unpkg)' \
      | grep -q .; then
