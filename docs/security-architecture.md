@@ -108,6 +108,12 @@ grouped by the layer they live in. the implementation order is in the companion 
 1. **retire issue-author self-authorization.** `OWNER==ACTOR` must no longer grant dev-flow privileges.
    re-check `permission ∈ {admin, write}` via the GitHub API **at execution time** for every privileged
    command (`/approved`, `/merge`, …). **labels are state, not proof of authority** (avoid confused-deputy).
+   - **exception — PM discussion (not dev-flow).** the issue author *may* steer their own issue's PM
+     agent in `pm-followup.yml` for **discussion only** (answering clarifying questions / refining the
+     spec — question & revise mode), rate-limited by `abuse-gate.sh`. this grants **no dev-flow
+     capability**: `/approved` (dev-implement) is filtered out of that job, and `/ready` (drafts +
+     auto-merges the spec) stays maintainer/allowlist-only. it adds no new exposure because `pm-intake`
+     already runs the PM agent on any opener's text. T1 (self-authorizing the **dev flow**) is unchanged.
 2. **secret segmentation** (free; highest leverage). untrusted plane = 0 secrets; dev plane = 0 prod
    secrets (it only writes code); **deploy = the only secret-bearing job**. converts a successful injection
    from total compromise into a wasted runner minute.
