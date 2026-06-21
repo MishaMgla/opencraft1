@@ -248,8 +248,12 @@ jobs:
           FREEZE_TOKEN: ${{ secrets.AUTO_PAT }}
         run: .github/scripts/mark-quota-blocked.sh
 
+      # B-naive: auto-merge any self-drafted spec PR (matches pm-intake.yml) so a
+      # spec the agent opens in question mode cascades into dev-implement without a
+      # maintainer `/ready`. auto-merge-spec.sh no-ops when no open spec PR exists
+      # (e.g. the agent only asked a question) and honors hold/needs-human labels.
       - name: Auto-merge spec PR (PAT cascade)
-        if: success() && steps.ctx.outputs.authorized == 'true' && steps.mode.outputs.mode == 'draft' && steps.spec_check.outputs.skip != 'true' && steps.codex.outputs.quota_blocked != 'true'
+        if: success() && steps.ctx.outputs.authorized == 'true' && steps.codex.outputs.quota_blocked != 'true'
         env:
           GH_TOKEN: ${{ secrets.AUTO_PAT }}
           ISSUE: ${{ steps.ctx.outputs.issue }}
