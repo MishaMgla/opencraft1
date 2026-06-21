@@ -12,6 +12,8 @@
     #name { background: #0c0f14; color: #cfe; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
     #hud { position: fixed; top: 8px; left: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+    #gh-link { position: fixed; bottom: 8px; left: 8px; z-index: 5; color: #9fb6c4; text-decoration: none; font: 13px system-ui; opacity: 0.7; }
+    #gh-link:hover { opacity: 1; text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -22,6 +24,7 @@
     </form>
   </div>
   <div id="hud"></div>
+  <a id="gh-link" href="https://github.com/MishaMgla/opencraft1/" target="_blank" rel="noopener noreferrer">GitHub</a>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>
