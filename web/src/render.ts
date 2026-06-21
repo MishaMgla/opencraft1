@@ -4,8 +4,10 @@ import { worldToScreen, depth, KX, KY } from './iso.js';
 const GROUND_STEP = 128; // world units between iso floor tiles
 const SHAKE_DURATION_MS = 350;
 const SHAKE_AMPLITUDE = 7;
+const REMOTE_LABEL_COLOR = 0xd8dee9;
+const LOCAL_LABEL_COLOR = 0xffffff;
 
-function makeToken(name: string, color: number): Container {
+function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): Container {
   const container = new Container();
 
   const shadow = new Graphics()
@@ -14,7 +16,7 @@ function makeToken(name: string, color: number): Container {
   const body = new Graphics().circle(0, 0, 10).fill({ color });
   const label = new Text({
     text: name,
-    style: { fill: 0xffffff, fontSize: 12, fontFamily: 'system-ui' },
+    style: { fill: labelColor, fontSize: 12, fontFamily: 'system-ui' },
   });
   label.anchor.set(0.5, 1);
   label.y = -16;
@@ -91,7 +93,7 @@ export async function createRenderer(): Promise<Renderer> {
   world.addChild(ground);
 
   // Local player token.
-  const localContainer = makeToken('you', 0xffffff);
+  const localContainer = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
   world.addChild(localContainer);
   const localToken = makeTokenState(localContainer, 0, 0);
 
