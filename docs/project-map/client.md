@@ -10,7 +10,7 @@ TypeScript source compiled in-place to ESM by `tsc` (no bundler). Emitted `.js` 
 - `input.ts` — keyboard state → local movement integration (client-authoritative).
 - `render.ts` — PixiJS app (loaded from the jsdelivr prebuilt ESM bundle): static iso floor, player tokens (shape + shadow + label), depth-sorted by world position, camera follow.
 - `main.ts` — orchestration: name-entry → connect → per-frame loop (move, interpolate remotes, center camera, rate-limited input send). resolves the socket URL via `config.ts` (`resolveWsUrl()`) before connecting. exposes live `{me, others, bounds}` on `window.__game` when `window.__E2E` is set, for the Playwright smoke test (`web/e2e/`); inert otherwise.
-- `index.html` — name-entry overlay + HUD + module entry.
+- `index.html` — name-entry overlay + top-left HUD + fixed bottom-left GitHub repository link + module entry.
 
 ## sharp edges
 - remote players are smoothed toward the latest snapshot (`rx += (tx-rx)*0.2`); not time-based interpolation — good enough for MVP.
