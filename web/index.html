@@ -12,6 +12,8 @@
     #name { background: #0c0f14; color: #cfe; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
     #hud { position: fixed; top: 8px; left: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+    #repo-link { position: fixed; bottom: 8px; left: 8px; z-index: 11; color: #9fb6c4; font: 13px system-ui; text-decoration: none; opacity: 0.85; }
+    #repo-link:hover, #repo-link:focus { color: #cfe; text-decoration: underline; opacity: 1; }
   </style>
 </head>
 <body>
@@ -22,6 +24,7 @@
     </form>
   </div>
   <div id="hud"></div>
+  <a id="repo-link" href="https://github.com/MishaMgla/opencraft1/" target="_blank" rel="noopener noreferrer" aria-label="Open opencraft1 on GitHub">GitHub</a>
   <script type="module" src="./src/main.js"></script>
 </body>
 </html>

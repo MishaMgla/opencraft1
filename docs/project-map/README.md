@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-21 (branch `codex/issue-37-hud-github-link`): add a minimal fixed bottom-left GitHub repository link over the web game viewport.
 - 2026-06-20 (branch `chore/cruft-audit-cleanup`): PM product-scope guardrail — the PM agent now softly redirects "start over" issues (rebuild from scratch, wipe the codebase, pivot to a different project) toward a concrete game-improving alternative instead of drafting a spec, and never closes/locks them (that stays the security classifier's job). Rule in `AGENT_RULES.md` ("product scope"); new redirect mode in `self-audit.md` + `pm-system.md`, backstop in `pm-draft-spec.md`; intake `ACTION` line updated.
 - 2026-06-19: repo cruft audit — removed the dead Next.js-oriented index generator (`scripts/build-index.ts`) and its empty `docs/project-map/index/` output (the repo is Go + vanilla TS, not a Next.js App Router tree), purged accidentally-committed `.playwright-mcp/` session dumps (now gitignored), refreshed this file's stale "no source tree yet" boilerplate, and added `Status:` headers to historical plans/specs.
 - 2026-06-16: add engine `/version` endpoint — returns deployed commit SHA and build timestamp as JSON, with Railway Docker builds stamping metadata via ldflags.
