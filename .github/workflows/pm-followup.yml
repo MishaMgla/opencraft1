@@ -49,7 +49,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Authorize
+      # Maintainer check (allowlist OR live push access). Author-blind by design
+      # — see authorize.sh. The issue-author discussion grant is layered on top
+      # in "Resolve effective authorization" below, NOT inside this shared gate.
+      - name: Authorize (maintainer)
         id: auth
         if: github.event_name != 'workflow_dispatch'
         env:
@@ -58,20 +61,74 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: .github/scripts/authorize.sh
 
-      - name: Reject unauthorized commenter
-        if: github.event_name != 'workflow_dispatch' && steps.auth.outputs.authorized != 'true'
+      # Who may steer via a comment, layered:
+      #   maintainer    -> everything (incl. /ready, which auto-merges the spec).
+      #   issue author  -> PM DISCUSSION only (question/revise). NOT /ready.
+      #   anyone else   -> rejected.
+      # WHY author-discussion is safe on a public repo: pm-intake already runs the
+      # PM agent on any opener's text, so letting the author answer follow-ups adds
+      # no new capability. It does NOT reach dev-implement (/approved is filtered
+      # out of this job entirely) or the auto-merge (/ready stays maintainer-only),
+      # so the T1 dev-flow self-authorization threat is unchanged.
+      - name: Resolve effective authorization
+        id: authz
+        if: github.event_name != 'workflow_dispatch'
+        env:
+          IS_MAINTAINER: ${{ steps.auth.outputs.authorized }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: |
+          if [ "$IS_MAINTAINER" = "true" ]; then
+            echo "role=maintainer" >> "$GITHUB_OUTPUT"
+          elif [ "$COMMENTER" = "$ISSUE_AUTHOR" ]; then
+            case "$COMMENT_BODY" in
+              /ready*) echo "role=author-ready" >> "$GITHUB_OUTPUT" ;;  # privileged: needs maintainer
+              *)       echo "role=author"       >> "$GITHUB_OUTPUT" ;;
+            esac
+          else
+            echo "role=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Soft friction / rate-limit for the author path (fail-open). Maintainers
+      # are trusted and skip it. abuse-gate posts its own message when it blocks.
+      - name: Rate-limit author discussion
+        id: abuse
+        if: github.event_name != 'workflow_dispatch' && steps.authz.outputs.role == 'author'
+        env:
+          ISSUE: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: .github/scripts/abuse-gate.sh
+
+      - name: Reject /ready from non-maintainer
+        if: github.event_name != 'workflow_dispatch' && steps.authz.outputs.role == 'author-ready'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue comment ${{ github.event.issue.number }} \
             --repo ${{ github.repository }} \
-            --body "🤖 Only a maintainer with write access (or an allowlisted maintainer) can steer this issue's agent. Ignoring this comment.
+            --body "🤖 \`/ready\` drafts the spec and auto-merges it, so only a maintainer (or allowlisted maintainer) can run it. Keep refining this issue in the comments — the PM agent will respond — and a maintainer will \`/ready\` it.
+          <sub>🤖 PM · auth</sub><!-- agent-bot -->"
+
+      - name: Reject unauthorized commenter
+        if: github.event_name != 'workflow_dispatch' && steps.authz.outputs.role == 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --repo ${{ github.repository }} \
+            --body "🤖 Only the issue's author or a maintainer with write access (or an allowlisted maintainer) can steer this issue's agent. Ignoring this comment.
           <sub>🤖 PM · auth</sub><!-- agent-bot -->"
 
       # Normalize trigger: issue number + effective authorization. The resume
-      # (workflow_dispatch) path is pre-authorized.
+      # (workflow_dispatch) path is pre-authorized. The author path is authorized
+      # only if it also cleared the rate-limit gate.
       - name: Resolve context
         id: ctx
+        env:
+          ROLE: ${{ steps.authz.outputs.role }}
+          PROCEED: ${{ steps.abuse.outputs.proceed }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ISSUE="${{ inputs.issue }}"
@@ -80,7 +137,11 @@ jobs:
             echo "authorized=true" >> "$GITHUB_OUTPUT"
           else
             echo "issue=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
-            echo "authorized=${{ steps.auth.outputs.authorized }}" >> "$GITHUB_OUTPUT"
+            case "$ROLE" in
+              maintainer) echo "authorized=true" >> "$GITHUB_OUTPUT" ;;
+              author)     [ "$PROCEED" = "true" ] && echo "authorized=true" >> "$GITHUB_OUTPUT" || echo "authorized=false" >> "$GITHUB_OUTPUT" ;;
+              *)          echo "authorized=false" >> "$GITHUB_OUTPUT" ;;
+            esac
           fi
 
       - name: Configure git

@@ -1,4 +1,10 @@
 # Hardcoded admins who may steer ANY issue/PR agent flow, regardless of who
 # opened the issue. One GitHub username per line. Lines starting with # and
 # blank lines are ignored. Read by .github/scripts/authorize.sh.
+#
+# NOTE: allowlisting grants FULL parity (incl. /ready and /approved -> dev) on
+# EVERY issue, not just the person's own. Add only people you trust like an
+# admin. The issue's own author already gets PM *discussion* rights without
+# being listed here (see pm-followup.yml) — the allowlist is for more than that.
 MishaMgla
+dmowski      # trusted creator (issue #43); full parity by owner decision 2026-06-21
