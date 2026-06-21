@@ -34,6 +34,8 @@ func TestParseClient(t *testing.T) {
 		{"ping ok", []byte{CPing, 0x40, 0xe2, 0x01, 0x00}, // t=123456
 			ClientMsg{Type: CPing, T: 123456}, true},
 		{"ping truncated", []byte{CPing, 0x01}, ClientMsg{}, false},
+
+		{"paint ok", []byte{CPaint}, ClientMsg{Type: CPaint}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -78,6 +80,12 @@ func TestEncoderTagsAndLengths(t *testing.T) {
 	}
 	if b := EncodePong(9); b[0] != SPong || len(b) != 5 {
 		t.Errorf("pong: tag=%#x len=%d", b[0], len(b))
+	}
+	if b := EncodePaint(1, 2, 3, 4); b[0] != SPaint || len(b) != 13 {
+		t.Errorf("paint: tag=%#x len=%d", b[0], len(b))
+	}
+	if b := EncodeShake(1); b[0] != SShake || len(b) != 5 {
+		t.Errorf("shake: tag=%#x len=%d", b[0], len(b))
 	}
 }
 

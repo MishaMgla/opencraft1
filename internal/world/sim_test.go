@@ -67,6 +67,8 @@ func startSim(t *testing.T) *Sim {
 
 func frameID(b []byte) uint32 { return binary.LittleEndian.Uint32(b[1:]) }
 
+func frameInt16(b []byte, off int) int16 { return int16(binary.LittleEndian.Uint16(b[off:])) }
+
 // waitFor reads frames from out until pred is satisfied or the deadline passes.
 // Snapshots tick in continuously, so callers filter by message tag.
 func waitFor(t *testing.T, out chan []byte, pred func(b []byte) bool) bool {
@@ -88,6 +90,23 @@ func tagIs(tag byte, id uint32) func([]byte) bool {
 	return func(b []byte) bool { return len(b) >= 5 && b[0] == tag && frameID(b) == id }
 }
 
+func paintIs(x, y int16, color, ownerID uint32) func([]byte) bool {
+	return func(b []byte) bool {
+		return len(b) == 13 &&
+			b[0] == wire.SPaint &&
+			frameInt16(b, 1) == x &&
+			frameInt16(b, 3) == y &&
+			binary.LittleEndian.Uint32(b[5:]) == color &&
+			binary.LittleEndian.Uint32(b[9:]) == ownerID
+	}
+}
+
+func pongIs(t uint32) func([]byte) bool {
+	return func(b []byte) bool {
+		return len(b) == 5 && b[0] == wire.SPong && binary.LittleEndian.Uint32(b[1:]) == t
+	}
+}
+
 // drain empties whatever is currently buffered so a later waitFor only sees new
 // events.
 func drain(out chan []byte) {
@@ -96,6 +115,25 @@ func drain(out chan []byte) {
 		case <-out:
 		default:
 			return
+		}
+	}
+}
+
+func countShakesUntilPong(t *testing.T, out chan []byte, playerID uint32, pongToken uint32) int {
+	t.Helper()
+	deadline := time.After(2 * time.Second)
+	shakes := 0
+	for {
+		select {
+		case b := <-out:
+			if tagIs(wire.SShake, playerID)(b) {
+				shakes++
+			}
+			if pongIs(pongToken)(b) {
+				return shakes
+			}
+		case <-deadline:
+			t.Fatalf("timed out waiting for pong %d", pongToken)
 		}
 	}
 }
@@ -169,5 +207,85 @@ func TestSnapshotIncludesVisiblePlayers(t *testing.T) {
 	})
 	if !found {
 		t.Fatal("snapshot never contained both co-located players")
+	}
+}
+
+func TestPaintBroadcastsAndReplaysSharedTileState(t *testing.T) {
+	s := startSim(t)
+
+	outA := make(chan []byte, 256)
+	idA := s.Join("A", outA)
+	outB := make(chan []byte, 256)
+	s.Join("B", outB)
+	drain(outA)
+	drain(outB)
+
+	s.Paint(idA)
+	wantPaint := paintIs(2048, 2048, colorFor(idA), idA)
+	if !waitFor(t, outA, wantPaint) {
+		t.Fatal("painter never received shared paint update")
+	}
+	if !waitFor(t, outB, wantPaint) {
+		t.Fatal("observer never received shared paint update")
+	}
+
+	outC := make(chan []byte, 256)
+	s.Join("C", outC)
+	if !waitFor(t, outC, wantPaint) {
+		t.Fatal("late joiner never received existing painted tile")
+	}
+}
+
+func TestPaintedTileEntryEmitsExactlyOneShake(t *testing.T) {
+	s := startSim(t)
+
+	outA := make(chan []byte, 256)
+	idA := s.Join("A", outA)
+	outB := make(chan []byte, 256)
+	idB := s.Join("B", outB)
+	drain(outA)
+	drain(outB)
+
+	s.Paint(idA)
+	if !waitFor(t, outB, paintIs(2048, 2048, colorFor(idA), idA)) {
+		t.Fatal("observer never received paint before shake check")
+	}
+	drain(outA)
+	drain(outB)
+
+	s.Input(idB, 2176, 2048)
+	s.Ping(idB, 1)
+	if shakes := countShakesUntilPong(t, outB, idB, 1); shakes != 0 {
+		t.Fatalf("moving off painted tile emitted %d shakes, want 0", shakes)
+	}
+	drain(outA)
+	drain(outB)
+
+	s.Input(idB, 2048, 2048)
+	s.Ping(idB, 2)
+	if shakes := countShakesUntilPong(t, outB, idB, 2); shakes != 1 {
+		t.Fatalf("entering another player's painted tile emitted %d shakes, want 1", shakes)
+	}
+	if !waitFor(t, outA, tagIs(wire.SShake, idB)) {
+		t.Fatal("other observer never received entering player's shake")
+	}
+	drain(outA)
+	drain(outB)
+
+	s.Input(idB, 2048, 2048)
+	s.Ping(idB, 3)
+	if shakes := countShakesUntilPong(t, outB, idB, 3); shakes != 0 {
+		t.Fatalf("standing still on painted tile emitted %d extra shakes, want 0", shakes)
+	}
+
+	s.Input(idA, 2176, 2048)
+	s.Ping(idA, 4)
+	if shakes := countShakesUntilPong(t, outA, idA, 4); shakes != 0 {
+		t.Fatalf("painter moving off own tile emitted %d shakes, want 0", shakes)
+	}
+	s.Input(idA, 2048, 2048)
+	s.Ping(idA, 5)
+	if shakes := countShakesUntilPong(t, outA, idA, 5); shakes != 0 {
+		t.Fatalf("painter re-entering own painted tile emitted %d shakes, want 0", shakes)
 	}
 }
