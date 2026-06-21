@@ -1,0 +1,49 @@
+name: Bot Comment
+
+# Posts a comment on an issue/PR as **github-actions[bot]**, so AI-drafted
+# replies are clearly bot-authored instead of going out under a human's account
+# via a local `gh issue comment`. Dispatch it instead of commenting locally:
+#
+#   gh workflow run bot-comment.yml -f issue=43 -f body="your message"
+#
+# The body gets the standard agent-bot marker appended, so the PM/followup
+# workflows treat it as bot output and never loop on it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: "Issue or PR number to comment on"
+        required: true
+      body:
+        description: "Comment body (markdown). Posted as github-actions[bot]."
+        required: true
+
+jobs:
+  bot-comment:
+    if: github.repository == 'MishaMgla/opencraft1'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Post comment as github-actions[bot]
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          ISSUE: ${{ inputs.issue }}
+          BODY: ${{ inputs.body }}
+        run: |
+          set -euo pipefail
+          case "$ISSUE" in
+            ''|*[!0-9]*) echo "issue must be a number, got '$ISSUE'" >&2; exit 1 ;;
+          esac
+          # issues/{n}/comments works for both issues and PRs (PRs are issues).
+          {
+            printf '%s\n' "$BODY"
+            printf '\n<sub>🤖 posted via bot-comment workflow</sub><!-- agent-bot -->\n'
+          } > /tmp/bot-comment-body.md
+          URL=$(gh api "repos/$REPO/issues/$ISSUE/comments" \
+            -F "body=@/tmp/bot-comment-body.md" --jq '.html_url')
+          echo "Posted: $URL"
+          echo "Posted: $URL" >> "$GITHUB_STEP_SUMMARY"
