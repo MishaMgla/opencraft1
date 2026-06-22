@@ -9,6 +9,10 @@
 #
 # Env (required): ISSUE, ACTOR, GH_TOKEN, GITHUB_REPOSITORY
 # Env (tunable):  NEW_ACCOUNT_DAYS=30  AUTHOR_ISSUES_24H=5  DAILY_INTAKE_CAP=50
+#                 TRUSTED_ACTORS="" (space/comma-separated logins; the repo owner
+#                 is always trusted). Trusted actors skip the per-author rate limit
+#                 and new-account friction — these target untrusted submitters, not
+#                 maintainers. The repo-wide daily intake cap still applies to all.
 # Output: proceed=true|false (+ reason) to $GITHUB_OUTPUT.
 set -uo pipefail
 
@@ -19,6 +23,8 @@ REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY not set}"
 NEW_ACCOUNT_DAYS="${NEW_ACCOUNT_DAYS:-30}"
 AUTHOR_ISSUES_24H="${AUTHOR_ISSUES_24H:-5}"
 DAILY_INTAKE_CAP="${DAILY_INTAKE_CAP:-50}"
+# The repo owner (slug before '/') is always trusted; add more via TRUSTED_ACTORS.
+TRUSTED_ACTORS="${REPO%%/*} ${TRUSTED_ACTORS:-}"
 
 emit() {
   if [ -n "${GITHUB_OUTPUT:-}" ]; then
@@ -32,10 +38,24 @@ say() {  # post a throwaway comment; never fail the gate on a comment error
 }
 add_label() { gh issue edit "$ISSUE" --repo "$REPO" --add-label "$1" 2>/dev/null || true; }
 is_int() { [[ "${1:-}" =~ ^[0-9]+$ ]]; }
+# case-insensitive membership of ACTOR in the trusted allowlist (GitHub logins
+# are case-insensitive). Splits on whitespace and commas.
+is_trusted() {
+  local a t
+  a="$(printf '%s' "$ACTOR" | tr 'A-Z' 'a-z')"
+  for t in $(printf '%s' "$TRUSTED_ACTORS" | tr ',' ' ' | tr 'A-Z' 'a-z'); do
+    [ "$t" = "$a" ] && return 0
+  done
+  return 1
+}
 
-# --- 1) per-author rate limit: issues opened in the last 24h ---
+if is_trusted; then
+  echo "abuse-gate: '$ACTOR' is a trusted actor — skipping rate limit and new-account friction."
+fi
+
+# --- 1) per-author rate limit: issues opened in the last 24h (trusted actors exempt) ---
 SINCE="$(date -u -d '24 hours ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo '')"
-if [ -n "$SINCE" ]; then
+if ! is_trusted && [ -n "$SINCE" ]; then
   N_AUTHOR="$(gh api -X GET search/issues \
     --raw-field q="repo:$REPO type:issue author:$ACTOR created:>=$SINCE" \
     --jq '.total_count' 2>/dev/null || echo '')"
@@ -59,7 +79,10 @@ if is_int "$N_RUNS" && [ "$N_RUNS" -gt "$DAILY_INTAKE_CAP" ]; then
 fi
 
 # --- 3) new-account friction (label only; PM still responds = discussion) ---
-CREATED="$(gh api "users/$ACTOR" --jq '.created_at' 2>/dev/null || echo '')"
+CREATED=""
+if ! is_trusted; then
+  CREATED="$(gh api "users/$ACTOR" --jq '.created_at' 2>/dev/null || echo '')"
+fi
 if [ -n "$CREATED" ]; then
   C_S="$(date -u -d "$CREATED" +%s 2>/dev/null || echo '')"
   NOW_S="$(date -u +%s)"
