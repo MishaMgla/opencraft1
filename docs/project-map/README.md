@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-22 (branch `fix/join-handshake-tile-flood`): deliver the join handshake (Welcome + painted world + Enters) reliably instead of through the lossy `send` path — a painted world past the 64-frame buffer was evicting Welcome, so clients rendered tiles but never learned their id and paint/movement were dead (issue #55 follow-up).
 - 2026-06-22 (branch `codex/issue-55-cell-color-changing-alignment`): align `Space` paint targeting with the rendered isometric floor tile under the player's feet (issue #55).
 - 2026-06-21 (branch `codex/issue-52-verify-test`): restore hardened Space paint input handling and add regression coverage for shared paint replay plus one-shot shake behavior (issue #52).
 - 2026-06-21 (branch `codex/issue-42-game-viewport`): add subtle top-left HUD viewport zoom buttons plus an always-visible `Space` paint hint (issue #42).
