@@ -11,6 +11,17 @@ type SavedPlayer struct {
 	Color uint32
 }
 
+// SavedTile is a persisted painted tile — everything needed to replay the
+// painted world after an engine restart. X/Y are tile-aligned world coords (the
+// tile's origin). Owner is the painter's name: the runtime ownerID isn't
+// persisted because ids are reassigned every restart, so it carries no meaning
+// across one.
+type SavedTile struct {
+	X, Y  int16
+	Color uint32
+	Owner string
+}
+
 // Store persists player state across engine restarts. A nil Store disables
 // persistence entirely (local dev, tests): players spawn at center, get a
 // derived color, and nothing is written. Implementations must be safe for
@@ -22,4 +33,8 @@ type Store interface {
 	Load(ctx context.Context, name string) (sp SavedPlayer, ok bool, err error)
 	// Save upserts the player's current state, keyed on name.
 	Save(ctx context.Context, sp SavedPlayer) error
+	// SavePaint upserts one painted tile, keyed on its (x, y) origin.
+	SavePaint(ctx context.Context, t SavedTile) error
+	// LoadPaints returns every persisted painted tile, for replay at startup.
+	LoadPaints(ctx context.Context) ([]SavedTile, error)
 }

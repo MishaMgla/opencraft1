@@ -5,7 +5,7 @@ Go authoritative game engine: a single-goroutine world sim behind a WebSocket se
 ## Public surface
 - `server.New(sim, BuildInfo) *Server` → `.Handler() http.Handler` (mux: `/healthz`, `/version`, `/ws`, `/`).
 - `world.NewSim(store) *Sim`; `.Run(ctx)` (blocks, run in a goroutine); `.Join/.Input/.Leave/.Ping`; `.Done()`.
-- `world.Store` interface (`Load`, `Save`); `world.SavedPlayer`.
+- `world.Store` interface (`Load`, `Save`, `SavePaint`, `LoadPaints`); `world.SavedPlayer`, `world.SavedTile`.
 - `store.NewPostgres(ctx, dsn) (*Postgres, error)` implements `world.Store`.
 - `wire.Encode*` (server→client), `wire.ParseClient` (client→server), `wire.Ent`, type tags.
 

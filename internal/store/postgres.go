@@ -65,3 +65,39 @@ func (p *Postgres) Save(ctx context.Context, sp world.SavedPlayer) error {
 		sp.Name, sp.X, sp.Y, int32(sp.Color))
 	return err
 }
+
+// SavePaint upserts one painted tile, keyed on its (x, y) origin. A later paint
+// of the same tile overwrites the previous color and owner. color is stored as
+// int4, matching player_state's color column.
+func (p *Postgres) SavePaint(ctx context.Context, t world.SavedTile) error {
+	_, err := p.pool.Exec(ctx,
+		`insert into public.painted_tile (x, y, color, owner_name, painted_at)
+		 values ($1, $2, $3, $4, now())
+		 on conflict (x, y) do update
+		   set color = excluded.color, owner_name = excluded.owner_name, painted_at = now()`,
+		t.X, t.Y, int32(t.Color), t.Owner)
+	return err
+}
+
+// LoadPaints returns every persisted painted tile. The sim replays these into
+// its painted map at startup, so the painted world survives restarts.
+func (p *Postgres) LoadPaints(ctx context.Context) ([]world.SavedTile, error) {
+	rows, err := p.pool.Query(ctx,
+		`select x, y, color, owner_name from public.painted_tile`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tiles []world.SavedTile
+	for rows.Next() {
+		var t world.SavedTile
+		var color int32 // color is stored as int4; carry uint32 RGB through it
+		if err := rows.Scan(&t.X, &t.Y, &color, &t.Owner); err != nil {
+			return nil, err
+		}
+		t.Color = uint32(color)
+		tiles = append(tiles, t)
+	}
+	return tiles, rows.Err()
+}

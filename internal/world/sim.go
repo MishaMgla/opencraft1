@@ -173,6 +173,47 @@ func (s *Sim) save(p *player) {
 	}()
 }
 
+// savePaint persists one painted tile asynchronously, mirroring save(): the
+// values are already a detached SavedTile, so the spawned goroutine never
+// touches sim state — no lock, no race.
+func (s *Sim) savePaint(t SavedTile) {
+	if s.store == nil {
+		return
+	}
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := s.store.SavePaint(ctx, t); err != nil {
+			log.Printf("store save paint (%d,%d): %v", t.X, t.Y, err)
+		}
+	}()
+}
+
+// loadPaints seeds painted from the store so the painted world survives
+// restarts. It runs once at Run startup — before the tick loop and before any
+// player is served — so the "no DB on the sim goroutine" rule, which exists to
+// protect the live loop, is not in play. A load error degrades to an empty
+// world rather than blocking startup. Restored tiles get ownerID 0: no live
+// player ever has id 0, so a rejoining painter is treated like anyone else
+// (entering the tile still shakes), which is the right call since runtime ids
+// don't survive a restart anyway.
+func (s *Sim) loadPaints(painted map[tileKey]paintedTile) {
+	if s.store == nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	tiles, err := s.store.LoadPaints(ctx)
+	if err != nil {
+		log.Printf("store load paints: %v", err)
+		return
+	}
+	for _, t := range tiles {
+		key := tileKey{t.X, t.Y}
+		painted[key] = paintedTile{x: t.X, y: t.Y, color: t.Color, ownerID: 0}
+	}
+}
+
 // snapshot copies every online player's state into a detached slice the sim no
 // longer owns — safe to hand to a goroutine or block on.
 func (s *Sim) snapshot(players map[uint32]*player) []SavedPlayer {
@@ -220,6 +261,7 @@ func (s *Sim) Run(ctx context.Context) {
 
 	players := map[uint32]*player{}
 	painted := map[tileKey]paintedTile{}
+	s.loadPaints(painted)
 	grid := NewGrid()
 	var nextID uint32 = 1
 	var tick uint32
@@ -297,6 +339,7 @@ func (s *Sim) Run(ctx context.Context) {
 				for _, o := range players {
 					send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
 				}
+				s.savePaint(SavedTile{X: tile.x, Y: tile.y, Color: tile.color, Owner: p.name})
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {

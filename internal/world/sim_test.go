@@ -3,11 +3,52 @@ package world
 import (
 	"context"
 	"encoding/binary"
+	"sync"
 	"testing"
 	"time"
 
 	"opencraft1/internal/wire"
 )
+
+// fakeStore is an in-memory world.Store for driving the persistence paths. It is
+// concurrency-safe because Save/SavePaint run on goroutines the sim spawns while
+// the test reads from its own goroutine.
+type fakeStore struct {
+	mu      sync.Mutex
+	preload []SavedTile // returned by LoadPaints (startup replay)
+	paints  []SavedTile // captured by SavePaint
+}
+
+func (f *fakeStore) Load(context.Context, string) (SavedPlayer, bool, error) {
+	return SavedPlayer{}, false, nil
+}
+func (f *fakeStore) Save(context.Context, SavedPlayer) error { return nil }
+func (f *fakeStore) SavePaint(_ context.Context, t SavedTile) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.paints = append(f.paints, t)
+	return nil
+}
+func (f *fakeStore) LoadPaints(context.Context) ([]SavedTile, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.preload, nil
+}
+
+func (f *fakeStore) savedPaints() []SavedTile {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]SavedTile(nil), f.paints...)
+}
+
+func startSimWithStore(t *testing.T, store Store) *Sim {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	s := NewSim(store)
+	go s.Run(ctx)
+	return s
+}
 
 func TestClamp(t *testing.T) {
 	tests := []struct{ in, want int16 }{
@@ -233,6 +274,49 @@ func TestPaintBroadcastsAndReplaysSharedTileState(t *testing.T) {
 	s.Join("C", outC)
 	if !waitFor(t, outC, wantPaint) {
 		t.Fatal("late joiner never received existing painted tile")
+	}
+}
+
+// Painting persists the tile through the Store so it survives an engine restart
+// (FR: space-paint must outlive a reload). The write is async, so poll.
+func TestPaintPersistsTileToStore(t *testing.T) {
+	store := &fakeStore{}
+	s := startSimWithStore(t, store)
+
+	out := make(chan []byte, 256)
+	id := s.Join("A", out)
+	s.Paint(id)
+
+	deadline := time.After(2 * time.Second)
+	for {
+		saved := store.savedPaints()
+		if len(saved) > 0 {
+			got := saved[0]
+			if got.X != 2048 || got.Y != 2048 || got.Color != colorFor(id) || got.Owner != "A" {
+				t.Fatalf("persisted tile = %+v, want {2048 2048 %#x A}", got, colorFor(id))
+			}
+			return
+		}
+		select {
+		case <-deadline:
+			t.Fatal("paint was never persisted to the store")
+		case <-time.After(10 * time.Millisecond):
+		}
+	}
+}
+
+// On startup the sim replays persisted tiles, so a joiner immediately receives
+// them just like a tile painted live before they connected.
+func TestPaintedTilesRestoredFromStoreOnStartup(t *testing.T) {
+	store := &fakeStore{preload: []SavedTile{{X: 2048, Y: 2048, Color: 0x123456, Owner: "ghost"}}}
+	s := startSimWithStore(t, store)
+
+	out := make(chan []byte, 256)
+	s.Join("A", out)
+
+	// ownerID 0: restored tiles have no live owner.
+	if !waitFor(t, out, paintIs(2048, 2048, 0x123456, 0)) {
+		t.Fatal("joiner never received the restored painted tile")
 	}
 }
 
