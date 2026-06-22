@@ -14,6 +14,7 @@ const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 1.5;
 const PAINT_TILE_SIZE = 128;
 const ULT_CHARGE_NEEDED = 12;
+const USERNAME_STORAGE_KEY = 'opencraft1.username';
 
 const ROLE_NAMES = new Map<number, string>([
   [ROLE_PULSE, 'Pulse'],
@@ -29,14 +30,58 @@ interface RosterPlayer {
   ready: boolean;
 }
 
-document.getElementById('name-form')!.addEventListener('submit', async (e) => {
+const overlay = document.getElementById('overlay')!;
+const nameForm = document.getElementById('name-form') as HTMLFormElement;
+const nameInput = document.getElementById('name') as HTMLInputElement;
+let startPromise: Promise<void> | null = null;
+
+function normalizeUsername(value: string): string {
+  return value.trim() || 'anon';
+}
+
+function loadSavedUsername(): string | null {
+  try {
+    const saved = localStorage.getItem(USERNAME_STORAGE_KEY);
+    return saved && saved.trim() ? saved.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveUsername(name: string): void {
+  try {
+    localStorage.setItem(USERNAME_STORAGE_KEY, name);
+  } catch {
+    // The game still works when browser storage is blocked.
+  }
+}
+
+function selectedRole(): number | null {
+  const selected = document.querySelector<HTMLInputElement>('input[name="role"]:checked');
+  return selected ? Number(selected.value) : null;
+}
+
+async function join(name: string, role: number): Promise<void> {
+  if (startPromise) return startPromise;
+  saveUsername(name);
+  overlay.style.display = 'none';
+  startPromise = start(name, role);
+  return startPromise;
+}
+
+nameForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const name = (document.getElementById('name') as HTMLInputElement).value.trim() || 'anon';
-  const selectedRole = document.querySelector<HTMLInputElement>('input[name="role"]:checked');
-  if (!selectedRole) return;
-  document.getElementById('overlay')!.style.display = 'none';
-  await start(name, Number(selectedRole.value));
+  const role = selectedRole();
+  if (role === null) return;
+  await join(normalizeUsername(nameInput.value), role);
 });
+
+const savedUsername = loadSavedUsername();
+if (savedUsername) {
+  const role = selectedRole();
+  nameInput.value = savedUsername;
+  if (role !== null) void join(savedUsername, role);
+}
 
 function paintTileKey(x: number, y: number, bounds: Bounds): string {
   const clampedX = Math.min(bounds.maxX, Math.max(bounds.minX, x));
@@ -53,11 +98,28 @@ function roleName(role: number): string {
 async function start(name: string, role: number): Promise<void> {
   const r = await createRenderer();
   const input = createInput();
+  const hudName = document.getElementById('hud-name') as HTMLButtonElement;
   const hudStatus = document.getElementById('hud-status')!;
+  const profileDialog = document.getElementById('profile-modal') as HTMLDialogElement;
+  const profileForm = document.getElementById('profile-form') as HTMLFormElement;
+  const profileNameInput = document.getElementById('profile-name') as HTMLInputElement;
+  const profileCancel = document.getElementById('profile-cancel') as HTMLButtonElement;
   const roster = document.getElementById('roster-list')!;
   const zoomOutButton = document.getElementById('zoom-out') as HTMLButtonElement;
   const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
+  let currentName = name;
   let zoom = 1;
+
+  function setDisplayName(nextName: string): void {
+    currentName = nextName;
+    hudName.textContent = nextName;
+    r.setLocalName(nextName);
+    const localRosterPlayer = rosterPlayers.get(me.id);
+    if (localRosterPlayer) {
+      localRosterPlayer.name = nextName;
+      renderRoster();
+    }
+  }
 
   function setZoom(nextZoom: number): void {
     zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(nextZoom.toFixed(2))));
@@ -70,6 +132,21 @@ async function start(name: string, role: number): Promise<void> {
   zoomInButton.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
   setZoom(zoom);
 
+  hudName.addEventListener('click', () => {
+    profileNameInput.value = currentName;
+    profileDialog.showModal();
+    profileNameInput.focus();
+    profileNameInput.select();
+  });
+  profileCancel.addEventListener('click', () => profileDialog.close());
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const nextName = normalizeUsername(profileNameInput.value);
+    saveUsername(nextName);
+    setDisplayName(nextName);
+    profileDialog.close();
+  });
+
   const me = { id: 0, x: 2048, y: 2048 };
   const bounds: Bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
   const others = new Map<number, Token>();
@@ -79,7 +156,7 @@ async function start(name: string, role: number): Promise<void> {
   function upsertRosterPlayer(state: PlayerState): void {
     rosterPlayers.set(state.id, {
       id: state.id,
-      name: state.name || (state.id === me.id ? name : `player ${state.id}`),
+      name: state.id === me.id ? currentName : state.name || `player ${state.id}`,
       role: state.role,
       charge: state.charge,
       ready: state.ready,
@@ -116,8 +193,9 @@ async function start(name: string, role: number): Promise<void> {
   // game loop, so exposing the references once is enough for a test to read
   // live state. Enabled by an init script that sets window.__E2E before load.
   if (window.__E2E) window.__game = { me, others, bounds };
+  setDisplayName(currentName);
 
-  const net = connect(await resolveWsUrl(), name, role, {
+  const net = connect(await resolveWsUrl(), currentName, role, {
     welcome(m) {
       me.id = m.id;
       // Adopt the server's spawn position (restored for returning players, else
@@ -214,6 +292,6 @@ async function start(name: string, role: number): Promise<void> {
       if (me.id !== 0) net.sendInput(Math.round(me.x), Math.round(me.y));
     }
 
-    hudStatus.textContent = `${name} · players online: ${rosterPlayers.size}`;
+    hudStatus.textContent = `players online: ${rosterPlayers.size}`;
   });
 }

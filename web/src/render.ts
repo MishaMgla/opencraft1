@@ -7,7 +7,7 @@ const SHAKE_AMPLITUDE = 7;
 const REMOTE_LABEL_COLOR = 0xd8dee9;
 const LOCAL_LABEL_COLOR = 0xffffff;
 
-function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): Container {
+function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; label: Text } {
   const container = new Container();
 
   const shadow = new Graphics()
@@ -22,11 +22,12 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
   label.y = -16;
 
   container.addChild(shadow, body, label);
-  return container;
+  return { container, label };
 }
 
 export interface Token {
   container: Container;
+  label: Text;
   rx: number;
   ry: number;
   tx: number;
@@ -44,12 +45,13 @@ export interface Renderer {
   paintTile(x: number, y: number, color: number): void;
   shakeLocal(): void;
   shakeToken(token: Token): void;
+  setLocalName(name: string): void;
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
 }
 
-function makeTokenState(container: Container, x: number, y: number): Token {
-  return { container, rx: x, ry: y, tx: x, ty: y, shakeStartedAt: 0, shakeUntil: 0 };
+function makeTokenState(container: Container, label: Text, x: number, y: number): Token {
+  return { container, label, rx: x, ry: y, tx: x, ty: y, shakeStartedAt: 0, shakeUntil: 0 };
 }
 
 function tileKey(x: number, y: number): string {
@@ -94,9 +96,9 @@ export async function createRenderer(): Promise<Renderer> {
   world.addChild(ground);
 
   // Local player token.
-  const localContainer = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
+  const { container: localContainer, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
   world.addChild(localContainer);
-  const localToken = makeTokenState(localContainer, 0, 0);
+  const localToken = makeTokenState(localContainer, localLabel, 0, 0);
 
   function placeToken(token: Token): void {
     const p = worldToScreen(token.rx, token.ry);
@@ -114,9 +116,9 @@ export async function createRenderer(): Promise<Renderer> {
   return {
     app,
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
-      const container = makeToken(name, color);
+      const { container, label } = makeToken(name, color);
       world.addChild(container);
-      const token = makeTokenState(container, x, y);
+      const token = makeTokenState(container, label, x, y);
       this.placeToken(token);
       return token;
     },
@@ -159,6 +161,9 @@ export async function createRenderer(): Promise<Renderer> {
     },
     shakeToken(token) {
       shakeToken(token);
+    },
+    setLocalName(name) {
+      localLabel.text = name;
     },
     setZoom(scale) {
       world.scale.set(scale);

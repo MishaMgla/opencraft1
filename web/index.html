@@ -8,8 +8,9 @@
     html, body { margin: 0; height: 100%; background: #11151c; overflow: hidden; font-family: system-ui, sans-serif; }
     #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: #11151c; z-index: 10; overflow: auto; box-sizing: border-box; }
     #name-form { display: grid; gap: 12px; width: min(520px, 100%); }
-    #name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
+    #name, #profile-name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
     #name { background: #0c0f14; color: #cfe; }
+    #profile-name { width: 100%; box-sizing: border-box; background: #0c0f14; color: #cfe; }
     #issue59-guide { display: grid; gap: 9px; padding: 12px; border: 1px solid #2a3340; border-radius: 6px; background: #0c0f14; color: #d8e8ef; }
     #issue59-guide h1 { margin: 0; color: #ffffff; font-size: 15px; line-height: 1.2; }
     #issue59-guide p { margin: 0; color: #b7cbd5; font-size: 13px; line-height: 1.35; }
@@ -24,6 +25,8 @@
     #role-picker label:has(input:checked) { border-color: #3CB44B; background: #132118; color: #ffffff; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
     #hud { position: fixed; top: 8px; left: 8px; display: flex; align-items: center; gap: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
+    #hud-name { max-width: min(180px, 38vw); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 8px; border: 1px solid rgba(159, 182, 196, 0.28); border-radius: 4px; background: rgba(12, 15, 20, 0.62); color: #ffffff; font: 700 14px/1.2 system-ui; }
+    #hud-name:hover { background: rgba(42, 51, 64, 0.72); }
     #hud .hint { opacity: 0.78; }
     #hud .zoom-controls { display: inline-flex; gap: 4px; }
     #hud .hud-zoom { width: 24px; height: 24px; padding: 0; border-radius: 4px; border: 1px solid rgba(159, 182, 196, 0.28); background: rgba(12, 15, 20, 0.62); color: #c8d8e1; font: 600 15px/1 system-ui; cursor: pointer; }
@@ -38,6 +41,13 @@
     .roster-role { color: #9fb6c4; }
     .roster-ult { min-width: 42px; text-align: right; color: #f2d06b; }
     .roster-ult.ready { color: #75d983; font-weight: 700; }
+    #profile-modal { width: min(360px, calc(100vw - 32px)); padding: 0; border: 1px solid #2a3340; border-radius: 6px; background: #11151c; color: #d8e8ef; }
+    #profile-modal::backdrop { background: rgba(0, 0, 0, 0.62); }
+    #profile-form { display: grid; gap: 12px; padding: 16px; }
+    #profile-form h2 { margin: 0; color: #ffffff; font-size: 16px; line-height: 1.2; }
+    #profile-form label { display: grid; gap: 6px; color: #9fb6c4; font-size: 13px; }
+    #profile-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    #profile-cancel { background: rgba(42, 51, 64, 0.92); color: #d8e8ef; }
     @media (max-width: 640px) {
       #hud { right: 8px; flex-wrap: wrap; }
       #roster { top: auto; right: 8px; bottom: 36px; min-width: 200px; }
@@ -83,6 +93,7 @@
     </form>
   </div>
   <div id="hud">
+    <button id="hud-name" type="button" aria-haspopup="dialog" aria-controls="profile-modal"></button>
     <span id="hud-status"></span>
     <span class="hint">Space: color cell</span>
     <span class="zoom-controls" aria-label="Viewport zoom">
@@ -94,6 +105,19 @@
     <div id="roster-title">players</div>
     <div id="roster-list"></div>
   </div>
+  <dialog id="profile-modal" aria-labelledby="profile-title">
+    <form id="profile-form">
+      <h2 id="profile-title">Profile</h2>
+      <label>
+        Username
+        <input id="profile-name" maxlength="16" autocomplete="off" />
+      </label>
+      <div id="profile-actions">
+        <button id="profile-cancel" type="button">cancel</button>
+        <button type="submit">save</button>
+      </div>
+    </form>
+  </dialog>
   <a id="gh-link" href="https://github.com/MishaMgla/opencraft1/" target="_blank" rel="noopener noreferrer">GitHub</a>
   <script type="module" src="./src/main.js"></script>
 </body>
