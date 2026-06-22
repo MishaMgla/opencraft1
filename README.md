@@ -30,29 +30,6 @@
 
 
     ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-    █▓▒░                  I S S U E   # 5 9   R E T R O                  ░▒▓█
-    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-
-       issue #59 added a first layer of role play on top of painting.
-
-       before entering, each player picks one fixed role for the session:
-
-       Pulse ──▶  paints a 3 x 3 block centered on the player.
-       Cross ──▶  paints the player's tile plus two tiles in each
-                  cardinal direction.
-       Trail ──▶  paints the next 8 distinct tiles the player enters.
-
-       normal painting charges the selected role's ult. when the roster
-       shows ready, press E to activate it. hold Space while moving to
-       keep painting each new tile once instead of tapping on every step.
-
-       the player roster shows everyone connected, their role, and ult
-       progress, so the world now has a small shared readout of who is
-       building with which paint pattern.
-
-
-
-    ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
     █▓▒░                          H O W   T O                            ░▒▓█
     ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 
