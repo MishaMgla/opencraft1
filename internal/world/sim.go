@@ -151,9 +151,15 @@ func diff(a, b []uint32) []uint32 { // returns a \ b
 
 func paintTileFor(x, y int16) tileKey {
 	return tileKey{
-		x: (clamp(x) / PaintTileSize) * PaintTileSize,
-		y: (clamp(y) / PaintTileSize) * PaintTileSize,
+		x: paintTileCoord(x),
+		y: paintTileCoord(y),
 	}
+}
+
+func paintTileCoord(v int16) int16 {
+	pos := int(clamp(v))
+	size := int(PaintTileSize)
+	return int16(((pos + size/2) / size) * size)
 }
 
 // save persists one player asynchronously. Values are copied into a local

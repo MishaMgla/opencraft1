@@ -15,7 +15,7 @@ TypeScript source compiled in-place to ESM by `tsc` (no bundler). Emitted `.js` 
 ## sharp edges
 - remote players are smoothed toward the latest snapshot (`rx += (tx-rx)*0.2`); not time-based interpolation — good enough for MVP.
 - input is sent at ~15 Hz as an absolute position; the render loop runs at display refresh.
-- `Space` sends one paint request for the local player's current server-side tile; paint/shake visibility comes back through server broadcasts rather than local-only prediction. the paint latch runs in capture phase so focused HUD controls cannot consume the key first.
+- `Space` sends one paint request for the local player's current rendered floor tile; the server chooses the nearest rendered 128-unit tile center so the returned colored diamond aligns under the player's feet. paint/shake visibility comes back through server broadcasts rather than local-only prediction. the paint latch runs in capture phase so focused HUD controls cannot consume the key first.
 - HUD `+`/`-` controls scale the Pixi world container in 10% steps from 50% to 150%; this is renderer presentation only, not browser zoom or protocol state.
 - WASD moves along world axes, which look diagonal under iso (acceptable for MVP).
 - the production engine URL comes from Vercel's `WS_URL` env via `/config.json`; there is no client rebuild on URL change. `web/api/config.js` + `web/vercel.json` wire this up — see `docs/deploy.md`.
