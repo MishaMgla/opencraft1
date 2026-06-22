@@ -109,10 +109,22 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := make(chan []byte, 64)
-	id := s.sim.Join(msg.Name, out)
+	id, initial := s.sim.Join(msg.Name, out)
 	defer s.sim.Leave(id)
 
-	// Writer goroutine: drain out -> socket until the connection ends.
+	// Deliver the joining player's initial state (Welcome + painted world +
+	// present players) reliably, before the lossy writer starts. These frames
+	// must not pass through the drop-oldest out channel: losing the Welcome
+	// frame leaves the client without its id and disables all input (the bug
+	// behind a painted world large enough to overflow out's 64-frame buffer).
+	// Writing here blocks only this connection's goroutine on its own socket.
+	for _, b := range initial {
+		if err := c.Write(ctx, websocket.MessageBinary, b); err != nil {
+			return
+		}
+	}
+
+	// Writer goroutine: drain ongoing frames -> socket until the connection ends.
 	go func() {
 		for {
 			select {

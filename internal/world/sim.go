@@ -65,7 +65,17 @@ type cmdJoin struct {
 	name  string
 	out   chan []byte
 	saved *SavedPlayer // nil = brand-new player: spawn at center, derive color
-	reply chan uint32
+	reply chan joinResult
+}
+
+// joinResult carries what the connection goroutine needs once a join is
+// processed: the assigned id and the player's initial-state frames (Welcome,
+// the painted world, and Enters for players already present). These frames are
+// returned for reliable delivery on the connection goroutine rather than
+// streamed through the lossy out channel — see Sim.Join.
+type joinResult struct {
+	id      uint32
+	initial [][]byte
 }
 type cmdInput struct {
 	id   uint32
@@ -89,14 +99,24 @@ func NewSim(store Store) *Sim {
 // final persist isn't cut short.
 func (s *Sim) Done() <-chan struct{} { return s.done }
 
-// Join registers a player and returns its assigned id. Blocks until the sim
-// goroutine processes the join (fast). out receives encoded frames.
+// Join registers a player and returns its assigned id plus the ordered frames
+// that make up its initial world state (Welcome, every painted tile, and an
+// Enter for each player already present). Blocks until the sim goroutine
+// processes the join (fast). out receives ongoing frames only.
+//
+// The initial frames are returned rather than pushed into out because out is a
+// lossy drop-oldest channel (see send): a painted world larger than out's
+// buffer would otherwise overflow the channel during the join burst — before
+// any writer drained it — and evict the oldest frame, the Welcome. A client
+// that never receives Welcome never learns its id and can neither move nor
+// paint. The caller must write these frames to the socket before starting the
+// lossy writer; blocking there stalls only that one connection, never the sim.
 //
 // The saved-position lookup happens here, on the caller's connection goroutine,
 // NOT inside the sim — so a slow DB never stalls the tick loop. A load error is
 // logged and treated as "new player" (spawn at center) so persistence trouble
 // degrades gracefully instead of blocking joins.
-func (s *Sim) Join(name string, out chan []byte) uint32 {
+func (s *Sim) Join(name string, out chan []byte) (uint32, [][]byte) {
 	var saved *SavedPlayer
 	if s.store != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -109,9 +129,10 @@ func (s *Sim) Join(name string, out chan []byte) uint32 {
 			saved = &sp
 		}
 	}
-	reply := make(chan uint32, 1)
+	reply := make(chan joinResult, 1)
 	s.cmds <- cmdJoin{name: name, out: out, saved: saved, reply: reply}
-	return <-reply
+	r := <-reply
+	return r.id, r.initial
 }
 
 func (s *Sim) Input(id uint32, x, y int16) { s.cmds <- cmdInput{id, x, y} }
@@ -303,18 +324,27 @@ func (s *Sim) Run(ctx context.Context) {
 				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out, lastPaintTile: paintTileFor(px, py)}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
-				send(p, wire.EncodeWelcome(id, p.x, p.y, 0, 0, WorldSize-1, WorldSize-1))
+
+				// Build the joining player's initial state for reliable
+				// delivery by the connection goroutine. Streaming these through
+				// p.out would expose them to drop-oldest backpressure, which
+				// evicts the Welcome frame once the painted world outgrows the
+				// channel buffer. Broadcasts to OTHER players stay on the lossy
+				// path — they already hold a full world and missing one Enter is
+				// harmless.
+				initial := make([][]byte, 0, 1+len(painted)+len(players))
+				initial = append(initial, wire.EncodeWelcome(id, p.x, p.y, 0, 0, WorldSize-1, WorldSize-1))
 				for _, tile := range painted {
-					send(p, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+					initial = append(initial, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
 				}
 				for oid, o := range players {
 					if oid == id {
 						continue
 					}
-					send(p, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
+					initial = append(initial, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
 					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name))
 				}
-				m.reply <- id
+				m.reply <- joinResult{id: id, initial: initial}
 
 			case cmdInput:
 				p := players[m.id]

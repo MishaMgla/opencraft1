@@ -106,6 +106,19 @@ func startSim(t *testing.T) *Sim {
 	return s
 }
 
+// clientJoin joins the way the real server connection does: it delivers the
+// reliable initial-state frames first, then lets the ongoing stream flow —
+// both observable on out. Tests can therefore keep treating out as the full
+// ordered sequence of frames the client receives. The out channels here are
+// generously buffered, so feeding the (small) initial burst never blocks.
+func clientJoin(s *Sim, name string, out chan []byte) uint32 {
+	id, initial := s.Join(name, out)
+	for _, b := range initial {
+		out <- b
+	}
+	return id
+}
+
 func frameID(b []byte) uint32 { return binary.LittleEndian.Uint32(b[1:]) }
 
 func frameInt16(b []byte, off int) int16 { return int16(binary.LittleEndian.Uint16(b[off:])) }
@@ -186,10 +199,10 @@ func TestJoinExchangesEnterEvents(t *testing.T) {
 	s := startSim(t)
 
 	outA := make(chan []byte, 256)
-	idA := s.Join("A", outA)
+	idA := clientJoin(s, "A", outA)
 
 	outB := make(chan []byte, 256)
-	idB := s.Join("B", outB)
+	idB := clientJoin(s, "B", outB)
 
 	// A (already in-world) must be told B entered.
 	if !waitFor(t, outA, tagIs(wire.SEnter, idB)) {
@@ -209,9 +222,9 @@ func TestLeaveNotifiesNeighbors(t *testing.T) {
 	s := startSim(t)
 
 	outA := make(chan []byte, 256)
-	s.Join("A", outA)
+	clientJoin(s, "A", outA)
 	outB := make(chan []byte, 256)
-	idB := s.Join("B", outB)
+	idB := clientJoin(s, "B", outB)
 
 	waitFor(t, outA, tagIs(wire.SEnter, idB))
 	drain(outA)
@@ -228,9 +241,9 @@ func TestSnapshotIncludesVisiblePlayers(t *testing.T) {
 	s := startSim(t)
 
 	outA := make(chan []byte, 256)
-	idA := s.Join("A", outA)
+	idA := clientJoin(s, "A", outA)
 	outB := make(chan []byte, 256)
-	idB := s.Join("B", outB)
+	idB := clientJoin(s, "B", outB)
 	_ = idB
 
 	found := waitFor(t, outA, func(b []byte) bool {
@@ -255,9 +268,9 @@ func TestPaintBroadcastsAndReplaysSharedTileState(t *testing.T) {
 	s := startSim(t)
 
 	outA := make(chan []byte, 256)
-	idA := s.Join("A", outA)
+	idA := clientJoin(s, "A", outA)
 	outB := make(chan []byte, 256)
-	s.Join("B", outB)
+	clientJoin(s, "B", outB)
 	drain(outA)
 	drain(outB)
 
@@ -271,7 +284,7 @@ func TestPaintBroadcastsAndReplaysSharedTileState(t *testing.T) {
 	}
 
 	outC := make(chan []byte, 256)
-	s.Join("C", outC)
+	clientJoin(s, "C", outC)
 	if !waitFor(t, outC, wantPaint) {
 		t.Fatal("late joiner never received existing painted tile")
 	}
@@ -284,7 +297,7 @@ func TestPaintPersistsTileToStore(t *testing.T) {
 	s := startSimWithStore(t, store)
 
 	out := make(chan []byte, 256)
-	id := s.Join("A", out)
+	id := clientJoin(s, "A", out)
 	s.Paint(id)
 
 	deadline := time.After(2 * time.Second)
@@ -312,7 +325,7 @@ func TestPaintedTilesRestoredFromStoreOnStartup(t *testing.T) {
 	s := startSimWithStore(t, store)
 
 	out := make(chan []byte, 256)
-	s.Join("A", out)
+	clientJoin(s, "A", out)
 
 	// ownerID 0: restored tiles have no live owner.
 	if !waitFor(t, out, paintIs(2048, 2048, 0x123456, 0)) {
@@ -324,9 +337,9 @@ func TestPaintedTileEntryEmitsExactlyOneShake(t *testing.T) {
 	s := startSim(t)
 
 	outA := make(chan []byte, 256)
-	idA := s.Join("A", outA)
+	idA := clientJoin(s, "A", outA)
 	outB := make(chan []byte, 256)
-	idB := s.Join("B", outB)
+	idB := clientJoin(s, "B", outB)
 	drain(outA)
 	drain(outB)
 
@@ -371,5 +384,40 @@ func TestPaintedTileEntryEmitsExactlyOneShake(t *testing.T) {
 	s.Ping(idA, 5)
 	if shakes := countShakesUntilPong(t, outA, idA, 5); shakes != 0 {
 		t.Fatalf("painter re-entering own painted tile emitted %d shakes, want 0", shakes)
+	}
+}
+
+// Regression for issue #55 follow-up: once the persisted painted world grows
+// past the connection's send buffer (64), the join burst — Welcome followed by
+// one Paint per persisted tile — used to be streamed through the lossy
+// drop-oldest channel before any writer drained it. The oldest frame (Welcome)
+// was evicted, so the client rendered the flood of tiles but never learned its
+// id, leaving input (including Space-to-paint) permanently dead. The joining
+// player's initial state must be delivered reliably regardless of tile count.
+func TestJoinDeliversWelcomeUnderTileFlood(t *testing.T) {
+	var preload []SavedTile
+	for i := 0; i < 200; i++ { // well past the 64-frame send buffer
+		x := int16((i % 32) * int(PaintTileSize))
+		y := int16((i / 32) * int(PaintTileSize))
+		preload = append(preload, SavedTile{X: x, Y: y, Color: 0x010203, Owner: "ghost"})
+	}
+	store := &fakeStore{preload: preload}
+	s := startSimWithStore(t, store)
+
+	out := make(chan []byte, 64) // same capacity as the production server conn
+	id, initial := s.Join("A", out)
+	if id == 0 {
+		t.Fatal("join returned id 0")
+	}
+
+	gotWelcome := false
+	for _, b := range initial {
+		if len(b) > 0 && b[0] == wire.SWelcome {
+			gotWelcome = true
+			break
+		}
+	}
+	if !gotWelcome {
+		t.Fatal("Welcome missing from initial join delivery — client never learns its id, paint stays dead")
 	}
 }
