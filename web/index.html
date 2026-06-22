@@ -7,9 +7,15 @@
   <style>
     html, body { margin: 0; height: 100%; background: #11151c; overflow: hidden; font-family: system-ui, sans-serif; }
     #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #11151c; z-index: 10; }
-    #name-form { display: flex; gap: 8px; }
+    #name-form { display: grid; gap: 12px; min-width: min(420px, calc(100vw - 32px)); }
     #name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
     #name { background: #0c0f14; color: #cfe; }
+    #role-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; border: 0; }
+    #role-picker label { display: grid; gap: 3px; min-width: 0; padding: 9px 10px; border: 1px solid #2a3340; border-radius: 6px; background: #0c0f14; color: #d8e8ef; cursor: pointer; }
+    #role-picker input { position: absolute; opacity: 0; pointer-events: none; }
+    #role-picker .role-name { font-size: 14px; font-weight: 700; }
+    #role-picker .role-effect { color: #9fb6c4; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #role-picker label:has(input:checked) { border-color: #3CB44B; background: #132118; color: #ffffff; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
     #hud { position: fixed; top: 8px; left: 8px; display: flex; align-items: center; gap: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
     #hud .hint { opacity: 0.78; }
@@ -17,6 +23,20 @@
     #hud .hud-zoom { width: 24px; height: 24px; padding: 0; border-radius: 4px; border: 1px solid rgba(159, 182, 196, 0.28); background: rgba(12, 15, 20, 0.62); color: #c8d8e1; font: 600 15px/1 system-ui; cursor: pointer; }
     #hud .hud-zoom:hover:not(:disabled) { background: rgba(42, 51, 64, 0.72); color: #ffffff; }
     #hud .hud-zoom:disabled { opacity: 0.38; cursor: default; }
+    #roster { position: fixed; top: 8px; right: 8px; z-index: 5; min-width: 220px; max-width: min(300px, calc(100vw - 16px)); color: #d8e8ef; font: 13px system-ui; background: rgba(12, 15, 20, 0.74); border: 1px solid rgba(159, 182, 196, 0.24); border-radius: 6px; overflow: hidden; }
+    #roster-title { padding: 7px 10px; color: #9fb6c4; border-bottom: 1px solid rgba(159, 182, 196, 0.16); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    #roster-list { display: grid; }
+    .roster-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 8px; padding: 7px 10px; border-top: 1px solid rgba(159, 182, 196, 0.1); }
+    .roster-row:first-child { border-top: 0; }
+    .roster-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .roster-role { color: #9fb6c4; }
+    .roster-ult { min-width: 42px; text-align: right; color: #f2d06b; }
+    .roster-ult.ready { color: #75d983; font-weight: 700; }
+    @media (max-width: 640px) {
+      #hud { right: 8px; flex-wrap: wrap; }
+      #roster { top: auto; right: 8px; bottom: 36px; min-width: 200px; }
+      #role-picker { grid-template-columns: 1fr; }
+    }
     #gh-link { position: fixed; bottom: 8px; left: 8px; z-index: 5; color: #9fb6c4; text-decoration: none; font: 13px system-ui; opacity: 0.7; }
     #gh-link:hover { opacity: 1; text-decoration: underline; }
   </style>
@@ -25,6 +45,23 @@
   <div id="overlay">
     <form id="name-form">
       <input id="name" placeholder="your name" maxlength="16" autocomplete="off" autofocus />
+      <fieldset id="role-picker" aria-label="Role">
+        <label>
+          <input type="radio" name="role" value="1" required checked />
+          <span class="role-name">Pulse</span>
+          <span class="role-effect">3 x 3 burst</span>
+        </label>
+        <label>
+          <input type="radio" name="role" value="2" />
+          <span class="role-name">Cross</span>
+          <span class="role-effect">wide cross</span>
+        </label>
+        <label>
+          <input type="radio" name="role" value="3" />
+          <span class="role-name">Trail</span>
+          <span class="role-effect">8 auto tiles</span>
+        </label>
+      </fieldset>
       <button type="submit">enter world</button>
     </form>
   </div>
@@ -35,6 +72,10 @@
       <button id="zoom-out" class="hud-zoom" type="button" aria-label="Zoom out">-</button>
       <button id="zoom-in" class="hud-zoom" type="button" aria-label="Zoom in">+</button>
     </span>
+  </div>
+  <div id="roster" aria-label="Player roster">
+    <div id="roster-title">players</div>
+    <div id="roster-list"></div>
   </div>
   <a id="gh-link" href="https://github.com/MishaMgla/opencraft1/" target="_blank" rel="noopener noreferrer">GitHub</a>
   <script type="module" src="./src/main.js"></script>
