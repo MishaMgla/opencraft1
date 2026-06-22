@@ -6,15 +6,21 @@
   <title>opencraft1</title>
   <style>
     html, body { margin: 0; height: 100%; background: #11151c; overflow: hidden; font-family: system-ui, sans-serif; }
-    #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #11151c; z-index: 10; }
-    #name-form { display: grid; gap: 12px; min-width: min(420px, calc(100vw - 32px)); }
+    #overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; background: #11151c; z-index: 10; overflow: auto; box-sizing: border-box; }
+    #name-form { display: grid; gap: 12px; width: min(520px, 100%); }
     #name, button { font-size: 16px; padding: 8px 12px; border-radius: 6px; border: 1px solid #2a3340; }
     #name { background: #0c0f14; color: #cfe; }
+    #issue59-guide { display: grid; gap: 9px; padding: 12px; border: 1px solid #2a3340; border-radius: 6px; background: #0c0f14; color: #d8e8ef; }
+    #issue59-guide h1 { margin: 0; color: #ffffff; font-size: 15px; line-height: 1.2; }
+    #issue59-guide p { margin: 0; color: #b7cbd5; font-size: 13px; line-height: 1.35; }
+    #issue59-guide ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+    #issue59-guide li { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 8px; color: #b7cbd5; font-size: 13px; line-height: 1.25; }
+    #issue59-guide strong { color: #ffffff; }
     #role-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0; margin: 0; border: 0; }
     #role-picker label { display: grid; gap: 3px; min-width: 0; padding: 9px 10px; border: 1px solid #2a3340; border-radius: 6px; background: #0c0f14; color: #d8e8ef; cursor: pointer; }
     #role-picker input { position: absolute; opacity: 0; pointer-events: none; }
     #role-picker .role-name { font-size: 14px; font-weight: 700; }
-    #role-picker .role-effect { color: #9fb6c4; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #role-picker .role-effect { color: #9fb6c4; font-size: 12px; line-height: 1.2; }
     #role-picker label:has(input:checked) { border-color: #3CB44B; background: #132118; color: #ffffff; }
     button { background: #3CB44B; color: #06210c; border: none; cursor: pointer; }
     #hud { position: fixed; top: 8px; left: 8px; display: flex; align-items: center; gap: 8px; color: #9fb6c4; z-index: 5; font: 14px system-ui; }
@@ -36,6 +42,7 @@
       #hud { right: 8px; flex-wrap: wrap; }
       #roster { top: auto; right: 8px; bottom: 36px; min-width: 200px; }
       #role-picker { grid-template-columns: 1fr; }
+      #issue59-guide li { grid-template-columns: 1fr; gap: 2px; }
     }
     #gh-link { position: fixed; bottom: 8px; left: 8px; z-index: 5; color: #9fb6c4; text-decoration: none; font: 13px system-ui; opacity: 0.7; }
     #gh-link:hover { opacity: 1; text-decoration: underline; }
@@ -45,16 +52,26 @@
   <div id="overlay">
     <form id="name-form">
       <input id="name" placeholder="your name" maxlength="16" autocomplete="off" autofocus />
+      <section id="issue59-guide" aria-labelledby="issue59-title">
+        <h1 id="issue59-title">New role mechanics</h1>
+        <p>Choose Pulse, Cross, or Trail before joining. Normal painting charges your role ult; press E once the roster says ready.</p>
+        <ul>
+          <li><strong>Pulse</strong><span>paints a 3 x 3 block centered on you.</span></li>
+          <li><strong>Cross</strong><span>paints your tile plus two tiles in each cardinal direction.</span></li>
+          <li><strong>Trail</strong><span>auto-paints the next 8 distinct tiles you enter.</span></li>
+        </ul>
+        <p>Hold Space while moving to paint each new tile once. The roster shows every connected player, their role, and ult progress.</p>
+      </section>
       <fieldset id="role-picker" aria-label="Role">
         <label>
           <input type="radio" name="role" value="1" required checked />
           <span class="role-name">Pulse</span>
-          <span class="role-effect">3 x 3 burst</span>
+          <span class="role-effect">3 x 3 paint burst</span>
         </label>
         <label>
           <input type="radio" name="role" value="2" />
           <span class="role-name">Cross</span>
-          <span class="role-effect">wide cross</span>
+          <span class="role-effect">cardinal cross</span>
         </label>
         <label>
           <input type="radio" name="role" value="3" />
