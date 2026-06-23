@@ -156,6 +156,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			s.sim.Paint(id)
 		case wire.CUlt:
 			s.sim.Ult(id)
+		case wire.CJump:
+			s.sim.Jump(id)
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
 		}

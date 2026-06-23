@@ -5,11 +5,14 @@ const GROUND_STEP = 128; // world units between iso floor tiles
 const WORLD_SIZE = 8192;
 const SHAKE_DURATION_MS = 350;
 const SHAKE_AMPLITUDE = 7;
+const JUMP_DURATION_MS = 420;
+const JUMP_HEIGHT = 30;
 const REMOTE_LABEL_COLOR = 0xd8dee9;
 const LOCAL_LABEL_COLOR = 0xffffff;
 
-function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; label: Text } {
+function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; avatar: Container; label: Text } {
   const container = new Container();
+  const avatar = new Container();
 
   const shadow = new Graphics()
     .ellipse(0, 6, 12, 6)
@@ -22,12 +25,14 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
   label.anchor.set(0.5, 1);
   label.y = -16;
 
-  container.addChild(shadow, body, label);
-  return { container, label };
+  avatar.addChild(body, label);
+  container.addChild(shadow, avatar);
+  return { container, avatar, label };
 }
 
 export interface Token {
   container: Container;
+  avatar: Container;
   label: Text;
   rx: number;
   ry: number;
@@ -35,6 +40,8 @@ export interface Token {
   ty: number;
   shakeStartedAt: number;
   shakeUntil: number;
+  jumpStartedAt: number;
+  jumpUntil: number;
 }
 
 export interface Renderer {
@@ -46,13 +53,27 @@ export interface Renderer {
   paintTile(x: number, y: number, color: number): void;
   shakeLocal(): void;
   shakeToken(token: Token): void;
+  jumpLocal(): void;
+  jumpToken(token: Token): void;
   setLocalName(name: string): void;
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
 }
 
-function makeTokenState(container: Container, label: Text, x: number, y: number): Token {
-  return { container, label, rx: x, ry: y, tx: x, ty: y, shakeStartedAt: 0, shakeUntil: 0 };
+function makeTokenState(container: Container, avatar: Container, label: Text, x: number, y: number): Token {
+  return {
+    container,
+    avatar,
+    label,
+    rx: x,
+    ry: y,
+    tx: x,
+    ty: y,
+    shakeStartedAt: 0,
+    shakeUntil: 0,
+    jumpStartedAt: 0,
+    jumpUntil: 0,
+  };
 }
 
 function tileKey(x: number, y: number): string {
@@ -65,6 +86,13 @@ function shakeOffset(token: Token): number {
   const age = now - token.shakeStartedAt;
   const decay = 1 - age / SHAKE_DURATION_MS;
   return Math.sin(age * 0.18) * SHAKE_AMPLITUDE * decay;
+}
+
+function jumpOffset(token: Token): number {
+  const now = performance.now();
+  if (now >= token.jumpUntil) return 0;
+  const t = (now - token.jumpStartedAt) / JUMP_DURATION_MS;
+  return Math.sin(t * Math.PI) * JUMP_HEIGHT;
 }
 
 export async function createRenderer(): Promise<Renderer> {
@@ -97,14 +125,15 @@ export async function createRenderer(): Promise<Renderer> {
   world.addChild(ground);
 
   // Local player token.
-  const { container: localContainer, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
+  const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
   world.addChild(localContainer);
-  const localToken = makeTokenState(localContainer, localLabel, 0, 0);
+  const localToken = makeTokenState(localContainer, localAvatar, localLabel, 0, 0);
 
   function placeToken(token: Token): void {
     const p = worldToScreen(token.rx, token.ry);
     token.container.x = p.x + shakeOffset(token);
     token.container.y = p.y;
+    token.avatar.y = -jumpOffset(token);
     token.container.zIndex = depth(token.rx, token.ry);
   }
 
@@ -114,12 +143,18 @@ export async function createRenderer(): Promise<Renderer> {
     token.shakeUntil = now + SHAKE_DURATION_MS;
   }
 
+  function jumpToken(token: Token): void {
+    const now = performance.now();
+    token.jumpStartedAt = now;
+    token.jumpUntil = now + JUMP_DURATION_MS;
+  }
+
   return {
     app,
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
-      const { container, label } = makeToken(name, color);
+      const { container, avatar, label } = makeToken(name, color);
       world.addChild(container);
-      const token = makeTokenState(container, label, x, y);
+      const token = makeTokenState(container, avatar, label, x, y);
       this.placeToken(token);
       return token;
     },
@@ -162,6 +197,12 @@ export async function createRenderer(): Promise<Renderer> {
     },
     shakeToken(token) {
       shakeToken(token);
+    },
+    jumpLocal() {
+      jumpToken(localToken);
+    },
+    jumpToken(token) {
+      jumpToken(token);
     },
     setLocalName(name) {
       localLabel.text = name;

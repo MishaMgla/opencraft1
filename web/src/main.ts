@@ -243,6 +243,14 @@ async function start(name: string, role: number): Promise<void> {
       const o = others.get(m.id);
       if (o) r.shakeToken(o);
     },
+    jump(m) {
+      if (m.id === me.id) {
+        r.jumpLocal();
+        return;
+      }
+      const o = others.get(m.id);
+      if (o) r.jumpToken(o);
+    },
     player(m) {
       upsertRosterPlayer(m);
     },
@@ -273,6 +281,9 @@ async function start(name: string, role: number): Promise<void> {
     }
     if (me.id !== 0 && input.consumeUlt()) {
       net.sendUlt();
+    }
+    if (me.id !== 0 && input.consumeJump()) {
+      net.sendJump();
     }
     r.setLocal(me.x, me.y);
 

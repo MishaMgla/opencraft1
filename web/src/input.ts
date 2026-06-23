@@ -17,6 +17,7 @@ export interface Input {
   consumePaint(): boolean;
   isPaintHeld(): boolean;
   consumeUlt(): boolean;
+  consumeJump(): boolean;
 }
 
 type KeyboardTarget = Pick<Window, 'addEventListener'>;
@@ -34,13 +35,17 @@ export function createInput(target: KeyboardTarget = window): Input {
   let paintRequested = false;
   let paintHeld = false;
   let ultRequested = false;
+  let jumpRequested = false;
   target.addEventListener(
     'keydown',
     (e) => {
       if (isPaintKey(e)) {
         e.preventDefault();
         paintHeld = true;
-        if (!e.repeat) paintRequested = true;
+        if (!e.repeat) {
+          paintRequested = true;
+          jumpRequested = true;
+        }
         return;
       }
       if (isUltKey(e)) {
@@ -102,6 +107,11 @@ export function createInput(target: KeyboardTarget = window): Input {
     consumeUlt() {
       if (!ultRequested) return false;
       ultRequested = false;
+      return true;
+    },
+    consumeJump() {
+      if (!jumpRequested) return false;
+      jumpRequested = false;
       return true;
     },
   };
