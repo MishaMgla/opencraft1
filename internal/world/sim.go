@@ -97,6 +97,7 @@ type cmdPing struct {
 }
 type cmdPaint struct{ id uint32 }
 type cmdUlt struct{ id uint32 }
+type cmdJump struct{ id uint32 }
 
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
@@ -154,6 +155,7 @@ func (s *Sim) Leave(id uint32)             { s.cmds <- cmdLeave{id} }
 func (s *Sim) Ping(id uint32, t uint32)    { s.cmds <- cmdPing{id, t} }
 func (s *Sim) Paint(id uint32)             { s.cmds <- cmdPaint{id} }
 func (s *Sim) Ult(id uint32)               { s.cmds <- cmdUlt{id} }
+func (s *Sim) Jump(id uint32)              { s.cmds <- cmdJump{id} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -517,6 +519,15 @@ func (s *Sim) Run(ctx context.Context) {
 					continue
 				}
 				s.activateUlt(players, painted, p)
+
+			case cmdJump:
+				p := players[m.id]
+				if p == nil {
+					continue
+				}
+				for _, o := range players {
+					send(o, wire.EncodeJump(p.id))
+				}
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {

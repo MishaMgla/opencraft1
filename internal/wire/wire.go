@@ -11,6 +11,7 @@ const (
 	CPing  = 0x03
 	CPaint = 0x04
 	CUlt   = 0x05
+	CJump  = 0x06
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
@@ -20,6 +21,7 @@ const (
 	SPaint    = 0x86
 	SShake    = 0x87
 	SPlayer   = 0x88
+	SJump     = 0x89
 )
 
 const (
@@ -113,6 +115,13 @@ func EncodeShake(id uint32) []byte {
 	return b
 }
 
+func EncodeJump(id uint32) []byte {
+	b := make([]byte, 1+4)
+	b[0] = SJump
+	binary.LittleEndian.PutUint32(b[1:], id)
+	return b
+}
+
 func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string) []byte {
 	n := []byte(name)
 	if len(n) > 255 {
@@ -175,6 +184,8 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 		return ClientMsg{Type: CPaint}, true
 	case CUlt:
 		return ClientMsg{Type: CUlt}, true
+	case CJump:
+		return ClientMsg{Type: CJump}, true
 	}
 	return ClientMsg{}, false
 }
