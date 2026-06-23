@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-23 (branch `codex/issue-72-game-field-size`): double the playable world bounds from 4096×4096 to 8192×8192 while keeping viewport/HUD behavior unchanged (issue #72).
 - 2026-06-23 (branch `codex/issue-68-save-username`): persist the browser-local username, auto-join saved users on reload, and add a top-left profile modal for local username edits (issue #68).
 - 2026-06-22 (branch `codex/issue-62-issue-59-retro-and-explanation`): add player-facing issue-59 mechanics guidance to the welcome overlay and README, covering role choice, Pulse/Cross/Trail effects, ult charge/activation, hold-to-paint, and roster progress (issue #62).
 - 2026-06-22 (branch `codex/issue-59-player-roster-and-ults`): add role selection, player roster HUD, non-combat Pulse/Cross/Trail ults charged by normal painting, `E` ult activation, and hold-to-paint while moving (issue #59).

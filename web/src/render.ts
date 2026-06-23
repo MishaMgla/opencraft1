@@ -2,6 +2,7 @@ import { Application, Container, Graphics, Text } from 'https://cdn.jsdelivr.net
 import { worldToScreen, depth, KX, KY } from './iso.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
+const WORLD_SIZE = 8192;
 const SHAKE_DURATION_MS = 350;
 const SHAKE_AMPLITUDE = 7;
 const REMOTE_LABEL_COLOR = 0xd8dee9;
@@ -80,8 +81,8 @@ export async function createRenderer(): Promise<Renderer> {
   const ground = new Graphics();
   const hw = KX * GROUND_STEP;
   const hh = KY * GROUND_STEP;
-  for (let wx = 0; wx <= 4096; wx += GROUND_STEP) {
-    for (let wy = 0; wy <= 4096; wy += GROUND_STEP) {
+  for (let wx = 0; wx <= WORLD_SIZE; wx += GROUND_STEP) {
+    for (let wy = 0; wy <= WORLD_SIZE; wy += GROUND_STEP) {
       const c = worldToScreen(wx, wy);
       ground
         .moveTo(c.x, c.y - hh)

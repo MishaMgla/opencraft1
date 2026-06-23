@@ -148,7 +148,7 @@ async function start(name: string, role: number): Promise<void> {
   });
 
   const me = { id: 0, x: 2048, y: 2048 };
-  const bounds: Bounds = { minX: 0, minY: 0, maxX: 4095, maxY: 4095 };
+  const bounds: Bounds = { minX: 0, minY: 0, maxX: 8191, maxY: 8191 };
   const others = new Map<number, Token>();
   const rosterPlayers = new Map<number, RosterPlayer>();
   let lastHeldPaintTile = '';

@@ -2,9 +2,9 @@ package world
 
 // World and grid geometry. Positions are int16 world units in [0, WorldSize-1].
 const (
-	WorldSize = 4096
+	WorldSize = 8192
 	CellSize  = 256
-	GridDim   = WorldSize / CellSize // 16
+	GridDim   = WorldSize / CellSize // 32
 )
 
 // Grid maps each cell to the set of entity ids currently inside it.
