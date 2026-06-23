@@ -14,8 +14,8 @@ const TILE_DARK = 0x0b1d18;
 const TILE_LIGHT = 0x102821;
 const TILE_EDGE = 0x3ddc84;
 const TILE_MAJOR_EDGE = 0xf2cf5b;
-const TOKEN_OUTLINE = 0xfff2a8;
-const TOKEN_SHADOW = 0x020605;
+const MARKER_OUTLINE = 0xfff2a8;
+const MARKER_SHADOW = 0x020605;
 
 function drawIsoDiamond(
   graphics: Graphics,
@@ -45,13 +45,13 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
 
   const shadow = new Graphics()
     .rect(-12, 4, 24, 8)
-    .fill({ color: TOKEN_SHADOW, alpha: 0.65 });
+    .fill({ color: MARKER_SHADOW, alpha: 0.65 });
   const body = new Graphics()
     .rect(-9, -13, 18, 18)
     .fill({ color })
-    .stroke({ color: TOKEN_OUTLINE, width: 2 })
+    .stroke({ color: MARKER_OUTLINE, width: 2 })
     .rect(-4, -8, 8, 8)
-    .fill({ color: TOKEN_OUTLINE, alpha: 0.9 });
+    .fill({ color: MARKER_OUTLINE, alpha: 0.9 });
   const label = new Text({
     text: name,
     style: {
