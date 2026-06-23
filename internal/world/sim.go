@@ -12,6 +12,7 @@ const TickHz = 15
 const PaintTileSize int16 = 128
 const UltChargeNeeded byte = 12
 const TrailUltTiles = 8
+const SpawnCoord int16 = 2048
 
 // flushEvery is how often the sim persists all online players, bounding how
 // much position is lost if the engine dies without a graceful shutdown.
@@ -450,7 +451,7 @@ func (s *Sim) Run(ctx context.Context) {
 			case cmdJoin:
 				id := nextID
 				nextID++
-				px, py := int16(WorldSize/2), int16(WorldSize/2)
+				px, py := SpawnCoord, SpawnCoord
 				color := colorFor(id)
 				if m.saved != nil {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)

@@ -12,7 +12,7 @@ Go authoritative game engine: a single-goroutine world sim behind a WebSocket se
 ## Layout
 - `world/sim.go` — the sim goroutine: tick loop, command dispatch, persistence orchestration.
 - `world/store.go` — `Store` interface + `SavedPlayer`; lives in `world` (not `store`) to avoid import cycle.
-- `world/grid.go` — 16×16 spatial grid (cell 256, world 4096); maintained but not yet read by broadcasts.
+- `world/grid.go` — 32×32 spatial grid (cell 256, world 8192); maintained but not yet read by broadcasts.
 - `server/server.go` — HTTP mux, WS origin policy, per-conn reader loop + writer goroutine.
 - `store/postgres.go` — pgx pool against `public.player_state`.
 - `wire/wire.go` — protocol codec; `wire/fixtures_test.go` — golden vector generator.
