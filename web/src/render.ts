@@ -7,23 +7,63 @@ const SHAKE_DURATION_MS = 350;
 const SHAKE_AMPLITUDE = 7;
 const JUMP_DURATION_MS = 420;
 const JUMP_HEIGHT = 30;
-const REMOTE_LABEL_COLOR = 0xd8dee9;
-const LOCAL_LABEL_COLOR = 0xffffff;
+const REMOTE_LABEL_COLOR = 0xd9f2e6;
+const LOCAL_LABEL_COLOR = 0xfff2a8;
+const WORLD_BG = '#07110f';
+const TILE_DARK = 0x0b1d18;
+const TILE_LIGHT = 0x102821;
+const TILE_EDGE = 0x3ddc84;
+const TILE_MAJOR_EDGE = 0xf2cf5b;
+const MARKER_OUTLINE = 0xfff2a8;
+const MARKER_SHADOW = 0x020605;
+
+function drawIsoDiamond(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  hw: number,
+  hh: number,
+  fillColor: number,
+  fillAlpha: number,
+  strokeColor: number,
+  strokeAlpha: number,
+  strokeWidth: number,
+): Graphics {
+  return graphics
+    .moveTo(cx, cy - hh)
+    .lineTo(cx + hw, cy)
+    .lineTo(cx, cy + hh)
+    .lineTo(cx - hw, cy)
+    .lineTo(cx, cy - hh)
+    .fill({ color: fillColor, alpha: fillAlpha })
+    .stroke({ color: strokeColor, alpha: strokeAlpha, width: strokeWidth });
+}
 
 function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; avatar: Container; label: Text } {
   const container = new Container();
   const avatar = new Container();
 
   const shadow = new Graphics()
-    .ellipse(0, 6, 12, 6)
-    .fill({ color: 0x000000, alpha: 0.25 });
-  const body = new Graphics().circle(0, 0, 10).fill({ color });
+    .rect(-12, 4, 24, 8)
+    .fill({ color: MARKER_SHADOW, alpha: 0.65 });
+  const body = new Graphics()
+    .rect(-9, -13, 18, 18)
+    .fill({ color })
+    .stroke({ color: MARKER_OUTLINE, width: 2 })
+    .rect(-4, -8, 8, 8)
+    .fill({ color: MARKER_OUTLINE, alpha: 0.9 });
   const label = new Text({
     text: name,
-    style: { fill: labelColor, fontSize: 12, fontFamily: 'system-ui' },
+    style: {
+      fill: labelColor,
+      fontFamily: '"Courier New", monospace',
+      fontSize: 11,
+      fontWeight: '700',
+      align: 'center',
+    },
   });
   label.anchor.set(0.5, 1);
-  label.y = -16;
+  label.y = -17;
 
   avatar.addChild(body, label);
   container.addChild(shadow, avatar);
@@ -97,7 +137,14 @@ function jumpOffset(token: Token): number {
 
 export async function createRenderer(): Promise<Renderer> {
   const app = new Application();
-  await app.init({ background: '#11151c', resizeTo: window, antialias: true });
+  await app.init({
+    background: WORLD_BG,
+    resizeTo: window,
+    antialias: false,
+    autoDensity: true,
+    resolution: Math.max(1, Math.floor(window.devicePixelRatio || 1)),
+  });
+  app.canvas.style.imageRendering = 'pixelated';
   document.body.appendChild(app.canvas);
 
   const world = new Container();
@@ -112,15 +159,21 @@ export async function createRenderer(): Promise<Renderer> {
   for (let wx = 0; wx <= WORLD_SIZE; wx += GROUND_STEP) {
     for (let wy = 0; wy <= WORLD_SIZE; wy += GROUND_STEP) {
       const c = worldToScreen(wx, wy);
-      ground
-        .moveTo(c.x, c.y - hh)
-        .lineTo(c.x + hw, c.y)
-        .lineTo(c.x, c.y + hh)
-        .lineTo(c.x - hw, c.y)
-        .lineTo(c.x, c.y - hh);
+      const major = wx % (GROUND_STEP * 4) === 0 || wy % (GROUND_STEP * 4) === 0;
+      drawIsoDiamond(
+        ground,
+        c.x,
+        c.y,
+        hw,
+        hh,
+        (wx / GROUND_STEP + wy / GROUND_STEP) % 2 === 0 ? TILE_DARK : TILE_LIGHT,
+        0.9,
+        major ? TILE_MAJOR_EDGE : TILE_EDGE,
+        major ? 0.32 : 0.2,
+        major ? 2 : 1,
+      );
     }
   }
-  ground.stroke({ color: 0x2a3340, width: 1 });
   ground.zIndex = -1_000_000;
   world.addChild(ground);
 
@@ -180,14 +233,8 @@ export async function createRenderer(): Promise<Renderer> {
         existing.destroy();
       }
       const c = worldToScreen(x, y);
-      const tile = new Graphics()
-        .moveTo(c.x, c.y - hh)
-        .lineTo(c.x + hw, c.y)
-        .lineTo(c.x, c.y + hh)
-        .lineTo(c.x - hw, c.y)
-        .lineTo(c.x, c.y - hh)
-        .fill({ color, alpha: 0.65 })
-        .stroke({ color: 0xffffff, alpha: 0.25, width: 1 });
+      const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.82, 0xfff2a8, 0.85, 2);
+      drawIsoDiamond(tile, c.x, c.y, hw - 6, hh - 3, color, 0, 0x07110f, 0.5, 1);
       tile.zIndex = depth(x, y) - 500_000;
       paintedTiles.set(key, tile);
       world.addChild(tile);
