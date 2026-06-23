@@ -4,6 +4,7 @@ const C_HELLO = 0x01;
 const C_INPUT = 0x02;
 const C_PAINT = 0x04;
 const C_ULT = 0x05;
+const C_JUMP = 0x06;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
@@ -13,6 +14,7 @@ const S_PONG = 0x85;
 const S_PAINT = 0x86;
 const S_SHAKE = 0x87;
 const S_PLAYER = 0x88;
+const S_JUMP = 0x89;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -76,10 +78,14 @@ export interface PlayerState {
   ready: boolean;
   name: string;
 }
+export interface Jump {
+  type: 'jump';
+  id: number;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Unknown;
 
 export function encodeHello(name: string, role = 0): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -110,6 +116,12 @@ export function encodePaint(): ArrayBuffer {
 export function encodeUlt(): ArrayBuffer {
   const b = new Uint8Array(1);
   b[0] = C_ULT;
+  return b.buffer;
+}
+
+export function encodeJump(): ArrayBuffer {
+  const b = new Uint8Array(1);
+  b[0] = C_JUMP;
   return b.buffer;
 }
 
@@ -175,6 +187,8 @@ export function decodeServer(view: DataView): ServerMsg {
       const bytes = new Uint8Array(view.buffer, view.byteOffset + 9, nlen);
       return { type: 'player', id, role, charge, ready, name: dec.decode(bytes) };
     }
+    case S_JUMP:
+      return { type: 'jump', id: view.getUint32(1, true) };
   }
   return { type: 'unknown' };
 }
