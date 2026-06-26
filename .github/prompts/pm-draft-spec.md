@@ -38,7 +38,7 @@ body (after Requirements). use this exact format (all six fields, in order):
 - name: knight           # lowercase slug [a-z0-9-]+, unique
 - prompt: armored medieval knight, front view, clean silhouette
 - size: 64               # tile/hud <=128, character <=64 per direction
-- directions: 4          # character only (4 or 8)
+- directions: 4          # character only (4 in v1)
 - frames: 6              # effect only (<=12)
 ```
 

@@ -23,7 +23,9 @@ after(() => { delete process.env.OPENCRAFT_ASSETS_DIR; rmSync(dir, { recursive: 
 const fakeGen = async ({ type }) => ({
   images: type === 'character'
     ? [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')]
-    : [Buffer.from('IMG')],
+    : type === 'effect'
+      ? [Buffer.from('0'), Buffer.from('1'), Buffer.from('2')]
+      : [Buffer.from('IMG')],
 });
 const env = { PIXELLAB_API_KEY: 'k' };
 
@@ -50,4 +52,20 @@ test('run writes four character PNGs', async () => {
     { generateImpl: fakeGen, env });
   assert.equal(res.files.length, 4);
   assert.ok(existsSync(join(dir, 'characters/testknight-south.png')));
+});
+
+test('run writes effect frames and manifest entry', async () => {
+  const res = await run(
+    ['--type', 'effect', '--name', 'testspark', '--prompt', 'spark', '--frames', '3'],
+    { generateImpl: fakeGen, env });
+  assert.equal(res.skipped, false);
+  assert.equal(res.key, 'effect:testspark');
+  assert.ok(existsSync(join(dir, 'effects/testspark-0.png')));
+  assert.ok(existsSync(join(dir, 'effects/testspark-1.png')));
+  assert.ok(existsSync(join(dir, 'effects/testspark-2.png')));
+  const m = JSON.parse(readFileSync(manifestPath(), 'utf8'));
+  const entry = m.assets['effect:testspark'];
+  assert.ok(Array.isArray(entry.frames), 'frames should be an array');
+  assert.equal(entry.frames.length, 3, 'should have 3 frames');
+  assert.ok(entry.fps, 'should have fps');
 });

@@ -46,3 +46,23 @@ test('generate throws on non-ok POST', async () => {
     /401/,
   );
 });
+
+test('generate returns images directly on a sync POST response', async () => {
+  // Track call count
+  let callCount = 0;
+  const b64sync = Buffer.from('PNGDATA').toString('base64');
+  const fetchImpl = mockFetch([
+    // POST returns image directly (sync response, no background_job_id)
+    { expectUrl: /create-image-pixflux/, json: { image: { base64: b64sync } } },
+  ]);
+  // Wrap to count calls
+  const countingFetch = async (...args) => { callCount++; return fetchImpl(...args); };
+
+  const { images } = await generate(
+    { type: 'tile', prompt: 'stone', size: 128 },
+    { apiKey: 'k', fetchImpl: countingFetch, pollMs: 1, sleep: noSleep },
+  );
+  assert.equal(images.length, 1, 'should decode one image');
+  assert.equal(images[0].toString(), 'PNGDATA', 'should decode base64 correctly');
+  assert.equal(callCount, 1, 'should call fetch exactly once (no polling)');
+});

@@ -24,13 +24,14 @@ function parseArgs(argv) {
     else throw new Error(`unknown flag: ${k}`);
   }
   if (!a.type || !a.name || !a.prompt) throw new Error('required: --type --name --prompt');
-  if (a.size === undefined) a.size = a.type === 'character' ? 64 : 128;
+  if (a.size === undefined) a.size = (a.type === 'tile' || a.type === 'hud') ? 128 : 64;
   return a;
 }
 
 export async function run(argv, { generateImpl = generate, env = process.env } = {}) {
   const a = parseArgs(argv);
   validateSlug(a.name);
+  if (a.type === 'character' && a.directions !== 4) throw new Error('v1 supports 4-direction characters only (got ' + a.directions + ')');
   enforceCaps(a.type, a.size, a.frames);
   const key = assetKey(a.type, a.name);
 

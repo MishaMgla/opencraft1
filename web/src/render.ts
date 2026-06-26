@@ -43,7 +43,7 @@ export interface Renderer {
   placeToken(token: Token): void;
   setLocal(x: number, y: number): void;
   paintTile(x: number, y: number, color: number): void;
-  placeTile(x: number, y: number, name: string): void;
+  placeTile(x: number, y: number, name: string): Promise<void>;
   shakeLocal(): void;
   shakeToken(token: Token): void;
   setZoom(scale: number): void;

@@ -50,7 +50,7 @@ test('loads, joins, and moves', async ({ page }) => {
   expect(x1).toBeGreaterThan(x0);
 });
 
-test('a manifest tile loads as a texture without error', async ({ page }) => {
+test('manifest is reachable and well-shaped', async ({ page }) => {
   // This test asserts the asset path does not throw; it does not commit assets.
   await page.goto('/');
   const ok = await page.evaluate(async () => {
