@@ -179,6 +179,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROMPT: ${{ steps.load.outputs.prompt }}
+          PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
         run: |
           gh auth setup-git
           .github/scripts/run-codex.sh \

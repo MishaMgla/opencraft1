@@ -14,6 +14,12 @@ Add under **Settings → Secrets and variables → Actions**:
   `AGENTS_QUOTA_FREEZE` Actions variable (`GITHUB_TOKEN` cannot manage
   variables). See [`agents-quota-recovery.md`](agents-quota-recovery.md).
 
+- `PIXELLAB_API_KEY` — PixelLab API token (from account settings at
+  [pixellab.ai](https://pixellab.ai)). Set as a repo Actions secret. Used only
+  by the Dev agent during `dev-implement` to generate committed pixel art via
+  `web/tools/gen-asset.mjs`. Absent ⇒ asset issues fail the gen step (no
+  silent skip); non-asset issues are unaffected.
+
 The agents authenticate to Codex via a ChatGPT subscription stored **on the
 runner** (step 2), so no model API key is kept as a repo secret and there is no
 per-call API billing.

@@ -1,5 +1,6 @@
-import { Application, Container, Graphics, Text } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
+import { Application, Container, Graphics, Text, Sprite, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 import { worldToScreen, depth, KX, KY } from './iso.js';
+import { resolveTile, loadTexture, resolveCharacter, resolveEffect, type Manifest } from './assets.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
 const WORLD_SIZE = 8192;
@@ -91,6 +92,7 @@ export interface Renderer {
   placeToken(token: Token): void;
   setLocal(x: number, y: number): void;
   paintTile(x: number, y: number, color: number): void;
+  placeTile(x: number, y: number, name: string): Promise<void>;
   shakeLocal(): void;
   shakeToken(token: Token): void;
   jumpLocal(): void;
@@ -98,6 +100,8 @@ export interface Renderer {
   setLocalName(name: string): void;
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
+  setSkin(token: Token, name: string): Promise<void>;
+  playEffect(x: number, y: number, name: string): void;
 }
 
 function makeTokenState(container: Container, avatar: Container, label: Text, x: number, y: number): Token {
@@ -135,7 +139,7 @@ function jumpOffset(token: Token): number {
   return Math.sin(t * Math.PI) * JUMP_HEIGHT;
 }
 
-export async function createRenderer(): Promise<Renderer> {
+export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const app = new Application();
   await app.init({
     background: WORLD_BG,
@@ -151,6 +155,7 @@ export async function createRenderer(): Promise<Renderer> {
   world.sortableChildren = true;
   app.stage.addChild(world);
   const paintedTiles = new Map<string, Graphics>();
+  const tileSprites = new Map<string, Sprite>();
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -239,6 +244,23 @@ export async function createRenderer(): Promise<Renderer> {
       paintedTiles.set(key, tile);
       world.addChild(tile);
     },
+    async placeTile(this: Renderer, x, y, name) {
+      const tile = resolveTile(manifest, name);
+      if (!tile) { this.paintTile(x, y, 0x3a4757); return; } // fallback: neutral diamond
+      const tex: Texture | null = await loadTexture(tile.file);
+      if (!tex) { this.paintTile(x, y, 0x3a4757); return; }
+      const key = tileKey(x, y);
+      const prev = tileSprites.get(key);
+      if (prev) { world.removeChild(prev); prev.destroy(); }
+      const c = worldToScreen(x, y);
+      const sprite = new Sprite(tex);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.x = c.x; sprite.y = c.y;
+      sprite.width = hw * 2; sprite.height = hh * 2;
+      sprite.zIndex = depth(x, y) - 400_000;
+      tileSprites.set(key, sprite);
+      world.addChild(sprite);
+    },
     shakeLocal() {
       shakeToken(localToken);
     },
@@ -261,6 +283,47 @@ export async function createRenderer(): Promise<Renderer> {
       const p = worldToScreen(x, y);
       world.x = app.screen.width / 2 - p.x * world.scale.x;
       world.y = app.screen.height / 2 - p.y * world.scale.y;
+    },
+    async setSkin(token, name) {
+      const ch = resolveCharacter(manifest, name);
+      if (!ch) return; // keep procedural token
+      const dx = token.tx - token.rx, dy = token.ty - token.ry;
+      const dir = Math.abs(dx) > Math.abs(dy) ? (dx >= 0 ? 'east' : 'west') : (dy >= 0 ? 'south' : 'north');
+      const file = ch.frames[dir] ?? ch.frames.south;
+      const tex = file ? await loadTexture(file) : null;
+      if (!tex) return;
+      const sprite = new Sprite(tex);
+      sprite.anchor.set(0.5, 0.8);
+      token.container.removeChildren();
+      token.container.addChild(sprite);
+    },
+    playEffect(x, y, name) {
+      const fx = resolveEffect(manifest, name);
+      if (!fx || !fx.frames.length) return;
+      const c = worldToScreen(x, y);
+      const sprite = new Sprite(Texture.EMPTY);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.x = c.x; sprite.y = c.y;
+      sprite.zIndex = depth(x, y) + 100_000;
+      world.addChild(sprite);
+      let i = 0;
+      const stepMs = 1000 / (fx.fps || 12);
+      let acc = 0, last = performance.now();
+      const tick = async () => {
+        const tex = await loadTexture(fx.frames[i]);
+        if (tex) sprite.texture = tex;
+        const advance = () => {
+          const now = performance.now(); acc += now - last; last = now;
+          if (acc >= stepMs) {
+            acc = 0; i++;
+            app.ticker.remove(advance);                 // remove self BEFORE ending or re-ticking
+            if (i >= fx.frames.length) { world.removeChild(sprite); sprite.destroy(); return; }
+            tick();
+          }
+        };
+        app.ticker.add(advance);
+      };
+      tick();
     },
   };
 }

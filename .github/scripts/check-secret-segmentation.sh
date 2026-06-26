@@ -18,16 +18,32 @@ AGENT_WORKFLOWS=(pm-intake pm-followup dev-implement dev-revise)
 # Production / high-value secrets that must never appear in an agent job.
 PROD_SECRET_RE='secrets\.(VERCEL_[A-Z_]+|SUPABASE_[A-Z_]+|RAILWAY_[A-Z_]+|DATABASE_[A-Z_]+|[A-Z_]*_API_KEY|[A-Z_]*_SECRET|[A-Z_]*_PRIVATE_KEY|OPENAI_[A-Z_]+|ANTHROPIC_[A-Z_]+)'
 
+# Agent-permitted exceptions: bounded-blast-radius third-party keys the agent
+# legitimately needs at build time. PIXELLAB_API_KEY funds image-gen credits only
+# — a leak burns capped credits, granting NO infra, data, repo, or merge access —
+# so the Dev agent may carry it (build-time asset generation; see
+# docs/superpowers/specs/2026-06-26-pixellab-asset-generation-design.md). Warned,
+# not failed, like AUTO_PAT. Real production / infra secrets still hard-fail.
+AGENT_PERMITTED_RE='secrets\.(PIXELLAB_API_KEY)'
+
 fail=0
 for w in "${AGENT_WORKFLOWS[@]}"; do
   f=".github/workflows/$w.yml"
   [ -f "$f" ] || { echo "warn: $f not found (skipping)"; continue; }
 
-  hits="$(grep -noE "$PROD_SECRET_RE" "$f" || true)"
-  if [ -n "$hits" ]; then
-    echo "::error file=$f::agent workflow references a production secret (violates secret segmentation):"
-    printf '%s\n' "$hits" | sed 's/^/    /'
-    fail=1
+  raw="$(grep -noE "$PROD_SECRET_RE" "$f" || true)"
+  if [ -n "$raw" ]; then
+    permitted="$(printf '%s\n' "$raw" | grep -E "$AGENT_PERMITTED_RE" || true)"
+    prod="$(printf '%s\n' "$raw" | grep -vE "$AGENT_PERMITTED_RE" || true)"
+    if [ -n "$permitted" ]; then
+      echo "::warning file=$f::$w carries agent-permitted bounded-risk key(s) — third-party, no infra/data/repo access:"
+      printf '%s\n' "$permitted" | sed 's/^/    /'
+    fi
+    if [ -n "$prod" ]; then
+      echo "::error file=$f::agent workflow references a production secret (violates secret segmentation):"
+      printf '%s\n' "$prod" | sed 's/^/    /'
+      fail=1
+    fi
   fi
 
   if grep -qE 'secrets\.AUTO_PAT' "$f"; then

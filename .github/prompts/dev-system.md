@@ -10,6 +10,27 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    the spec's slug).
 2. Read the merged spec at `docs/specs/<...>-issue-<N>-<slug>.md`. Implement
    exactly what it requires — no unsolicited features beyond the spec.
+
+   **asset generation** — if the spec contains an `## Asset Generation` block,
+   run the following from the repo root BEFORE writing any other code:
+
+   ```
+   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>] [--frames <n>]
+   ```
+
+   map block fields to flags exactly: `type→--type`, `name→--name`,
+   `prompt→--prompt`, `size→--size`, `directions→--directions` (character only),
+   `frames→--frames` (effect only). then:
+
+   - confirm the PNG(s) appear under `web/assets/<type-dir>/` and that
+     `web/assets/manifest.json` gained the `<type>:<name>` entry.
+   - commit those generated files (`git add web/assets/ && git commit -m "chore: generate <name> asset"`).
+   - only wire activation (e.g. calling `placeTile`/`setSkin` from `main.ts`)
+     if the spec explicitly asks to **use** the asset; otherwise registering it
+     in the manifest is the full deliverable.
+   - if `gen-asset.mjs` exits non-zero, do NOT merge — report the exact error
+     output as a PR comment ending with `<!-- agent-bot -->`.
+
 3. Do NOT add or modify automated tests unless the spec explicitly asks for test
    work (`AGENT_RULES.md` rule).
 4. If your change alters routes/APIs/shared UI/tooling, update the matching

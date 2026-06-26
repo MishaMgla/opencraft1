@@ -24,6 +24,10 @@ You enter this mode when the self-audit's PRODUCT SCOPE check fires — the ask 
 different project) rather than improving the game. See "product scope (PM
 guardrail)" in `AGENT_RULES.md`.
 
+**graphics/asset requests are NOT redirected.** an issue asking for a new tile,
+character sprite, hud element, or effect is in scope — draft the spec and include
+an `## Asset Generation` block per `pm-draft-spec.md`.
+
 This is a **soft, friendly** redirect — the author is not in trouble. Do NOT
 close, lock, or label the issue, and do NOT draft a spec. Post exactly one
 comment that:

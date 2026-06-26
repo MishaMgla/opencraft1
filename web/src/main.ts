@@ -2,6 +2,7 @@ import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
+import { loadManifest, resolveHud, assetUrl } from './assets.js';
 import { ROLE_CROSS, ROLE_PULSE, ROLE_TRAIL } from './wire.js';
 import type { Bounds } from './input.js';
 import type { Token } from './render.js';
@@ -96,7 +97,11 @@ function roleName(role: number): string {
 }
 
 async function start(name: string, role: number): Promise<void> {
-  const r = await createRenderer();
+  const manifest = await loadManifest();
+  const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
+  const bar = resolveHud(manifest, 'healthbar');
+  if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
+  const r = await createRenderer(manifest);
   const input = createInput();
   const hudName = document.getElementById('hud-name') as HTMLButtonElement;
   const hudStatus = document.getElementById('hud-status')!;
