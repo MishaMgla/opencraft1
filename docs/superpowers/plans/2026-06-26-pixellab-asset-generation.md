@@ -912,7 +912,12 @@ Implement (directional facing chosen from the token's velocity vector; effect fr
         if (tex) sprite.texture = tex;
         const advance = () => {
           const now = performance.now(); acc += now - last; last = now;
-          if (acc >= stepMs) { acc = 0; i++; if (i >= fx.frames.length) { app.ticker.remove(advance); world.removeChild(sprite); sprite.destroy(); return; } tick(); }
+          if (acc >= stepMs) {
+            acc = 0; i++;
+            app.ticker.remove(advance); // remove SELF before ending or re-ticking — only one advance live at a time
+            if (i >= fx.frames.length) { world.removeChild(sprite); sprite.destroy(); return; }
+            tick();
+          }
         };
         app.ticker.add(advance);
       };
