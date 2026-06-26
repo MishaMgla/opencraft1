@@ -2,7 +2,7 @@ import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
-import { loadManifest } from './assets.js';
+import { loadManifest, resolveHud, assetUrl } from './assets.js';
 import type { Bounds } from './input.js';
 import type { Token } from './render.js';
 
@@ -21,6 +21,9 @@ document.getElementById('name-form')!.addEventListener('submit', async (e) => {
 
 async function start(name: string): Promise<void> {
   const manifest = await loadManifest();
+  const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
+  const bar = resolveHud(manifest, 'healthbar');
+  if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
   const r = await createRenderer(manifest);
   const input = createInput();
   const hudStatus = document.getElementById('hud-status')!;
