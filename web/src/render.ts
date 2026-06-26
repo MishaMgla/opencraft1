@@ -220,7 +220,12 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         if (tex) sprite.texture = tex;
         const advance = () => {
           const now = performance.now(); acc += now - last; last = now;
-          if (acc >= stepMs) { acc = 0; i++; if (i >= fx.frames.length) { app.ticker.remove(advance); world.removeChild(sprite); sprite.destroy(); return; } tick(); }
+          if (acc >= stepMs) {
+            acc = 0; i++;
+            app.ticker.remove(advance);                 // remove self BEFORE ending or re-ticking
+            if (i >= fx.frames.length) { world.removeChild(sprite); sprite.destroy(); return; }
+            tick();
+          }
         };
         app.ticker.add(advance);
       };
