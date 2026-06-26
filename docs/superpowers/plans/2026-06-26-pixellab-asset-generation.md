@@ -683,7 +683,15 @@ Expected: FAIL — `Cannot find module '../src/assets.js'`.
 
 ```ts
 // web/src/assets.ts
-import { Assets, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
+// Pixi is imported TWO ways on purpose:
+//  - `import type` is fully erased by tsc, so the emitted assets.js has NO
+//    static CDN import and Node can load it for the pure-resolver unit tests
+//    (Node 20 cannot resolve `https:` import specifiers).
+//  - the runtime Pixi value is pulled via a DYNAMIC import() inside loadTexture,
+//    which only executes in the browser, never during `node --test`.
+import type { Texture } from 'pixi.js';
+
+const PIXI_CDN = 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 
 export interface AssetEntry {
   type: 'tile' | 'character' | 'hud' | 'effect';
@@ -728,11 +736,20 @@ export async function loadManifest(): Promise<Manifest> {
 }
 
 export async function loadTexture(file: string): Promise<Texture | null> {
-  try { return await Assets.load(assetUrl(file)); } catch { return null; }
+  try {
+    const { Assets } = await import(PIXI_CDN);
+    return await Assets.load(assetUrl(file));
+  } catch { return null; }
 }
 ```
 
-> `npm test` runs `tsc` first. The `Texture` type import resolves through the existing `pixi.js` types-only devDep + `pixi-cdn.d.ts` pattern. If `tsc` flags the CDN module import, mirror exactly how `render.ts` imports from the same URL (it already does, so reuse that pattern).
+> `npm test` runs `tsc` first. `import type { Texture } from 'pixi.js'` resolves
+> against the existing types-only `pixi.js` devDep and is erased from the JS
+> output. The dynamic `import(PIXI_CDN)` is typed by the existing
+> `pixi-cdn.d.ts` module declaration. Verify after building that the emitted
+> `web/src/assets.js` contains NO top-level `import ... from 'https://...'`
+> (only the dynamic import inside `loadTexture`) — otherwise the node resolver
+> tests cannot load the module.
 
 - [ ] **Step 4: Run test to verify it passes**
 
