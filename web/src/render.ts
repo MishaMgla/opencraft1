@@ -293,7 +293,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const tex = file ? await loadTexture(file) : null;
       if (!tex) return;
       const sprite = new Sprite(tex);
-      sprite.anchor.set(0.5, 0.8);
+      sprite.anchor.set(ch.anchor.x, ch.anchor.y);
       token.container.removeChildren();
       token.container.addChild(sprite);
     },

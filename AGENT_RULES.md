@@ -28,10 +28,11 @@ the security classifier (which handles spam / abuse / injection / malicious code
 
 - **in scope:** anything that extends or improves opencraft1 as it is — new
   gameplay surface, rendering/UX, netcode, persistence, an additive roadmap layer,
-  bug fixes, performance, polish. graphics/asset requests (a tile, character, hud
-  element, or effect) are explicitly in scope — the PM drafts an `## Asset
-  Generation` block and the Dev agent generates the art via
-  `web/tools/gen-asset.mjs`. do not redirect these as teardown or pivot.
+  bug fixes, performance, polish. graphics/asset requests (a tile, character, or
+  hud element) are explicitly in scope — the PM drafts an `## Asset Generation`
+  block and the Dev agent generates the art via `web/tools/gen-asset.mjs`. do not
+  redirect these as teardown or pivot. (animated `effect` assets are not yet
+  supported — the generator rejects them; see `.github/prompts/pm-draft-spec.md`.)
 - **out of scope (do not spec):** "start over" asks — rebuild or rewrite the
   project from scratch, wipe or mass-delete the codebase, swap opencraft1 for a
   different product/genre, or otherwise turn it into a different project. partial

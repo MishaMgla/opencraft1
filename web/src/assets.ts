@@ -9,6 +9,11 @@ import type { Texture } from 'pixi.js';
 
 const PIXI_CDN = 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 
+export interface Placement {
+  anchor: { x: number; y: number };       // normalized canvas point pinned to the ground point
+  footprint: { w: number; h: number };    // tile cells the asset occupies
+  sortOffset: number;                      // zIndex nudge for tall/multi-cell objects
+}
 export interface AssetEntry {
   type: 'tile' | 'character' | 'hud' | 'effect';
   name: string;
@@ -17,8 +22,20 @@ export interface AssetEntry {
   directions?: number;
   fps?: number;
   size?: number;
+  placement?: Placement;
 }
 export interface Manifest { version: number; assets: Record<string, AssetEntry>; }
+
+// Backward-compatible defaults for manifests written before placement existed.
+const DEFAULT_ANCHOR: Record<AssetEntry['type'], { x: number; y: number }> = {
+  character: { x: 0.5, y: 0.8 },
+  tile: { x: 0.5, y: 0.5 },
+  effect: { x: 0.5, y: 0.5 },
+  hud: { x: 0.5, y: 0.5 },
+};
+export function anchorOf(e: AssetEntry): { x: number; y: number } {
+  return e.placement?.anchor ?? DEFAULT_ANCHOR[e.type];
+}
 
 const EMPTY: Manifest = { version: 1, assets: {} };
 
@@ -27,10 +44,10 @@ export function resolveTile(m: Manifest, name: string): { file: string } | null 
   return e?.file ? { file: e.file } : null;
 }
 export function resolveCharacter(m: Manifest, name: string):
-    { directions: number; frames: Record<string, string> } | null {
+    { directions: number; frames: Record<string, string>; anchor: { x: number; y: number } } | null {
   const e = m.assets[`character:${name}`];
   if (!e || Array.isArray(e.frames) || !e.frames) return null;
-  return { directions: e.directions ?? 4, frames: e.frames };
+  return { directions: e.directions ?? 4, frames: e.frames, anchor: anchorOf(e) };
 }
 export function resolveEffect(m: Manifest, name: string): { fps: number; frames: string[] } | null {
   const e = m.assets[`effect:${name}`];

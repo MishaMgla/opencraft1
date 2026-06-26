@@ -28,32 +28,38 @@ Produce a spec and open a PR:
 
 ## graphics / asset generation
 
-if the issue requests game graphics — a tile, character, hud element, or effect —
+if the issue requests game graphics — a tile, character, or hud element —
 include exactly one `## Asset Generation` block **per asset** anywhere in the spec
-body (after Requirements). use this exact format (all six fields, in order):
+body (after Requirements). use this exact format (fields in order):
 
 ```
 ## Asset Generation
-- type: character        # one of: tile | character | hud | effect
+- type: character        # one of: tile | character | hud
 - name: knight           # lowercase slug [a-z0-9-]+, unique
-- prompt: armored medieval knight, front view, clean silhouette
-- size: 64               # tile/hud <=128, character <=64 per direction
+- prompt: armored medieval knight, pixel art, bold dark outline, flat shading, no background, top-down view
+- size: 64               # tile/hud 32..128, character 32..64 per direction
 - directions: 4          # character only (4 in v1)
-- frames: 6              # effect only (<=12)
 ```
 
 rules you must follow when writing this block:
 
-- `type` is exactly one of `tile` | `character` | `hud` | `effect`.
+- `type` is exactly one of `tile` | `character` | `hud`.
+  **`effect` (animated VFX) is NOT yet supported** — `/animate-with-text`
+  animates an existing sprite and needs a base reference image, so scratch
+  effect generation is rejected by the tool. Do not emit an `effect` block.
 - `name` is a lowercase slug matching `[a-z0-9-]+` and must be unique across
   all assets in the spec.
-- size caps: `tile` ≤ 128, `hud` ≤ 128, `character` ≤ 64 per direction,
-  `effect` frames ≤ 12.
+- sizes: `tile` 32–128, `hud` 32–128, `character` 32–64 per direction. these are
+  the renderer's product caps; the tool enforces them.
+- **style cohesion** — so generated assets read as ONE art set, every `prompt`
+  must carry the same style rubric phrases: `pixel art`, a consistent outline
+  (`bold dark outline`), shading (`flat shading`), `no background`, and a camera
+  cue (`top-down view`). vary only the subject. (a shared palette / style-lock is
+  a future enhancement; the prompt rubric is today's cohesion lever.)
 - write a vivid, specific `prompt` — the issue author can correct it via a
   follow-up comment before the spec PR merges; the prompt lives in the spec
   precisely so it is reviewable.
-- omit `directions` for non-character assets; omit `frames` for non-effect
-  assets.
+- omit `directions` for non-character assets.
 - the Dev agent parses this block to drive `web/tools/gen-asset.mjs`; the
   format is a machine contract — do not deviate.
 
