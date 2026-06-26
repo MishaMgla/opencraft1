@@ -1,5 +1,6 @@
-import { Application, Container, Graphics, Text } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
+import { Application, Container, Graphics, Text, Assets, Sprite, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 import { worldToScreen, depth, KX, KY } from './iso.js';
+import { resolveTile, loadTexture, type Manifest } from './assets.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
 const SHAKE_DURATION_MS = 350;
@@ -42,6 +43,7 @@ export interface Renderer {
   placeToken(token: Token): void;
   setLocal(x: number, y: number): void;
   paintTile(x: number, y: number, color: number): void;
+  placeTile(x: number, y: number, name: string): void;
   shakeLocal(): void;
   shakeToken(token: Token): void;
   setZoom(scale: number): void;
@@ -64,7 +66,7 @@ function shakeOffset(token: Token): number {
   return Math.sin(age * 0.18) * SHAKE_AMPLITUDE * decay;
 }
 
-export async function createRenderer(): Promise<Renderer> {
+export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const app = new Application();
   await app.init({ background: '#11151c', resizeTo: window, antialias: true });
   document.body.appendChild(app.canvas);
@@ -73,6 +75,7 @@ export async function createRenderer(): Promise<Renderer> {
   world.sortableChildren = true;
   app.stage.addChild(world);
   const paintedTiles = new Map<string, Graphics>();
+  const tileSprites = new Map<string, Sprite>();
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -153,6 +156,23 @@ export async function createRenderer(): Promise<Renderer> {
       tile.zIndex = depth(x, y) - 500_000;
       paintedTiles.set(key, tile);
       world.addChild(tile);
+    },
+    async placeTile(this: Renderer, x, y, name) {
+      const tile = resolveTile(manifest, name);
+      if (!tile) { this.paintTile(x, y, 0x3a4757); return; } // fallback: neutral diamond
+      const tex: Texture | null = await loadTexture(tile.file);
+      if (!tex) { this.paintTile(x, y, 0x3a4757); return; }
+      const key = tileKey(x, y);
+      const prev = tileSprites.get(key);
+      if (prev) { world.removeChild(prev); prev.destroy(); }
+      const c = worldToScreen(x, y);
+      const sprite = new Sprite(tex);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.x = c.x; sprite.y = c.y;
+      sprite.width = hw * 2; sprite.height = hh * 2;
+      sprite.zIndex = depth(x, y) - 400_000;
+      tileSprites.set(key, sprite);
+      world.addChild(sprite);
     },
     shakeLocal() {
       shakeToken(localToken);
