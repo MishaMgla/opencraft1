@@ -35,17 +35,39 @@ export const ENDPOINTS = {
 // The API returns an object keyed by these names; renderer expects this order.
 export const DIRECTIONS = ['south', 'north', 'east', 'west'];
 
+// Camera view for character generation. /create-character-with-4-directions
+// accepts "low_top_down" | "high_top_down" | "side"; the endpoint default is
+// low_top_down. For our 2:1 iso projection (KX=0.5, KY=0.25) the right value is
+// UNDECIDED — picking it needs a real generation compared against the 128x64
+// diamond grid (isometric:true and low_top_down are the first candidates). Until
+// that fixture runs (first activation), we send NO view and let the server
+// default apply. Pass an explicit `view` to override.
+//
+// Palette/colour control is intentionally NOT wired yet (deferred with the rest
+// of the set-cohesion work). When added, use the REAL per-endpoint field — it is
+// not uniform: /animate-with-text exposes `forced_palette`, while the character
+// endpoint exposes `color_image` + `force_colors`. Do not invent a shared field.
+
 // Build the POST body for a generation request.
 // "description" is the confirmed PixelLab field name (not "prompt").
-export function requestBody(type, { prompt, size, frames }) {
+export function requestBody(type, { prompt, size, view }) {
   switch (type) {
     case 'tile':
     case 'hud':
       return { description: prompt, image_size: { width: size, height: size } };
-    case 'character':
-      return { description: prompt, image_size: { width: size, height: size } };
+    case 'character': {
+      const body = { description: prompt, image_size: { width: size, height: size } };
+      if (view) body.view = view;
+      return body;
+    }
     case 'effect':
-      return { description: prompt, n_frames: frames, image_size: { width: size, height: size } };
+      // /animate-with-text ANIMATES an existing sprite — it is NOT text-to-effect.
+      // It requires `action` + `reference_image` (plus description/image_size).
+      // Scratch (reference-less) effect generation is unsupported; gen-asset.mjs
+      // rejects it upstream. This throw is defence-in-depth so we never emit the
+      // old invalid body that 422s. Re-introduce as a two-step (generate a base
+      // frame, then animate it) when object-VFX support is built.
+      throw new Error('effect: /animate-with-text requires a reference_image + action; scratch effects unsupported');
     default:
       throw new Error(`unknown asset type: ${type}`);
   }

@@ -54,18 +54,23 @@ test('run writes four character PNGs', async () => {
   assert.ok(existsSync(join(dir, 'characters/testknight-south.png')));
 });
 
-test('run writes effect frames and manifest entry', async () => {
-  const res = await run(
-    ['--type', 'effect', '--name', 'testspark', '--prompt', 'spark', '--frames', '3'],
+test('run rejects scratch effect generation', async () => {
+  // /animate-with-text animates an existing sprite; it can't synthesize an
+  // effect from text. Scratch effect generation must fail fast (it would 422
+  // against the real API) rather than emit an invalid request.
+  await assert.rejects(
+    run(['--type', 'effect', '--name', 'testspark', '--prompt', 'spark', '--frames', '3'],
+      { generateImpl: fakeGen, env }),
+    /not supported via scratch/,
+  );
+  assert.ok(!existsSync(join(dir, 'effects/testspark-0.png')), 'no effect files should be written');
+});
+
+test('run stamps placement metadata on entries', async () => {
+  await run(['--type', 'character', '--name', 'testmage', '--prompt', 'mage', '--size', '64', '--directions', '4'],
     { generateImpl: fakeGen, env });
-  assert.equal(res.skipped, false);
-  assert.equal(res.key, 'effect:testspark');
-  assert.ok(existsSync(join(dir, 'effects/testspark-0.png')));
-  assert.ok(existsSync(join(dir, 'effects/testspark-1.png')));
-  assert.ok(existsSync(join(dir, 'effects/testspark-2.png')));
   const m = JSON.parse(readFileSync(manifestPath(), 'utf8'));
-  const entry = m.assets['effect:testspark'];
-  assert.ok(Array.isArray(entry.frames), 'frames should be an array');
-  assert.equal(entry.frames.length, 3, 'should have 3 frames');
-  assert.ok(entry.fps, 'should have fps');
+  const entry = m.assets['character:testmage'];
+  assert.ok(entry.placement, 'entry should carry placement');
+  assert.equal(entry.placement.anchor.y, 0.8, 'character anchor.y default is 0.8');
 });

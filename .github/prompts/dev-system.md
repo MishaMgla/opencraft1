@@ -15,12 +15,13 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    run the following from the repo root BEFORE writing any other code:
 
    ```
-   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>] [--frames <n>]
+   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>]
    ```
 
    map block fields to flags exactly: `type→--type`, `name→--name`,
-   `prompt→--prompt`, `size→--size`, `directions→--directions` (character only),
-   `frames→--frames` (effect only). then:
+   `prompt→--prompt`, `size→--size`, `directions→--directions` (character only).
+   `type` is `tile` | `character` | `hud`; **`effect` is not supported** (the tool
+   rejects it — `/animate-with-text` needs a base sprite). then:
 
    - confirm the PNG(s) appear under `web/assets/<type-dir>/` and that
      `web/assets/manifest.json` gained the `<type>:<name>` entry.
