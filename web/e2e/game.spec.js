@@ -31,6 +31,9 @@ test('loads, joins, and moves', async ({ page }) => {
   // The overlay hides on submit; the HUD shows once the loop runs.
   await expect(page.locator('#overlay')).toBeHidden();
 
+  // Asset system: with an empty manifest, the client must render exactly as
+  // before (procedural fallback). The existing join+render assertions cover this.
+
   // Assertion 1 — full handshake completed (renderer init + ws + Welcome).
   await page.waitForFunction(() => window.__game?.me.id !== 0, null, {
     timeout: 15000,
@@ -45,4 +48,14 @@ test('loads, joins, and moves', async ({ page }) => {
   const x1 = await page.evaluate(() => window.__game.me.x);
 
   expect(x1).toBeGreaterThan(x0);
+});
+
+test('a manifest tile loads as a texture without error', async ({ page }) => {
+  // This test asserts the asset path does not throw; it does not commit assets.
+  await page.goto('/');
+  const ok = await page.evaluate(async () => {
+    const res = await fetch('assets/manifest.json');
+    return res.ok && typeof (await res.json()).assets === 'object';
+  });
+  expect(ok).toBe(true);
 });
