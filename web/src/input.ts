@@ -15,6 +15,9 @@ export interface Input {
   // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
   step(pos: Vec2, speed: number, dt: number, bounds: Bounds): boolean;
   consumePaint(): boolean;
+  isPaintHeld(): boolean;
+  consumeUlt(): boolean;
+  consumeJump(): boolean;
 }
 
 type KeyboardTarget = Pick<Window, 'addEventListener'>;
@@ -23,15 +26,31 @@ function isPaintKey(e: KeyboardEvent): boolean {
   return e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
 }
 
+function isUltKey(e: KeyboardEvent): boolean {
+  return e.code === 'KeyE' || e.key.toLowerCase() === 'e';
+}
+
 export function createInput(target: KeyboardTarget = window): Input {
   const keys: Record<string, boolean> = Object.create(null);
   let paintRequested = false;
+  let paintHeld = false;
+  let ultRequested = false;
+  let jumpRequested = false;
   target.addEventListener(
     'keydown',
     (e) => {
       if (isPaintKey(e)) {
         e.preventDefault();
-        if (!e.repeat) paintRequested = true;
+        paintHeld = true;
+        if (!e.repeat) {
+          paintRequested = true;
+          jumpRequested = true;
+        }
+        return;
+      }
+      if (isUltKey(e)) {
+        e.preventDefault();
+        if (!e.repeat) ultRequested = true;
         return;
       }
       keys[e.key.toLowerCase()] = true;
@@ -42,6 +61,11 @@ export function createInput(target: KeyboardTarget = window): Input {
     'keyup',
     (e) => {
       if (isPaintKey(e)) {
+        e.preventDefault();
+        paintHeld = false;
+        return;
+      }
+      if (isUltKey(e)) {
         e.preventDefault();
         return;
       }
@@ -75,6 +99,19 @@ export function createInput(target: KeyboardTarget = window): Input {
     consumePaint() {
       if (!paintRequested) return false;
       paintRequested = false;
+      return true;
+    },
+    isPaintHeld() {
+      return paintHeld;
+    },
+    consumeUlt() {
+      if (!ultRequested) return false;
+      ultRequested = false;
+      return true;
+    },
+    consumeJump() {
+      if (!jumpRequested) return false;
+      jumpRequested = false;
       return true;
     },
   };

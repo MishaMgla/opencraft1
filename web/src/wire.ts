@@ -3,6 +3,8 @@
 const C_HELLO = 0x01;
 const C_INPUT = 0x02;
 const C_PAINT = 0x04;
+const C_ULT = 0x05;
+const C_JUMP = 0x06;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
@@ -11,6 +13,12 @@ const S_LEAVE = 0x84;
 const S_PONG = 0x85;
 const S_PAINT = 0x86;
 const S_SHAKE = 0x87;
+const S_PLAYER = 0x88;
+const S_JUMP = 0x89;
+
+export const ROLE_PULSE = 1;
+export const ROLE_CROSS = 2;
+export const ROLE_TRAIL = 3;
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -62,17 +70,31 @@ export interface Shake {
   type: 'shake';
   id: number;
 }
+export interface PlayerState {
+  type: 'player';
+  id: number;
+  role: number;
+  charge: number;
+  ready: boolean;
+  name: string;
+}
+export interface Jump {
+  type: 'jump';
+  id: number;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Unknown;
 
-export function encodeHello(name: string): ArrayBuffer {
+export function encodeHello(name: string, role = 0): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
-  const b = new Uint8Array(2 + n.length);
+  const hasRole = role > 0;
+  const b = new Uint8Array(2 + n.length + (hasRole ? 1 : 0));
   b[0] = C_HELLO;
   b[1] = n.length;
   b.set(n, 2);
+  if (hasRole) b[2 + n.length] = role;
   return b.buffer;
 }
 
@@ -88,6 +110,18 @@ export function encodeInput(x: number, y: number): ArrayBuffer {
 export function encodePaint(): ArrayBuffer {
   const b = new Uint8Array(1);
   b[0] = C_PAINT;
+  return b.buffer;
+}
+
+export function encodeUlt(): ArrayBuffer {
+  const b = new Uint8Array(1);
+  b[0] = C_ULT;
+  return b.buffer;
+}
+
+export function encodeJump(): ArrayBuffer {
+  const b = new Uint8Array(1);
+  b[0] = C_JUMP;
   return b.buffer;
 }
 
@@ -144,6 +178,17 @@ export function decodeServer(view: DataView): ServerMsg {
       };
     case S_SHAKE:
       return { type: 'shake', id: view.getUint32(1, true) };
+    case S_PLAYER: {
+      const id = view.getUint32(1, true);
+      const role = view.getUint8(5);
+      const charge = view.getUint8(6);
+      const ready = view.getUint8(7) !== 0;
+      const nlen = view.getUint8(8);
+      const bytes = new Uint8Array(view.buffer, view.byteOffset + 9, nlen);
+      return { type: 'player', id, role, charge, ready, name: dec.decode(bytes) };
+    }
+    case S_JUMP:
+      return { type: 'jump', id: view.getUint32(1, true) };
   }
   return { type: 'unknown' };
 }

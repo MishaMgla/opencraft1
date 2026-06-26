@@ -80,11 +80,13 @@ instead of inlining the command. Responsibilities:
 - Run `codex exec` (passing through model / sandbox / reasoning args), teeing
   combined stdout+stderr to a log file.
 - On non-zero exit, classify the log:
-  - **Quota block** if it matches any of `usage_limit_reached`,
+  - **Recoverable backend block** if it matches any of `usage_limit_reached`,
     `You've hit your usage limit`, `exceeded retry limit, last status: 429`
     (and, when `--json` is enabled, the structured `usage_limit_reached` error
-    event — preferred). → emit step output `quota_blocked=true` and **exit 0**,
-    so the caller marks-and-pauses instead of tripping the generic failure path.
+    event — preferred), **or** `Selected model is at capacity` (a transient
+    model-availability error that, like a quota block, clears on its own). →
+    emit step output `quota_blocked=true` and **exit 0**, so the caller
+    marks-and-pauses instead of tripping the generic failure path.
   - **Genuine failure** otherwise → exit non-zero → existing failure-comment
     path fires unchanged. No resume marker is written (never auto-retry broken
     code).

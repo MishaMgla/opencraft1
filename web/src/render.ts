@@ -3,37 +3,86 @@ import { worldToScreen, depth, KX, KY } from './iso.js';
 import { resolveTile, loadTexture, resolveCharacter, resolveEffect, type Manifest } from './assets.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
+const WORLD_SIZE = 8192;
 const SHAKE_DURATION_MS = 350;
 const SHAKE_AMPLITUDE = 7;
-const REMOTE_LABEL_COLOR = 0xd8dee9;
-const LOCAL_LABEL_COLOR = 0xffffff;
+const JUMP_DURATION_MS = 420;
+const JUMP_HEIGHT = 30;
+const REMOTE_LABEL_COLOR = 0xd9f2e6;
+const LOCAL_LABEL_COLOR = 0xfff2a8;
+const WORLD_BG = '#07110f';
+const TILE_DARK = 0x0b1d18;
+const TILE_LIGHT = 0x102821;
+const TILE_EDGE = 0x3ddc84;
+const TILE_MAJOR_EDGE = 0xf2cf5b;
+const MARKER_OUTLINE = 0xfff2a8;
+const MARKER_SHADOW = 0x020605;
 
-function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): Container {
+function drawIsoDiamond(
+  graphics: Graphics,
+  cx: number,
+  cy: number,
+  hw: number,
+  hh: number,
+  fillColor: number,
+  fillAlpha: number,
+  strokeColor: number,
+  strokeAlpha: number,
+  strokeWidth: number,
+): Graphics {
+  return graphics
+    .moveTo(cx, cy - hh)
+    .lineTo(cx + hw, cy)
+    .lineTo(cx, cy + hh)
+    .lineTo(cx - hw, cy)
+    .lineTo(cx, cy - hh)
+    .fill({ color: fillColor, alpha: fillAlpha })
+    .stroke({ color: strokeColor, alpha: strokeAlpha, width: strokeWidth });
+}
+
+function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; avatar: Container; label: Text } {
   const container = new Container();
+  const avatar = new Container();
 
   const shadow = new Graphics()
-    .ellipse(0, 6, 12, 6)
-    .fill({ color: 0x000000, alpha: 0.25 });
-  const body = new Graphics().circle(0, 0, 10).fill({ color });
+    .rect(-12, 4, 24, 8)
+    .fill({ color: MARKER_SHADOW, alpha: 0.65 });
+  const body = new Graphics()
+    .rect(-9, -13, 18, 18)
+    .fill({ color })
+    .stroke({ color: MARKER_OUTLINE, width: 2 })
+    .rect(-4, -8, 8, 8)
+    .fill({ color: MARKER_OUTLINE, alpha: 0.9 });
   const label = new Text({
     text: name,
-    style: { fill: labelColor, fontSize: 12, fontFamily: 'system-ui' },
+    style: {
+      fill: labelColor,
+      fontFamily: '"Courier New", monospace',
+      fontSize: 11,
+      fontWeight: '700',
+      align: 'center',
+    },
   });
   label.anchor.set(0.5, 1);
-  label.y = -16;
+  label.y = -17;
 
-  container.addChild(shadow, body, label);
-  return container;
+  avatar.addChild(body, label);
+  container.addChild(shadow, avatar);
+  return { container, avatar, label };
 }
 
 export interface Token {
   container: Container;
+  avatar: Container;
+  label: Text;
   rx: number;
   ry: number;
   tx: number;
   ty: number;
   shakeStartedAt: number;
   shakeUntil: number;
+  jumpStartedAt: number;
+  jumpUntil: number;
 }
 
 export interface Renderer {
@@ -46,14 +95,29 @@ export interface Renderer {
   placeTile(x: number, y: number, name: string): Promise<void>;
   shakeLocal(): void;
   shakeToken(token: Token): void;
+  jumpLocal(): void;
+  jumpToken(token: Token): void;
+  setLocalName(name: string): void;
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
   setSkin(token: Token, name: string): Promise<void>;
   playEffect(x: number, y: number, name: string): void;
 }
 
-function makeTokenState(container: Container, x: number, y: number): Token {
-  return { container, rx: x, ry: y, tx: x, ty: y, shakeStartedAt: 0, shakeUntil: 0 };
+function makeTokenState(container: Container, avatar: Container, label: Text, x: number, y: number): Token {
+  return {
+    container,
+    avatar,
+    label,
+    rx: x,
+    ry: y,
+    tx: x,
+    ty: y,
+    shakeStartedAt: 0,
+    shakeUntil: 0,
+    jumpStartedAt: 0,
+    jumpUntil: 0,
+  };
 }
 
 function tileKey(x: number, y: number): string {
@@ -68,9 +132,23 @@ function shakeOffset(token: Token): number {
   return Math.sin(age * 0.18) * SHAKE_AMPLITUDE * decay;
 }
 
+function jumpOffset(token: Token): number {
+  const now = performance.now();
+  if (now >= token.jumpUntil) return 0;
+  const t = (now - token.jumpStartedAt) / JUMP_DURATION_MS;
+  return Math.sin(t * Math.PI) * JUMP_HEIGHT;
+}
+
 export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const app = new Application();
-  await app.init({ background: '#11151c', resizeTo: window, antialias: true });
+  await app.init({
+    background: WORLD_BG,
+    resizeTo: window,
+    antialias: false,
+    autoDensity: true,
+    resolution: Math.max(1, Math.floor(window.devicePixelRatio || 1)),
+  });
+  app.canvas.style.imageRendering = 'pixelated';
   document.body.appendChild(app.canvas);
 
   const world = new Container();
@@ -83,30 +161,37 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const ground = new Graphics();
   const hw = KX * GROUND_STEP;
   const hh = KY * GROUND_STEP;
-  for (let wx = 0; wx <= 4096; wx += GROUND_STEP) {
-    for (let wy = 0; wy <= 4096; wy += GROUND_STEP) {
+  for (let wx = 0; wx <= WORLD_SIZE; wx += GROUND_STEP) {
+    for (let wy = 0; wy <= WORLD_SIZE; wy += GROUND_STEP) {
       const c = worldToScreen(wx, wy);
-      ground
-        .moveTo(c.x, c.y - hh)
-        .lineTo(c.x + hw, c.y)
-        .lineTo(c.x, c.y + hh)
-        .lineTo(c.x - hw, c.y)
-        .lineTo(c.x, c.y - hh);
+      const major = wx % (GROUND_STEP * 4) === 0 || wy % (GROUND_STEP * 4) === 0;
+      drawIsoDiamond(
+        ground,
+        c.x,
+        c.y,
+        hw,
+        hh,
+        (wx / GROUND_STEP + wy / GROUND_STEP) % 2 === 0 ? TILE_DARK : TILE_LIGHT,
+        0.9,
+        major ? TILE_MAJOR_EDGE : TILE_EDGE,
+        major ? 0.32 : 0.2,
+        major ? 2 : 1,
+      );
     }
   }
-  ground.stroke({ color: 0x2a3340, width: 1 });
   ground.zIndex = -1_000_000;
   world.addChild(ground);
 
   // Local player token.
-  const localContainer = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
+  const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
   world.addChild(localContainer);
-  const localToken = makeTokenState(localContainer, 0, 0);
+  const localToken = makeTokenState(localContainer, localAvatar, localLabel, 0, 0);
 
   function placeToken(token: Token): void {
     const p = worldToScreen(token.rx, token.ry);
     token.container.x = p.x + shakeOffset(token);
     token.container.y = p.y;
+    token.avatar.y = -jumpOffset(token);
     token.container.zIndex = depth(token.rx, token.ry);
   }
 
@@ -116,12 +201,18 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     token.shakeUntil = now + SHAKE_DURATION_MS;
   }
 
+  function jumpToken(token: Token): void {
+    const now = performance.now();
+    token.jumpStartedAt = now;
+    token.jumpUntil = now + JUMP_DURATION_MS;
+  }
+
   return {
     app,
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
-      const container = makeToken(name, color);
+      const { container, avatar, label } = makeToken(name, color);
       world.addChild(container);
-      const token = makeTokenState(container, x, y);
+      const token = makeTokenState(container, avatar, label, x, y);
       this.placeToken(token);
       return token;
     },
@@ -147,14 +238,8 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         existing.destroy();
       }
       const c = worldToScreen(x, y);
-      const tile = new Graphics()
-        .moveTo(c.x, c.y - hh)
-        .lineTo(c.x + hw, c.y)
-        .lineTo(c.x, c.y + hh)
-        .lineTo(c.x - hw, c.y)
-        .lineTo(c.x, c.y - hh)
-        .fill({ color, alpha: 0.65 })
-        .stroke({ color: 0xffffff, alpha: 0.25, width: 1 });
+      const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.82, 0xfff2a8, 0.85, 2);
+      drawIsoDiamond(tile, c.x, c.y, hw - 6, hh - 3, color, 0, 0x07110f, 0.5, 1);
       tile.zIndex = depth(x, y) - 500_000;
       paintedTiles.set(key, tile);
       world.addChild(tile);
@@ -181,6 +266,15 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     },
     shakeToken(token) {
       shakeToken(token);
+    },
+    jumpLocal() {
+      jumpToken(localToken);
+    },
+    jumpToken(token) {
+      jumpToken(token);
+    },
+    setLocalName(name) {
+      localLabel.text = name;
     },
     setZoom(scale) {
       world.scale.set(scale);

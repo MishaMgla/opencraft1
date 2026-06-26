@@ -10,6 +10,9 @@ import (
 
 const TickHz = 15
 const PaintTileSize int16 = 128
+const UltChargeNeeded byte = 12
+const TrailUltTiles = 8
+const SpawnCoord int16 = 2048
 
 // flushEvery is how often the sim persists all online players, bounding how
 // much position is lost if the engine dies without a graceful shutdown.
@@ -37,8 +40,13 @@ type player struct {
 	x, y          int16
 	name          string
 	color         uint32
+	role          byte
 	out           chan []byte
 	lastPaintTile tileKey
+	ultCharge     byte
+	ultReady      bool
+	trailLeft     int
+	trailTiles    map[tileKey]struct{}
 }
 
 type tileKey struct {
@@ -63,6 +71,7 @@ type Sim struct {
 
 type cmdJoin struct {
 	name  string
+	role  byte
 	out   chan []byte
 	saved *SavedPlayer // nil = brand-new player: spawn at center, derive color
 	reply chan joinResult
@@ -87,6 +96,8 @@ type cmdPing struct {
 	t  uint32
 }
 type cmdPaint struct{ id uint32 }
+type cmdUlt struct{ id uint32 }
+type cmdJump struct{ id uint32 }
 
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
@@ -117,6 +128,10 @@ func (s *Sim) Done() <-chan struct{} { return s.done }
 // logged and treated as "new player" (spawn at center) so persistence trouble
 // degrades gracefully instead of blocking joins.
 func (s *Sim) Join(name string, out chan []byte) (uint32, [][]byte) {
+	return s.JoinWithRole(name, wire.RolePulse, out)
+}
+
+func (s *Sim) JoinWithRole(name string, role byte, out chan []byte) (uint32, [][]byte) {
 	var saved *SavedPlayer
 	if s.store != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -130,7 +145,7 @@ func (s *Sim) Join(name string, out chan []byte) (uint32, [][]byte) {
 		}
 	}
 	reply := make(chan joinResult, 1)
-	s.cmds <- cmdJoin{name: name, out: out, saved: saved, reply: reply}
+	s.cmds <- cmdJoin{name: name, role: validRole(role), out: out, saved: saved, reply: reply}
 	r := <-reply
 	return r.id, r.initial
 }
@@ -139,6 +154,8 @@ func (s *Sim) Input(id uint32, x, y int16) { s.cmds <- cmdInput{id, x, y} }
 func (s *Sim) Leave(id uint32)             { s.cmds <- cmdLeave{id} }
 func (s *Sim) Ping(id uint32, t uint32)    { s.cmds <- cmdPing{id, t} }
 func (s *Sim) Paint(id uint32)             { s.cmds <- cmdPaint{id} }
+func (s *Sim) Ult(id uint32)               { s.cmds <- cmdUlt{id} }
+func (s *Sim) Jump(id uint32)              { s.cmds <- cmdJump{id} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -181,6 +198,38 @@ func paintTileCoord(v int16) int16 {
 	pos := int(clamp(v))
 	size := int(PaintTileSize)
 	return int16(((pos + size/2) / size) * size)
+}
+
+func validRole(role byte) byte {
+	switch role {
+	case wire.RolePulse, wire.RoleCross, wire.RoleTrail:
+		return role
+	default:
+		return wire.RolePulse
+	}
+}
+
+func playerState(p *player) []byte {
+	charge := p.ultCharge
+	if p.ultReady {
+		charge = UltChargeNeeded
+	}
+	return wire.EncodePlayer(p.id, p.role, charge, p.ultReady, p.name)
+}
+
+func broadcastPlayerState(players map[uint32]*player, p *player) {
+	frame := playerState(p)
+	for _, o := range players {
+		send(o, frame)
+	}
+}
+
+func validPaintTile(key tileKey) bool {
+	return key.x >= 0 && key.y >= 0 && int(key.x) <= WorldSize && int(key.y) <= WorldSize
+}
+
+func tileChanged(existing paintedTile, exists bool, p *player) bool {
+	return !exists || existing.color != p.color || existing.ownerID != p.id
 }
 
 // save persists one player asynchronously. Values are copied into a local
@@ -282,6 +331,95 @@ func (s *Sim) flushAll(players map[uint32]*player) {
 	}
 }
 
+func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile, p *player, key tileKey, charge bool) bool {
+	if !validPaintTile(key) {
+		return false
+	}
+	existing, exists := painted[key]
+	if !tileChanged(existing, exists, p) {
+		return false
+	}
+	tile := paintedTile{x: key.x, y: key.y, color: p.color, ownerID: p.id}
+	painted[key] = tile
+	for _, o := range players {
+		send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+	}
+	s.savePaint(SavedTile{X: tile.x, Y: tile.y, Color: tile.color, Owner: p.name})
+	if charge && !p.ultReady && p.ultCharge < UltChargeNeeded {
+		p.ultCharge++
+		if p.ultCharge >= UltChargeNeeded {
+			p.ultCharge = UltChargeNeeded
+			p.ultReady = true
+		}
+		broadcastPlayerState(players, p)
+	}
+	return true
+}
+
+func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+	center := paintTileFor(p.x, p.y)
+	for dx := -1; dx <= 1; dx++ {
+		for dy := -1; dy <= 1; dy++ {
+			key := tileKey{
+				x: center.x + int16(dx)*PaintTileSize,
+				y: center.y + int16(dy)*PaintTileSize,
+			}
+			s.paint(players, painted, p, key, false)
+		}
+	}
+}
+
+func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+	center := paintTileFor(p.x, p.y)
+	s.paint(players, painted, p, center, false)
+	directions := []tileKey{{x: 1}, {x: -1}, {y: 1}, {y: -1}}
+	for _, d := range directions {
+		for step := int16(1); step <= 2; step++ {
+			key := tileKey{
+				x: center.x + d.x*PaintTileSize*step,
+				y: center.y + d.y*PaintTileSize*step,
+			}
+			s.paint(players, painted, p, key, false)
+		}
+	}
+}
+
+func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+	if !p.ultReady {
+		return
+	}
+	p.ultReady = false
+	p.ultCharge = 0
+	p.trailLeft = 0
+	p.trailTiles = nil
+
+	switch p.role {
+	case wire.RolePulse:
+		s.paintPulse(players, painted, p)
+	case wire.RoleCross:
+		s.paintCross(players, painted, p)
+	case wire.RoleTrail:
+		p.trailLeft = TrailUltTiles
+		p.trailTiles = map[tileKey]struct{}{}
+	}
+	broadcastPlayerState(players, p)
+}
+
+func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]paintedTile, p *player, key tileKey) {
+	if p.trailLeft <= 0 {
+		return
+	}
+	if _, ok := p.trailTiles[key]; ok {
+		return
+	}
+	p.trailTiles[key] = struct{}{}
+	p.trailLeft--
+	s.paint(players, painted, p, key, false)
+	if p.trailLeft == 0 {
+		p.trailTiles = nil
+	}
+}
+
 // Run is the simulation loop. Call in its own goroutine.
 func (s *Sim) Run(ctx context.Context) {
 	defer close(s.done)
@@ -315,13 +453,13 @@ func (s *Sim) Run(ctx context.Context) {
 			case cmdJoin:
 				id := nextID
 				nextID++
-				px, py := int16(WorldSize/2), int16(WorldSize/2)
+				px, py := SpawnCoord, SpawnCoord
 				color := colorFor(id)
 				if m.saved != nil {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
-				p := &player{id: id, x: px, y: py, name: m.name, color: color, out: m.out, lastPaintTile: paintTileFor(px, py)}
+				p := &player{id: id, x: px, y: py, name: m.name, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py)}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 
@@ -337,12 +475,15 @@ func (s *Sim) Run(ctx context.Context) {
 				for _, tile := range painted {
 					initial = append(initial, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
 				}
+				initial = append(initial, playerState(p))
 				for oid, o := range players {
 					if oid == id {
 						continue
 					}
 					initial = append(initial, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
+					initial = append(initial, playerState(o))
 					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name))
+					send(o, playerState(p))
 				}
 				m.reply <- joinResult{id: id, initial: initial}
 
@@ -362,6 +503,7 @@ func (s *Sim) Run(ctx context.Context) {
 							send(o, wire.EncodeShake(p.id))
 						}
 					}
+					s.applyTrail(players, painted, p, tile)
 				}
 
 			case cmdPaint:
@@ -369,13 +511,23 @@ func (s *Sim) Run(ctx context.Context) {
 				if p == nil {
 					continue
 				}
-				key := paintTileFor(p.x, p.y)
-				tile := paintedTile{x: key.x, y: key.y, color: p.color, ownerID: p.id}
-				painted[key] = tile
-				for _, o := range players {
-					send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+				s.paint(players, painted, p, paintTileFor(p.x, p.y), true)
+
+			case cmdUlt:
+				p := players[m.id]
+				if p == nil {
+					continue
 				}
-				s.savePaint(SavedTile{X: tile.x, Y: tile.y, Color: tile.color, Owner: p.name})
+				s.activateUlt(players, painted, p)
+
+			case cmdJump:
+				p := players[m.id]
+				if p == nil {
+					continue
+				}
+				for _, o := range players {
+					send(o, wire.EncodeJump(p.id))
+				}
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {

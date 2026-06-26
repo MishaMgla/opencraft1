@@ -109,7 +109,7 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := make(chan []byte, 64)
-	id, initial := s.sim.Join(msg.Name, out)
+	id, initial := s.sim.JoinWithRole(msg.Name, msg.Role, out)
 	defer s.sim.Leave(id)
 
 	// Deliver the joining player's initial state (Welcome + painted world +
@@ -154,6 +154,10 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			s.sim.Input(id, m.X, m.Y)
 		case wire.CPaint:
 			s.sim.Paint(id)
+		case wire.CUlt:
+			s.sim.Ult(id)
+		case wire.CJump:
+			s.sim.Jump(id)
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
 		}

@@ -10,6 +10,8 @@ const (
 	CInput = 0x02
 	CPing  = 0x03
 	CPaint = 0x04
+	CUlt   = 0x05
+	CJump  = 0x06
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
@@ -18,6 +20,14 @@ const (
 	SPong     = 0x85
 	SPaint    = 0x86
 	SShake    = 0x87
+	SPlayer   = 0x88
+	SJump     = 0x89
+)
+
+const (
+	RolePulse byte = 1
+	RoleCross byte = 2
+	RoleTrail byte = 3
 )
 
 // Ent is a minimal entity record carried in snapshots.
@@ -105,10 +115,36 @@ func EncodeShake(id uint32) []byte {
 	return b
 }
 
+func EncodeJump(id uint32) []byte {
+	b := make([]byte, 1+4)
+	b[0] = SJump
+	binary.LittleEndian.PutUint32(b[1:], id)
+	return b
+}
+
+func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string) []byte {
+	n := []byte(name)
+	if len(n) > 255 {
+		n = n[:255]
+	}
+	b := make([]byte, 1+4+1+1+1+1+len(n))
+	b[0] = SPlayer
+	binary.LittleEndian.PutUint32(b[1:], id)
+	b[5] = role
+	b[6] = charge
+	if ready {
+		b[7] = 1
+	}
+	b[8] = byte(len(n))
+	copy(b[9:], n)
+	return b
+}
+
 // ClientMsg is a decoded client->server frame. Only fields relevant to Type are set.
 type ClientMsg struct {
 	Type byte
 	Name string // CHello
+	Role byte   // CHello
 	X, Y int16  // CInput
 	T    uint32 // CPing
 }
@@ -127,7 +163,11 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 		if len(b) < 2+nlen {
 			return ClientMsg{}, false
 		}
-		return ClientMsg{Type: CHello, Name: string(b[2 : 2+nlen])}, true
+		msg := ClientMsg{Type: CHello, Name: string(b[2 : 2+nlen])}
+		if len(b) >= 2+nlen+1 {
+			msg.Role = b[2+nlen]
+		}
+		return msg, true
 	case CInput:
 		if len(b) < 5 {
 			return ClientMsg{}, false
@@ -142,6 +182,10 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 		return ClientMsg{Type: CPing, T: binary.LittleEndian.Uint32(b[1:])}, true
 	case CPaint:
 		return ClientMsg{Type: CPaint}, true
+	case CUlt:
+		return ClientMsg{Type: CUlt}, true
+	case CJump:
+		return ClientMsg{Type: CJump}, true
 	}
 	return ClientMsg{}, false
 }

@@ -30,6 +30,8 @@ assert 0 "retry limit exhausted 429" \
   'codex: exceeded retry limit, last status: 429 Too Many Requests'
 assert 0 "case-insensitive USAGE LIMIT" \
   'ERROR: USAGE LIMIT REACHED for this account'
+assert 0 "model at capacity" \
+  'ERROR: Selected model is at capacity. Please try a different model.'
 
 # --- genuine failures (expect exit 1) ---
 assert 1 "go build error" \
