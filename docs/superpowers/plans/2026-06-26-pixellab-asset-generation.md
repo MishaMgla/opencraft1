@@ -135,8 +135,8 @@ git commit -m "feat(assets): pin PixelLab v2 API contract constants"
 **Interfaces:**
 - Consumes: nothing.
 - Produces:
-  - `MANIFEST_PATH` (absolute path to `web/assets/manifest.json`)
-  - `ASSETS_DIR` (absolute path to `web/assets`)
+  - `assetsDir(): string` — `$OPENCRAFT_ASSETS_DIR` if set, else `web/assets`. **Read at call time** (not a module constant) so tests can redirect to a temp dir even though ESM imports are hoisted.
+  - `manifestPath(): string` — `join(assetsDir(), 'manifest.json')`
   - `CAPS = { tile:128, hud:128, character:64, effect:64 }` and `MAX_EFFECT_FRAMES = 12`
   - `validateSlug(name): void` (throws on bad slug)
   - `assetKey(type, name): string` → `"type:name"`
@@ -185,8 +185,15 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-export const ASSETS_DIR = join(HERE, '..', 'assets');
-export const MANIFEST_PATH = join(ASSETS_DIR, 'manifest.json');
+// Resolved at CALL time, not import time: tests set OPENCRAFT_ASSETS_DIR to a
+// temp dir to stay isolated from the committed manifest. The CLI run by the Dev
+// agent leaves it unset and writes to the real web/assets.
+export function assetsDir() {
+  return process.env.OPENCRAFT_ASSETS_DIR || join(HERE, '..', 'assets');
+}
+export function manifestPath() {
+  return join(assetsDir(), 'manifest.json');
+}
 
 export const CAPS = { tile: 128, hud: 128, character: 64, effect: 64 };
 export const MAX_EFFECT_FRAMES = 12;
@@ -213,8 +220,9 @@ export function enforceCaps(type, size, frames = 1) {
 }
 
 export function readManifest() {
-  if (!existsSync(MANIFEST_PATH)) return { version: 1, assets: {} };
-  return JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
+  const p = manifestPath();
+  if (!existsSync(p)) return { version: 1, assets: {} };
+  return JSON.parse(readFileSync(p, 'utf8'));
 }
 
 export function upsertManifest(entry) {
@@ -226,7 +234,7 @@ export function upsertManifest(entry) {
   const sorted = {};
   for (const k of Object.keys(m.assets).sort()) sorted[k] = m.assets[k];
   m.assets = sorted;
-  writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + '\n');
+  writeFileSync(manifestPath(), JSON.stringify(m, null, 2) + '\n');
   return m;
 }
 ```
@@ -400,67 +408,61 @@ git commit -m "feat(assets): PixelLab async generation client"
 
 ```js
 // web/test/gen-asset.test.mjs
-import { test } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, rmSync, readFileSync } from 'node:fs';
-import { run } from '../tools/gen-asset.mjs';
-import { MANIFEST_PATH, ASSETS_DIR } from '../tools/manifest.mjs';
+import { existsSync, readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { run } from '../tools/gen-asset.mjs';
+import { manifestPath } from '../tools/manifest.mjs';
+
+// Fully isolated: redirect ALL asset writes to a temp dir so the committed
+// web/assets/manifest.json is never touched. Set BEFORE any run() call; the
+// manifest module resolves the dir at call time, so this takes effect despite
+// hoisted imports.
+let dir;
+before(() => {
+  dir = mkdtempSync(join(tmpdir(), 'gen-asset-'));
+  for (const d of ['tiles', 'characters', 'hud', 'effects']) mkdirSync(join(dir, d), { recursive: true });
+  writeFileSync(join(dir, 'manifest.json'), '{\n  "version": 1,\n  "assets": {}\n}\n');
+  process.env.OPENCRAFT_ASSETS_DIR = dir;
+});
+after(() => { delete process.env.OPENCRAFT_ASSETS_DIR; rmSync(dir, { recursive: true, force: true }); });
 
 const fakeGen = async ({ type }) => ({
   images: type === 'character'
     ? [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')]
     : [Buffer.from('IMG')],
 });
+const env = { PIXELLAB_API_KEY: 'k' };
 
 test('run writes a tile PNG and manifest entry', async () => {
-  const res = await run(
-    ['--type', 'tile', '--name', 'testrock', '--prompt', 'rock', '--size', '128'],
-    { generateImpl: fakeGen, env: { PIXELLAB_API_KEY: 'k' } },
-  );
+  const res = await run(['--type', 'tile', '--name', 'testrock', '--prompt', 'rock', '--size', '128'],
+    { generateImpl: fakeGen, env });
   assert.equal(res.skipped, false);
   assert.equal(res.key, 'tile:testrock');
-  assert.ok(existsSync(join(ASSETS_DIR, 'tiles/testrock.png')));
-  const m = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
+  assert.ok(existsSync(join(dir, 'tiles/testrock.png')));
+  const m = JSON.parse(readFileSync(manifestPath(), 'utf8'));
   assert.equal(m.assets['tile:testrock'].file, 'tiles/testrock.png');
-  // teardown
-  rmSync(join(ASSETS_DIR, 'tiles/testrock.png'));
-  delete m.assets['tile:testrock'];
-  const { writeFileSync } = await import('node:fs');
-  writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + '\n');
 });
 
 test('run is idempotent without --force', async () => {
   const args = ['--type', 'tile', '--name', 'testdup', '--prompt', 'x', '--size', '128'];
-  const opts = { generateImpl: fakeGen, env: { PIXELLAB_API_KEY: 'k' } };
-  await run(args, opts);
-  const second = await run(args, opts);
+  await run(args, { generateImpl: fakeGen, env });
+  const second = await run(args, { generateImpl: fakeGen, env });
   assert.equal(second.skipped, true);
-  // teardown
-  const { writeFileSync } = await import('node:fs');
-  rmSync(join(ASSETS_DIR, 'tiles/testdup.png'));
-  const m = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
-  delete m.assets['tile:testdup'];
-  writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + '\n');
 });
 
 test('run writes four character PNGs', async () => {
   const res = await run(
     ['--type', 'character', '--name', 'testknight', '--prompt', 'knight', '--size', '64', '--directions', '4'],
-    { generateImpl: fakeGen, env: { PIXELLAB_API_KEY: 'k' } },
-  );
+    { generateImpl: fakeGen, env });
   assert.equal(res.files.length, 4);
-  assert.ok(existsSync(join(ASSETS_DIR, 'characters/testknight-south.png')));
-  // teardown
-  const { writeFileSync } = await import('node:fs');
-  for (const f of res.files) rmSync(join(ASSETS_DIR, f));
-  const m = JSON.parse(readFileSync(MANIFEST_PATH, 'utf8'));
-  delete m.assets['character:testknight'];
-  writeFileSync(MANIFEST_PATH, JSON.stringify(m, null, 2) + '\n');
+  assert.ok(existsSync(join(dir, 'characters/testknight-south.png')));
 });
 ```
 
-> The teardown above keeps the committed manifest empty so `manifest-integrity.test.mjs` (Task 5) stays green. Keep tests serial (default for `node --test` within a file).
+> The temp-dir redirect keeps the committed manifest untouched, so `manifest-integrity.test.mjs` (Task 5) stays green regardless of test outcomes. Tests run serially within a file (`node --test` default).
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -476,7 +478,7 @@ import { join } from 'node:path';
 import { generate } from './pixellab.mjs';
 import { DIRECTIONS } from './contract.mjs';
 import {
-  ASSETS_DIR, assetKey, validateSlug, enforceCaps, readManifest, upsertManifest,
+  assetsDir, assetKey, validateSlug, enforceCaps, readManifest, upsertManifest,
 } from './manifest.mjs';
 
 const TYPE_DIR = { tile: 'tiles', character: 'characters', hud: 'hud', effect: 'effects' };
@@ -524,20 +526,20 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     const frames = {};
     DIRECTIONS.slice(0, a.directions).forEach((d, i) => {
       const rel = `${dir}/${a.name}-${d}.png`;
-      writeFileSync(join(ASSETS_DIR, rel), images[i]);
+      writeFileSync(join(assetsDir(), rel), images[i]);
       frames[d] = rel; files.push(rel);
     });
     entry = { type: 'character', name: a.name, directions: a.directions, size: a.size, frames, prompt: a.prompt };
   } else if (a.type === 'effect') {
     const frames = images.map((buf, i) => {
       const rel = `${dir}/${a.name}-${i}.png`;
-      writeFileSync(join(ASSETS_DIR, rel), buf);
+      writeFileSync(join(assetsDir(), rel), buf);
       files.push(rel); return rel;
     });
     entry = { type: 'effect', name: a.name, fps: 12, size: a.size, frames, prompt: a.prompt };
   } else {
     const rel = `${dir}/${a.name}.png`;
-    writeFileSync(join(ASSETS_DIR, rel), images[0]);
+    writeFileSync(join(assetsDir(), rel), images[0]);
     files.push(rel);
     entry = { type: a.type, name: a.name, file: rel, size: a.size, prompt: a.prompt };
   }
@@ -573,7 +575,7 @@ git commit -m "feat(assets): gen-asset CLI (write PNGs, upsert manifest, idempot
 - Create: `web/test/manifest-integrity.test.mjs`
 
 **Interfaces:**
-- Consumes: `manifest.mjs` (`readManifest`, `ASSETS_DIR`, `assetKey`).
+- Consumes: `manifest.mjs` (`readManifest`, `assetsDir`, `assetKey`).
 - Produces: a test that fails CI if the committed manifest is malformed or references a missing file. Runs inside `npm test` ⇒ inside `run-gates.sh`. This is the safety net: the renderer trusts the manifest, so a broken merge is blocked here.
 
 - [ ] **Step 1: Write the test**
@@ -584,7 +586,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { readManifest, ASSETS_DIR, assetKey } from '../tools/manifest.mjs';
+import { readManifest, assetsDir, assetKey } from '../tools/manifest.mjs';
 
 test('committed manifest is well-formed and every referenced file exists', () => {
   const m = readManifest();
@@ -596,7 +598,7 @@ test('committed manifest is well-formed and every referenced file exists', () =>
       : [e.file];
     for (const f of files) {
       assert.ok(f, `${key} has an empty file path`);
-      assert.ok(existsSync(join(ASSETS_DIR, f)), `${key} references missing file ${f}`);
+      assert.ok(existsSync(join(assetsDir(), f)), `${key} references missing file ${f}`);
     }
   }
 });
@@ -756,29 +758,16 @@ git commit -m "feat(client): asset manifest loader + resolvers with null fallbac
 - Consumes: `assets.ts` (`Manifest`, `resolveTile`, `loadTexture`, `loadManifest`).
 - Produces: `createRenderer(manifest: Manifest)` now takes the loaded manifest; new renderer method `placeTile(x, y, name): void` that draws a textured sprite when `resolveTile` hits, else falls back to the existing diamond draw. Existing `paintTile` keeps its solid-diamond behavior unchanged (paint is a color, not a named asset).
 
-- [ ] **Step 1: Write the failing test (resolver-level, node)**
+**How this task is verified:** tile rendering is Pixi/browser code with no
+node-testable seam. Two existing gates cover it without a source-grep test:
+(1) **`tsc`** enforces that the object returned by `createRenderer` implements
+the `Renderer` interface — declaring `placeTile` in the interface makes its
+absence a *compile* error, and changing `createRenderer`'s signature breaks
+`main.ts`'s call site; (2) **e2e** (Task 10) exercises the real render path.
+So this task's "test" is `npm test` going green (build + suite) plus the Task 10
+e2e — no `render-signature.test.mjs`.
 
-Tile rendering itself is Pixi/browser and is covered by e2e in Task 10. Add a focused unit test that the renderer module exports `placeTile` and that `createRenderer` accepts a manifest argument shape — guard against signature drift:
-
-```js
-// web/test/render-signature.test.mjs
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-
-test('render.ts exposes placeTile and takes a manifest arg', () => {
-  const src = readFileSync(new URL('../src/render.ts', import.meta.url), 'utf8');
-  assert.match(src, /placeTile\s*\(/, 'placeTile method missing');
-  assert.match(src, /createRenderer\s*\(\s*manifest/, 'createRenderer should accept manifest');
-});
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `cd web && node --test test/render-signature.test.mjs`
-Expected: FAIL — `placeTile method missing`.
-
-- [ ] **Step 3: Implement in `render.ts`**
+- [ ] **Step 1: Implement in `render.ts`**
 
 Add the import and extend the renderer. Concretely:
 
@@ -833,15 +822,16 @@ import { loadManifest } from './assets.js';
   const r = await createRenderer(manifest);
 ```
 
-- [ ] **Step 4: Run signature test + build + full suite**
+- [ ] **Step 2: Build + full suite**
 
 Run: `cd web && npm test`
-Expected: `tsc` clean; `render-signature.test.mjs` passes; all prior tests still pass.
+Expected: `tsc` clean (proves `Renderer` is fully implemented and `main.ts`'s
+call site matches the new signature); all prior tests still pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add web/src/render.ts web/src/main.ts web/test/render-signature.test.mjs
+git add web/src/render.ts web/src/main.ts
 git commit -m "feat(client): render textured tiles from manifest, procedural fallback"
 ```
 
@@ -858,24 +848,12 @@ git commit -m "feat(client): render textured tiles from manifest, procedural fal
   - `setSkin(token, name): Promise<void>` — swaps a token's body for a directional sprite (facing from `tx-rx`/`ty-ry`); no-op (keeps shape token) when the skin is absent. v1 ships the capability; nothing calls it with a real skin yet.
   - `playEffect(x, y, name): void` — plays a manifest effect's frames once at a world position via a ticker-driven frame index; no-op when absent. Hooked to the same one-shot path as shake in a later flip; v1 just exposes it.
 
-- [ ] **Step 1: Extend the test guard**
+**How this task is verified:** same as Task 7 — `setSkin`/`playEffect` are
+declared on the `Renderer` interface, so `tsc` enforces their presence and
+signatures; behavior is browser-only. Verification is `npm test` green. No
+source-grep test.
 
-```js
-// append to web/test/render-signature.test.mjs
-test('render.ts exposes setSkin and playEffect', () => {
-  const { readFileSync } = require('node:fs');
-  const src = readFileSync(new URL('../src/render.ts', import.meta.url), 'utf8');
-  assert.match(src, /setSkin\s*\(/);
-  assert.match(src, /playEffect\s*\(/);
-});
-```
-
-- [ ] **Step 2: Run to verify it fails**
-
-Run: `cd web && node --test test/render-signature.test.mjs`
-Expected: FAIL — `setSkin` not found.
-
-- [ ] **Step 3: Implement `setSkin` + `playEffect`**
+- [ ] **Step 1: Implement `setSkin` + `playEffect`**
 
 Add to the `Renderer` interface:
 
@@ -925,15 +903,15 @@ Implement (directional facing chosen from the token's velocity vector; effect fr
     },
 ```
 
-- [ ] **Step 4: Run guard + build**
+- [ ] **Step 2: Build + suite**
 
 Run: `cd web && npm test`
-Expected: `tsc` clean; all tests pass.
+Expected: `tsc` clean (interface fully implemented); all tests pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add web/src/render.ts web/test/render-signature.test.mjs
+git add web/src/render.ts
 git commit -m "feat(client): character-skin + one-shot effect renderer capabilities"
 ```
 
