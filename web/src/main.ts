@@ -16,6 +16,10 @@ const MAX_ZOOM = 1.5;
 const PAINT_TILE_SIZE = 128;
 const ULT_CHARGE_NEEDED = 12;
 const USERNAME_STORAGE_KEY = 'opencraft1.username';
+// Every player renders as this generated character (with its walk cycle) when
+// the asset is present in the manifest; resolveCharacter returns null otherwise,
+// so setSkin is a no-op and the procedural token shows (spec #83/#84 fallback).
+const PLAYER_SKIN = 'horse';
 
 const ROLE_NAMES = new Map<number, string>([
   [ROLE_PULSE, 'Pulse'],
@@ -102,6 +106,7 @@ async function start(name: string, role: number): Promise<void> {
   const bar = resolveHud(manifest, 'healthbar');
   if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
   const r = await createRenderer(manifest);
+  void r.skinLocal(PLAYER_SKIN); // horse skin for the local player (no-op without the asset)
   const input = createInput();
   const hudName = document.getElementById('hud-name') as HTMLButtonElement;
   const hudStatus = document.getElementById('hud-status')!;
@@ -216,7 +221,9 @@ async function start(name: string, role: number): Promise<void> {
     },
     enter(m) {
       if (m.id === me.id) return;
-      others.set(m.id, r.addToken(m.id, m.name, m.color, m.x, m.y));
+      const token = r.addToken(m.id, m.name, m.color, m.x, m.y);
+      others.set(m.id, token);
+      void r.setSkin(token, PLAYER_SKIN); // horse skin for remote players (no-op without the asset)
     },
     leave(m) {
       const o = others.get(m.id);

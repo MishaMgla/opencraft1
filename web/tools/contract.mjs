@@ -6,15 +6,24 @@
 // CONFIRMED against live OpenAPI spec (2026-06-26):
 //   - Endpoint paths: /create-image-pixflux, /create-character-with-4-directions,
 //     /animate-with-text, /background-jobs/{job_id}
-//   - Request field: "description" (not "prompt")
+//   - Request field: "description" (not "prompt") — carries the SUBJECT only;
+//     style is set via dedicated fields below, not adjectives in the description.
 //   - Request field: "image_size" with nested "width"/"height"
+//   - Style fields (soft hints): "outline", "shading", "detail", "view".
+//     outline ∈ {single color black outline, single color outline,
+//     selective outline, lineless}; view ∈ {side, low top-down, high top-down}.
+//   - "no_background" (pixflux only): transparent background.
+//   - "template_id" (character only): 'mannequin' | quadruped preset
+//     (bear|cat|dog|horse|lion).
 //   - Request field: "n_frames" for animate-with-text
 //   - Background job ID field: "background_job_id"
 //   - Background job status values: "processing" | "completed" | "failed"
 //   - Background job result location: "last_response" nested object
 //   - /create-image-pixflux sync response: { image: { type, base64 } } (singular)
-//   - /create-character-with-4-directions sync response:
-//       { images: { south, west, east, north } } (object keyed by direction)
+//   - /create-character-with-4-directions: ASYNC-ONLY. POST returns
+//       { background_job_id, character_id } with NO inline images. Sprites are
+//       PUBLIC URLs under CharacterDetail.rotation_urls (GET /characters/{id}),
+//       not base64. (The old "{images:{south,west,east,north}}" note was wrong.)
 //   - /animate-with-text sync response: { images: [ { type, base64 }, ... ] } (array)
 //
 // NOTE: These endpoints are synchronous by default. Background-job wrapping is
@@ -35,29 +44,45 @@ export const ENDPOINTS = {
 // The API returns an object keyed by these names; renderer expects this order.
 export const DIRECTIONS = ['south', 'north', 'east', 'west'];
 
-// Camera view for character generation. /create-character-with-4-directions
-// accepts "low_top_down" | "high_top_down" | "side"; the endpoint default is
-// low_top_down. For our 2:1 iso projection (KX=0.5, KY=0.25) the right value is
-// UNDECIDED — picking it needs a real generation compared against the 128x64
-// diamond grid (isometric:true and low_top_down are the first candidates). Until
-// that fixture runs (first activation), we send NO view and let the server
-// default apply. Pass an explicit `view` to override.
+// Style is expressed through the API's DEDICATED PARAMETERS — never by stuffing
+// adjectives into the description. The generator is pixel-art by default, so the
+// description carries the SUBJECT ONLY. The following are real request fields,
+// confirmed against the live OpenAPI spec (2026-06-26):
 //
-// Palette/colour control is intentionally NOT wired yet (deferred with the rest
-// of the set-cohesion work). When added, use the REAL per-endpoint field — it is
-// not uniform: /animate-with-text exposes `forced_palette`, while the character
-// endpoint exposes `color_image` + `force_colors`. Do not invent a shared field.
+//   outline (both endpoints) — soft style hint. Allowed:
+//       'single color black outline' (API default) | 'single color outline'
+//       | 'selective outline' | 'lineless'.  We default to 'lineless' (no
+//       outline) to match the retro look; pass --outline to override.
+//   view (camera) — 'side' | 'low top-down' | 'high top-down'.
+//       NOTE: REAL values use SPACES, not underscores (earlier note was wrong).
+//       The endpoint default is 'low top-down'; we omit it unless --view is set.
+//   no_background (pixflux/tile+hud only) — transparent background. HUD overlays
+//       want it true; floor tiles want it false (opaque). Caller decides.
+//   template_id (character only) — 'mannequin' (humanoid, default) or a quadruped
+//       preset: 'bear' | 'cat' | 'dog' | 'horse' | 'lion'. Pass --template.
+//
+// Palette/colour control stays unwired (deferred). When added, use the REAL
+// per-endpoint field — it is not uniform: /animate-with-text exposes
+// `forced_palette`, the character endpoint exposes `color_image` + `force_colors`.
 
 // Build the POST body for a generation request.
 // "description" is the confirmed PixelLab field name (not "prompt").
-export function requestBody(type, { prompt, size, view }) {
+export function requestBody(type, { prompt, size, view, outline = 'lineless', noBackground, templateId }) {
+  const image_size = { width: size, height: size };
   switch (type) {
     case 'tile':
-    case 'hud':
-      return { description: prompt, image_size: { width: size, height: size } };
-    case 'character': {
-      const body = { description: prompt, image_size: { width: size, height: size } };
+    case 'hud': {
+      const body = { description: prompt, image_size };
+      if (outline) body.outline = outline;
       if (view) body.view = view;
+      if (noBackground !== undefined) body.no_background = noBackground;
+      return body;
+    }
+    case 'character': {
+      const body = { description: prompt, image_size };
+      if (outline) body.outline = outline;       // 'lineless' → no outline
+      if (view) body.view = view;
+      if (templateId) body.template_id = templateId; // e.g. 'horse'
       return body;
     }
     case 'effect':
@@ -80,6 +105,51 @@ export function requestBody(type, { prompt, size, view }) {
 // Background job ID field is "background_job_id" (confirmed).
 // For sync responses that return images directly, jobIdOf is not applicable.
 export const jobIdOf = (postJson) => postJson.background_job_id;
+
+// ---------------------------------------------------------------------------
+// Character flow (async-only). CONFIRMED against the live OpenAPI spec:
+//   POST /create-character-with-4-directions -> { background_job_id, character_id }
+//     (NO inline images — the earlier "sync character {images:{...}}" shape was
+//      fiction; character generation is always async).
+//   After the job completes: GET /characters/{character_id} -> CharacterDetail
+//     with `rotation_urls` (PUBLIC URLs, NOT base64) keyed by direction, and
+//     `animations` (array of AnimationGroup, each direction's `frames` is a list
+//      of PUBLIC frame URLs). Sprite bytes are fetched by downloading those URLs.
+// ---------------------------------------------------------------------------
+
+// character_id from the create POST (available immediately, before the job ends).
+export const characterIdOf = (post) => post.character_id;
+
+// CharacterDetail.rotation_urls -> URLs in DIRECTIONS order (4-dir: south/north/east/west).
+export function rotationUrlsOf(characterDetail) {
+  const u = characterDetail.rotation_urls ?? {};
+  return DIRECTIONS.map((dir) => u[dir]).filter(Boolean);
+}
+
+// POST /animate-character -> { background_job_ids:[...one per direction...], directions:[...] }.
+export const animationJobIdsOf = (post) => post.background_job_ids ?? [];
+
+// Build the /animate-character body. Template mode drives a named walk-cycle
+// (template_animation_id e.g. 'walk'); the endpoint fans out one job per direction.
+export function animateRequestBody({ characterId, animation, frameCount }) {
+  const body = { character_id: characterId, template_animation_id: animation, mode: 'template', async_mode: true };
+  if (frameCount) body.frame_count = frameCount;
+  return body;
+}
+
+// CharacterDetail.animations -> { fps?, frames: { <dir>: [frameUrl,...] } } for the
+// named animation (falls back to the first group if the exact name is absent).
+export function animationFramesOf(characterDetail, animationType) {
+  const groups = characterDetail.animations ?? [];
+  const g = groups.find((x) => x.animation_type === animationType) ?? groups[0];
+  if (!g) return null;
+  const frames = {};
+  for (const dir of g.directions ?? []) frames[dir.direction] = dir.frames ?? [];
+  return { name: g.animation_type, frames };
+}
+
+// `usage` block on any response: { type:'usd'|'generations', usd?, generations? }.
+export const usageOf = (json) => json?.usage ?? null;
 
 // Background job status: "processing" | "completed" | "failed" (confirmed).
 export const jobDoneOf   = (getJson) => getJson.status === 'completed';

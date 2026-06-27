@@ -14,11 +14,15 @@ export interface Placement {
   footprint: { w: number; h: number };    // tile cells the asset occupies
   sortOffset: number;                      // zIndex nudge for tall/multi-cell objects
 }
+export interface CharacterAnimation { fps: number; frames: Record<string, string[]>; }
 export interface AssetEntry {
   type: 'tile' | 'character' | 'hud' | 'effect';
   name: string;
   file?: string;
   frames?: string[] | Record<string, string>;
+  // Per-direction frame sequences keyed by animation name (e.g. 'walk'); the
+  // renderer loops the matching direction's frames while the character moves.
+  animations?: Record<string, CharacterAnimation>;
   directions?: number;
   fps?: number;
   size?: number;
@@ -44,10 +48,11 @@ export function resolveTile(m: Manifest, name: string): { file: string } | null 
   return e?.file ? { file: e.file } : null;
 }
 export function resolveCharacter(m: Manifest, name: string):
-    { directions: number; frames: Record<string, string>; anchor: { x: number; y: number } } | null {
+    { directions: number; frames: Record<string, string>; anchor: { x: number; y: number };
+      animations?: Record<string, CharacterAnimation> } | null {
   const e = m.assets[`character:${name}`];
   if (!e || Array.isArray(e.frames) || !e.frames) return null;
-  return { directions: e.directions ?? 4, frames: e.frames, anchor: anchorOf(e) };
+  return { directions: e.directions ?? 4, frames: e.frames, anchor: anchorOf(e), animations: e.animations };
 }
 export function resolveEffect(m: Manifest, name: string): { fps: number; frames: string[] } | null {
   const e = m.assets[`effect:${name}`];

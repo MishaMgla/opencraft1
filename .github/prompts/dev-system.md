@@ -15,11 +15,18 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    run the following from the repo root BEFORE writing any other code:
 
    ```
-   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>]
+   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>] [--outline <style>] [--view <view>] [--template <id>] [--animate <name>]
    ```
 
    map block fields to flags exactly: `type→--type`, `name→--name`,
    `prompt→--prompt`, `size→--size`, `directions→--directions` (character only).
+   forward the OPTIONAL style fields only when the block includes them:
+   `outline→--outline`, `view→--view`, `template→--template`, `animation→--animate`
+   (character walk-cycle; one job per direction, so it costs more credits and
+   takes longer — only when the block has it). do NOT add style
+   words to `--prompt` — the prompt is the subject only; outline/background/view
+   are parameters the tool sets (cohesive defaults: lineless outline, transparent
+   HUD, opaque tiles, pixel-art by default).
    `type` is `tile` | `character` | `hud`; **`effect` is not supported** (the tool
    rejects it — `/animate-with-text` needs a base sprite). then:
 

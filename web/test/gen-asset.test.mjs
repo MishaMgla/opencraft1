@@ -66,6 +66,35 @@ test('run rejects scratch effect generation', async () => {
   assert.ok(!existsSync(join(dir, 'effects/testspark-0.png')), 'no effect files should be written');
 });
 
+test('run writes character walk-animation frames + manifest animations', async () => {
+  const fakeGenAnim = async () => ({
+    images: [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')],
+    animation: { name: 'walk', frames: {
+      south: [Buffer.from('s0'), Buffer.from('s1')], north: [Buffer.from('n0'), Buffer.from('n1')],
+      east: [Buffer.from('e0'), Buffer.from('e1')], west: [Buffer.from('w0'), Buffer.from('w1')],
+    } },
+    usage: [{ type: 'usd', usd: 0.02 }],
+  });
+  await run(['--type', 'character', '--name', 'testhorse', '--prompt', 'horse', '--size', '64',
+    '--directions', '4', '--animate', 'walk'], { generateImpl: fakeGenAnim, env });
+  assert.ok(existsSync(join(dir, 'characters/testhorse-south.png')), 'idle still written');
+  assert.ok(existsSync(join(dir, 'characters/testhorse-south-walk-0.png')), 'walk frame 0 written');
+  assert.ok(existsSync(join(dir, 'characters/testhorse-west-walk-1.png')), 'walk frame 1 written');
+  const m = JSON.parse(readFileSync(manifestPath(), 'utf8'));
+  const e = m.assets['character:testhorse'];
+  assert.equal(e.animations.walk.fps, 12);
+  assert.equal(e.animations.walk.frames.south.length, 2);
+  assert.equal(e.animations.walk.frames.south[0], 'characters/testhorse-south-walk-0.png');
+});
+
+test('run rejects --animate on a non-character type', async () => {
+  await assert.rejects(
+    run(['--type', 'tile', '--name', 'testanim', '--prompt', 'x', '--size', '128', '--animate', 'walk'],
+      { generateImpl: fakeGen, env }),
+    /character-only/,
+  );
+});
+
 test('run stamps placement metadata on entries', async () => {
   await run(['--type', 'character', '--name', 'testmage', '--prompt', 'mage', '--size', '64', '--directions', '4'],
     { generateImpl: fakeGen, env });

@@ -71,6 +71,50 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
   return { container, avatar, label };
 }
 
+// Animated character skin. Textures are preloaded once in setSkin so the
+// per-frame tick is a synchronous texture swap (no async in the render loop).
+interface SkinState {
+  sprite: Sprite;
+  fps: number;
+  idle: Record<string, Texture>;          // direction -> still
+  walk: Record<string, Texture[]> | null; // direction -> walk frames (null if none)
+  dir: string;                            // current facing
+  frame: number;                          // walk frame cursor
+  acc: number;                            // ms accumulator toward the next frame
+  last: number;                           // performance.now() at last tick
+  prevX: number;                          // last sampled world pos (movement detection)
+  prevY: number;
+}
+
+const SKIN_MOVE_EPS = 0.5; // world units; below this a token is "stationary" (idle pose)
+
+function dirOf(dvx: number, dvy: number): string {
+  return Math.abs(dvx) > Math.abs(dvy) ? (dvx >= 0 ? 'east' : 'west') : (dvy >= 0 ? 'south' : 'north');
+}
+
+// Advance a token's character animation one frame: walk-cycle while moving,
+// idle still when stationary, facing the latest movement direction.
+function tickSkin(token: Token): void {
+  const s = token.skin;
+  if (!s) return;
+  const dvx = token.rx - s.prevX, dvy = token.ry - s.prevY;
+  s.prevX = token.rx; s.prevY = token.ry;
+  const now = performance.now();
+  const moving = Math.hypot(dvx, dvy) > SKIN_MOVE_EPS;
+  if (moving) s.dir = dirOf(dvx, dvy);
+  const seq = moving && s.walk ? s.walk[s.dir] : null;
+  if (seq && seq.length) {
+    s.acc += now - s.last;
+    const stepMs = 1000 / (s.fps || 12);
+    while (s.acc >= stepMs) { s.acc -= stepMs; s.frame++; }
+    s.sprite.texture = seq[s.frame % seq.length];
+  } else {
+    s.frame = 0; s.acc = 0;
+    s.sprite.texture = s.idle[s.dir] ?? s.idle.south;
+  }
+  s.last = now;
+}
+
 export interface Token {
   container: Container;
   avatar: Container;
@@ -83,6 +127,7 @@ export interface Token {
   shakeUntil: number;
   jumpStartedAt: number;
   jumpUntil: number;
+  skin?: SkinState;
 }
 
 export interface Renderer {
@@ -101,6 +146,7 @@ export interface Renderer {
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
   setSkin(token: Token, name: string): Promise<void>;
+  skinLocal(name: string): Promise<void>;
   playEffect(x: number, y: number, name: string): void;
 }
 
@@ -193,6 +239,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     token.container.y = p.y;
     token.avatar.y = -jumpOffset(token);
     token.container.zIndex = depth(token.rx, token.ry);
+    tickSkin(token); // walk-cycle / idle swap, driven by movement since last frame
   }
 
   function shakeToken(token: Token): void {
@@ -287,15 +334,46 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     async setSkin(token, name) {
       const ch = resolveCharacter(manifest, name);
       if (!ch) return; // keep procedural token
-      const dx = token.tx - token.rx, dy = token.ty - token.ry;
-      const dir = Math.abs(dx) > Math.abs(dy) ? (dx >= 0 ? 'east' : 'west') : (dy >= 0 ? 'south' : 'north');
-      const file = ch.frames[dir] ?? ch.frames.south;
-      const tex = file ? await loadTexture(file) : null;
-      if (!tex) return;
-      const sprite = new Sprite(tex);
+      // Preload every texture up front so the per-frame tick is a pure swap.
+      const dirs = Object.keys(ch.frames);
+      const idle: Record<string, Texture> = {};
+      await Promise.all(dirs.map(async (d) => {
+        const tex = await loadTexture(ch.frames[d]);
+        if (tex) idle[d] = tex;
+      }));
+      if (!idle.south && !Object.keys(idle).length) return; // nothing loaded; keep procedural
+
+      // Walk-cycle frames (prefer 'walk', else the first defined animation).
+      const animDef = ch.animations?.walk ?? (ch.animations ? Object.values(ch.animations)[0] : undefined);
+      let walk: Record<string, Texture[]> | null = null;
+      let fps = 12;
+      if (animDef) {
+        fps = animDef.fps || 12;
+        walk = {};
+        await Promise.all(Object.entries(animDef.frames).map(async ([d, files]) => {
+          const texes = (await Promise.all(files.map((f) => loadTexture(f)))).filter((t): t is Texture => !!t);
+          if (texes.length) walk![d] = texes;
+        }));
+        if (!Object.keys(walk).length) walk = null;
+      }
+
+      const dvx = token.tx - token.rx, dvy = token.ty - token.ry;
+      const startDir = idle[dirOf(dvx, dvy)] ? dirOf(dvx, dvy) : (idle.south ? 'south' : dirs[0]);
+      const sprite = new Sprite(idle[startDir]);
       sprite.anchor.set(ch.anchor.x, ch.anchor.y);
-      token.container.removeChildren();
-      token.container.addChild(sprite);
+      // Swap only the procedural body (a Graphics) for the sprite; keep the name
+      // label and the container's shadow so depth/grounding/labels are preserved.
+      for (const child of [...token.avatar.children]) {
+        if (child instanceof Graphics) { token.avatar.removeChild(child); child.destroy(); }
+      }
+      token.avatar.addChildAt(sprite, 0);
+      token.skin = {
+        sprite, fps, idle, walk, dir: startDir, frame: 0, acc: 0,
+        last: performance.now(), prevX: token.rx, prevY: token.ry,
+      };
+    },
+    skinLocal(this: Renderer, name) {
+      return this.setSkin(localToken, name);
     },
     playEffect(x, y, name) {
       const fx = resolveEffect(manifest, name);

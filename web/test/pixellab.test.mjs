@@ -47,6 +47,55 @@ test('generate throws on non-ok POST', async () => {
   );
 });
 
+// Character is async-only: POST -> {background_job_id, character_id}, then
+// GET /characters/{id} yields rotation_urls (URLs, not base64) to DOWNLOAD.
+// Animation is a second pipeline whose frames are also URLs.
+const PNG = Buffer.from('PNGBYTES');
+function charFetch() {
+  const json = (obj) => ({ ok: true, status: 200, json: async () => obj });
+  const bin = () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array(PNG).buffer });
+  return async (url) => {
+    const u = String(url);
+    if (u.includes('/create-character-with-4-directions')) return json({ background_job_id: 'cj', character_id: 'cid' });
+    if (u.includes('/animate-character')) return json({ background_job_ids: ['aj-s', 'aj-n', 'aj-e', 'aj-w'], directions: ['south', 'north', 'east', 'west'] });
+    if (u.includes('/background-jobs/')) return json({ id: 'x', status: 'completed', created_at: 't' });
+    if (u.includes('/characters/cid')) return json({
+      id: 'cid',
+      rotation_urls: { south: 'https://img/s', north: 'https://img/n', east: 'https://img/e', west: 'https://img/w' },
+      animations: [{ animation_type: 'walk', directions: [
+        { direction: 'south', frame_count: 2, frames: ['https://f/s0', 'https://f/s1'] },
+        { direction: 'north', frame_count: 2, frames: ['https://f/n0', 'https://f/n1'] },
+        { direction: 'east', frame_count: 2, frames: ['https://f/e0', 'https://f/e1'] },
+        { direction: 'west', frame_count: 2, frames: ['https://f/w0', 'https://f/w1'] },
+      ] }],
+    });
+    if (u.startsWith('https://img/') || u.startsWith('https://f/')) return bin();
+    throw new Error(`unexpected fetch ${u}`);
+  };
+}
+
+test('generate(character) downloads rotation URLs (not base64)', async () => {
+  const { images, animation } = await generate(
+    { type: 'character', prompt: 'horse', size: 64, directions: 4 },
+    { apiKey: 'k', fetchImpl: charFetch(), pollMs: 1, sleep: noSleep },
+  );
+  assert.equal(images.length, 4);
+  assert.equal(images[0].toString(), 'PNGBYTES');
+  assert.equal(animation, null, 'no animation when not requested');
+});
+
+test('generate(character) with animation downloads per-direction walk frames', async () => {
+  const { images, animation } = await generate(
+    { type: 'character', prompt: 'horse', size: 64, directions: 4, animation: 'walk' },
+    { apiKey: 'k', fetchImpl: charFetch(), pollMs: 1, sleep: noSleep },
+  );
+  assert.equal(images.length, 4);
+  assert.equal(animation.name, 'walk');
+  assert.equal(animation.frames.south.length, 2);
+  assert.equal(animation.frames.west.length, 2);
+  assert.equal(animation.frames.south[0].toString(), 'PNGBYTES');
+});
+
 test('generate returns images directly on a sync POST response', async () => {
   // Track call count
   let callCount = 0;

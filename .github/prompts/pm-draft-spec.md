@@ -36,7 +36,7 @@ body (after Requirements). use this exact format (fields in order):
 ## Asset Generation
 - type: character        # one of: tile | character | hud
 - name: knight           # lowercase slug [a-z0-9-]+, unique
-- prompt: armored medieval knight, pixel art, bold dark outline, flat shading, no background, top-down view
+- prompt: armored medieval knight with a tall plume and a round shield
 - size: 64               # tile/hud 32..128, character 32..64 per direction
 - directions: 4          # character only (4 in v1)
 ```
@@ -51,15 +51,26 @@ rules you must follow when writing this block:
   all assets in the spec.
 - sizes: `tile` 32–128, `hud` 32–128, `character` 32–64 per direction. these are
   the renderer's product caps; the tool enforces them.
-- **style cohesion** — so generated assets read as ONE art set, every `prompt`
-  must carry the same style rubric phrases: `pixel art`, a consistent outline
-  (`bold dark outline`), shading (`flat shading`), `no background`, and a camera
-  cue (`top-down view`). vary only the subject. (a shared palette / style-lock is
-  a future enhancement; the prompt rubric is today's cohesion lever.)
-- write a vivid, specific `prompt` — the issue author can correct it via a
-  follow-up comment before the spec PR merges; the prompt lives in the spec
-  precisely so it is reviewable.
+- **`prompt` describes the SUBJECT ONLY.** PixelLab is a pixel-art generator, so
+  do NOT append `pixel art`. Do NOT append outline, shading, background, or
+  camera-view words either — those are real API parameters the tool sets, not
+  prose. Stuffing them into the prompt is the bug this format exists to avoid.
+  Just name the thing and its distinctive features (`sturdy brown riding horse
+  with a readable saddle`), and stay faithful to what the issue author asked —
+  do not invent style the author didn't request.
+- **style is set by parameters, with cohesive defaults** the tool applies so
+  assets read as one set: no outline (`outline: lineless`), transparent
+  background where it matters (HUD transparent, floor tiles opaque), pixel-art
+  by default. To override, add optional lines — only when the author asks:
+  - `outline: <single color black outline | single color outline | selective outline | lineless>`
+  - `view: <side | low top-down | high top-down>`
+  - `template: <horse | cat | dog | bear | lion | mannequin>`  # character quadruped/humanoid base
+  - `animation: <walk>`  # character only — generates a looping walk-cycle (per
+    direction) the renderer plays while the character moves. Add this whenever
+    the issue asks for movement/walk animation; omit for a static sprite.
 - omit `directions` for non-character assets.
+- the issue author can correct any field via a follow-up comment before the spec
+  PR merges; the block lives in the spec precisely so it is reviewable.
 - the Dev agent parses this block to drive `web/tools/gen-asset.mjs`; the
   format is a machine contract — do not deviate.
 
