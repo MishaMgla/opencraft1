@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-27 (branch `codex/issue-83-graphics-horse`): render all players as generated four-direction horse characters with movement-facing and presentation-only walk motion, falling back to procedural tokens if the asset is unavailable (issue #83).
 - 2026-06-23 (branch `codex/issue-71-game-graphics`): restyle the full client presentation with a sharp retro-symbolic world, HUD, roster, entry flow, and profile modal while preserving gameplay behavior (issue #71).
 - 2026-06-23 (branch `codex/issue-75-jump-functionality`): add a multiplayer-visible, cosmetic one-shot jump on fresh `Space` presses while preserving existing `Space` paint and hold-to-paint behavior (issue #75).
 - 2026-06-23 (branch `codex/issue-72-game-field-size`): double the playable world bounds from 4096×4096 to 8192×8192 while keeping viewport/HUD behavior unchanged (issue #72).
