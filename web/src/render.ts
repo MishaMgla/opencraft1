@@ -1,6 +1,6 @@
 import { Application, Container, Graphics, Text, Sprite, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 import { worldToScreen, depth, KX, KY } from './iso.js';
-import { resolveTile, loadTexture, resolveCharacter, resolveEffect, type Manifest } from './assets.js';
+import { resolveTile, loadTexture, resolveCharacter, resolveEffect, assetUrl, type Manifest } from './assets.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
 const WORLD_SIZE = 8192;
@@ -73,20 +73,13 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
 
 // Animated character skin. Textures are preloaded once in setSkin so the
 // per-frame tick is a synchronous texture swap (no async in the render loop).
-const SKIN_SLOT_ISO_FACING = {
-  north: 'north-east',
-  east: 'south-east',
-  south: 'south-west',
-  west: 'north-west',
-} as const;
-type SkinSlot = keyof typeof SKIN_SLOT_ISO_FACING;
-
 interface SkinState {
   sprite: Sprite;
   fps: number;
-  idle: Record<string, Texture>;          // direction -> still
-  walk: Record<string, Texture[]> | null; // direction -> walk frames (null if none)
-  dir: SkinSlot;                          // current four-slot facing
+  idle: Record<string, Texture>;          // facing -> still
+  walk: Record<string, Texture[]> | null; // facing -> walk frames (null if none)
+  anchorY: Record<string, number>;        // facing -> per-texture feet anchor (normalized)
+  dir: string;                            // current facing (always a key present in `idle`)
   frame: number;                          // walk frame cursor
   acc: number;                            // ms accumulator toward the next frame
   last: number;                           // performance.now() at last tick
@@ -98,12 +91,67 @@ const SKIN_MOVE_EPS = 0.5; // world units; below this a token is "stationary" (i
 const SKIN_FALLBACK_WALK_FPS = 8;
 const SKIN_FALLBACK_WALK_BOB = 3;
 const SKIN_FALLBACK_WALK_SWAY = 0.06;
+const SKIN_FALLBACK_ANCHOR_Y = 0.9; // used when feet detection can't run
 
-// The manifest still stores the PixelLab/API slot keys south/north/east/west,
-// but in the isometric world those slots are visual diagonal facings:
-// north -> north-east, east -> south-east, south -> south-west, west -> north-west.
-function dirOf(dvx: number, dvy: number): SkinSlot {
-  return Math.abs(dvx) > Math.abs(dvy) ? (dvx >= 0 ? 'east' : 'west') : (dvy >= 0 ? 'south' : 'north');
+// Movement -> the iso-diagonal facing the character should show. Under this
+// camera (iso.ts): world +X is screen south-east, +Y south-west, -X north-west,
+// -Y north-east. The horse art is generated as those four diagonal (ordinal)
+// facings, so the chosen facing matches the on-screen travel direction.
+function dirOf(dvx: number, dvy: number): string {
+  return Math.abs(dvx) > Math.abs(dvy)
+    ? (dvx >= 0 ? 'south-east' : 'north-west')
+    : (dvy >= 0 ? 'south-west' : 'north-east');
+}
+
+// Legacy fallback: older horse art shipped four CARDINAL slots. If a manifest
+// only has cardinal facings, map the desired ordinal onto the nearest cardinal
+// so pre-regeneration art still renders.
+const ORDINAL_TO_CARDINAL: Record<string, string> = {
+  'north-east': 'north', 'south-east': 'east', 'south-west': 'south', 'north-west': 'west',
+};
+
+// Resolve a desired facing against the facings actually present in the art.
+function resolveFacing(available: Record<string, unknown>, want: string): string {
+  if (available[want]) return want;
+  const card = ORDINAL_TO_CARDINAL[want];
+  if (card && available[card]) return card;
+  if (available.south) return 'south';        // legacy default
+  return Object.keys(available)[0];
+}
+
+// Feet detection: scan a sprite PNG's alpha for the lowest mostly-opaque row so
+// the renderer grounds the character on the tile regardless of the transparent
+// padding the generator leaves below the body. Cached per file — decodes the
+// image once via an offscreen 2D canvas. Our PNGs are same-origin, so
+// getImageData never taints. Returns a normalized anchor.y (feet row / height).
+const feetAnchorCache = new Map<string, number>();
+async function feetAnchorY(file: string): Promise<number> {
+  const cached = feetAnchorCache.get(file);
+  if (cached !== undefined) return cached;
+  let anchor = SKIN_FALLBACK_ANCHOR_Y;
+  try {
+    const img = new Image();
+    img.src = assetUrl(file);
+    await img.decode();
+    const w = img.naturalWidth, h = img.naturalHeight;
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (ctx && w && h) {
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, w, h).data;
+      const ALPHA = 24;                                    // ignore near-transparent fringe
+      const minPixels = Math.max(2, Math.floor(w * 0.03)); // ignore sparse stray rows
+      for (let y = h - 1; y >= 0; y--) {
+        let count = 0;
+        const row = y * w * 4;
+        for (let x = 0; x < w; x++) { if (data[row + x * 4 + 3] > ALPHA) count++; }
+        if (count >= minPixels) { anchor = (y + 1) / h; break; }
+      }
+    }
+  } catch { /* keep fallback */ }
+  feetAnchorCache.set(file, anchor);
+  return anchor;
 }
 
 // Advance a token's character animation one frame: walk-cycle while moving,
@@ -115,7 +163,9 @@ function tickSkin(token: Token): void {
   s.prevX = token.rx; s.prevY = token.ry;
   const now = performance.now();
   const moving = Math.hypot(dvx, dvy) > SKIN_MOVE_EPS;
-  if (moving) s.dir = dirOf(dvx, dvy);
+  if (moving) s.dir = resolveFacing(s.idle, dirOf(dvx, dvy));
+  // Ground every facing on the tile: anchor.y at the facing's detected feet row.
+  s.sprite.anchor.set(0.5, s.anchorY[s.dir] ?? SKIN_FALLBACK_ANCHOR_Y);
   const seq = moving && s.walk ? s.walk[s.dir] : null;
   if (seq && seq.length) {
     s.acc += now - s.last;
@@ -384,18 +434,35 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         if (!Object.keys(walk).length) walk = null;
       }
 
+      // Per-facing feet anchor so each idle still sits on the tile (no hover);
+      // detected once from each PNG's alpha, defaulting to the manifest anchor.
+      const anchorY: Record<string, number> = {};
+      await Promise.all(Object.keys(idle).map(async (d) => {
+        anchorY[d] = await feetAnchorY(ch.frames[d]);
+      }));
+
       const dvx = token.tx - token.rx, dvy = token.ty - token.ry;
-      const startDir = idle[dirOf(dvx, dvy)] ? dirOf(dvx, dvy) : (idle.south ? 'south' : dirs[0] as SkinSlot);
+      const startDir = resolveFacing(idle, dirOf(dvx, dvy));
       const sprite = new Sprite(idle[startDir]);
-      sprite.anchor.set(ch.anchor.x, ch.anchor.y);
-      // Swap only the procedural body (a Graphics) for the sprite; keep the name
-      // label and the container's shadow so depth/grounding/labels are preserved.
+      sprite.anchor.set(0.5, anchorY[startDir] ?? ch.anchor.y);
+      // Replace the procedural body (a Graphics in `avatar`) with the sprite AND
+      // drop the procedural token shadow (a Graphics in `container`) so a skinned
+      // horse isn't doubled with a detached gray rect underneath it — the
+      // renderer grounds the sprite itself via the feet anchor above.
       for (const child of [...token.avatar.children]) {
         if (child instanceof Graphics) { token.avatar.removeChild(child); child.destroy(); }
       }
+      for (const child of [...token.container.children]) {
+        if (child instanceof Graphics) { token.container.removeChild(child); child.destroy(); }
+      }
       token.avatar.addChildAt(sprite, 0);
+      // Lift the name label clear above the sprite's tallest facing (a horse is
+      // far taller than the procedural token the default label.y was sized for).
+      const texH = idle[startDir].height || 0;
+      const topAnchor = Math.max(...Object.values(anchorY), ch.anchor.y);
+      token.label.y = -Math.round(topAnchor * texH) - 4;
       token.skin = {
-        sprite, fps, idle, walk, dir: startDir, frame: 0, acc: 0,
+        sprite, fps, idle, walk, anchorY, dir: startDir, frame: 0, acc: 0,
         last: performance.now(), prevX: token.rx, prevY: token.ry,
       };
     },

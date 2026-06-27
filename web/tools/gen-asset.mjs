@@ -10,7 +10,7 @@ import {
 const TYPE_DIR = { tile: 'tiles', character: 'characters', hud: 'hud', effect: 'effects' };
 
 function parseArgs(argv) {
-  const a = { size: undefined, directions: 4, frames: 4, fps: 12, force: false };
+  const a = { size: undefined, directions: 4, frames: 4, fps: 12, facings: 'cardinal', force: false };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--force') { a.force = true; continue; }
@@ -24,12 +24,15 @@ function parseArgs(argv) {
     else if (k === '--view') a.view = v;
     else if (k === '--outline') a.outline = v;            // e.g. lineless (default), single color black outline
     else if (k === '--template') a.template = v;          // character only: horse, cat, dog, mannequin, ...
+    else if (k === '--facings') a.facings = v;            // character only: 'cardinal' (default) | 'ordinal' (iso diagonals)
     else if (k === '--no-background') a.noBackground = v === 'true'; // pixflux only: transparent bg
     else if (k === '--animate') a.animate = v;            // character only: walk-cycle template (e.g. walk)
     else if (k === '--fps') a.fps = Number(v);            // animation playback rate stamped into the manifest
     else throw new Error(`unknown flag: ${k}`);
   }
   if (a.animate && a.type !== 'character') throw new Error('--animate is character-only');
+  if (a.facings !== 'cardinal' && a.facings !== 'ordinal') throw new Error(`--facings must be 'cardinal' or 'ordinal' (got ${a.facings})`);
+  if (a.facings === 'ordinal' && a.type !== 'character') throw new Error('--facings is character-only');
   if (!a.type || !a.name || !a.prompt) throw new Error('required: --type --name --prompt');
   if (a.size === undefined) a.size = (a.type === 'tile' || a.type === 'hud') ? 128 : 64;
   // Background defaults by type: HUD overlays are transparent, floor tiles opaque.
@@ -70,10 +73,11 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     console.log(`gen-asset: ${key} exists but lacks '${a.animate}' animation — regenerating with it.`);
   }
 
-  const { images, animation, usage } = await generateImpl(
+  const { images, dirs: genDirs, animation, usage } = await generateImpl(
     {
       type: a.type, prompt: a.prompt, size: a.size, frames: a.frames, directions: a.directions,
       view: a.view, outline: a.outline, noBackground: a.noBackground, templateId: a.template,
+      ordinal: a.facings === 'ordinal',
       animation: a.animate, frameCount: a.frameCount,
     },
     { apiKey: env.PIXELLAB_API_KEY },
@@ -85,13 +89,17 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
   let entry;
 
   if (a.type === 'character') {
+    // Direction labels come from the generator: cardinal (south/north/east/west)
+    // or the four ISO ordinals (north-east/south-east/south-west/north-west).
+    const dirsOut = genDirs ?? DIRECTIONS.slice(0, a.directions);
     const frames = {};
-    DIRECTIONS.slice(0, a.directions).forEach((d, i) => {
+    dirsOut.forEach((d, i) => {
       const rel = `${dir}/${a.name}-${d}.png`;
       writeFileSync(join(assetsDir(), rel), images[i]);
       frames[d] = rel; files.push(rel);
     });
-    entry = { type: 'character', name: a.name, directions: a.directions, size: a.size, frames, prompt: a.prompt, placement };
+    entry = { type: 'character', name: a.name, directions: dirsOut.length, size: a.size, frames, prompt: a.prompt, placement };
+    if (a.facings === 'ordinal') entry.facings = 'ordinal';
     // Optional walk-style animation: per-direction frame sequences the renderer
     // loops while the character is moving. Non-fatal — a failed animation still
     // ships the static character (renderer falls back to the idle still).

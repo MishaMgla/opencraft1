@@ -34,18 +34,24 @@
 export const BASE_URL = 'https://api.pixellab.ai/v2';
 
 export const ENDPOINTS = {
-  tile:      '/create-image-pixflux',
-  hud:       '/create-image-pixflux',
-  character: '/create-character-with-4-directions',
-  effect:    '/animate-with-text',
+  tile:       '/create-image-pixflux',
+  hud:        '/create-image-pixflux',
+  character:  '/create-character-with-4-directions',
+  character8: '/create-character-with-8-directions',
+  effect:     '/animate-with-text',
 };
 
-// 4-direction character endpoint slot keys. The API returns an object keyed by
-// these legacy cardinal names. In opencraft1's isometric renderer they are
-// interpreted as diagonal visual facings:
-//   north -> north-east, east -> south-east,
-//   south -> south-west, west -> north-west.
+// 4-direction character endpoint slot keys (the legacy CARDINAL set). The API
+// returns/keys rotation_urls by these names.
 export const DIRECTIONS = ['south', 'north', 'east', 'west'];
+
+// The 8-direction endpoint keys its output by these hyphenated names (confirmed
+// against the live OpenAPI spec, 2026-06-28). For opencraft1's ISOMETRIC camera
+// (iso.ts), world-axis movement projects to the four DIAGONAL screen directions,
+// so we keep only the four ordinal facings and store them under these exact keys
+// — the renderer (render.ts `dirOf`) picks among them directly. This is the fix
+// for issue #92: cardinal art read wrong under the iso view.
+export const ORDINAL_DIRECTIONS = ['north-east', 'south-east', 'south-west', 'north-west'];
 
 // Style is expressed through the API's DEDICATED PARAMETERS — never by stuffing
 // adjectives into the description. The generator is pixel-art by default, so the
@@ -88,6 +94,14 @@ export function requestBody(type, { prompt, size, view, outline = 'lineless', no
       if (templateId) body.template_id = templateId; // e.g. 'horse'
       return body;
     }
+    case 'character8': {
+      // 8-direction endpoint: SAME shape as the 4-dir one MINUS template_id,
+      // which the 8-dir schema does not accept (confirmed against the live spec).
+      const body = { description: prompt, image_size };
+      if (outline) body.outline = outline;
+      if (view) body.view = view;
+      return body;
+    }
     case 'effect':
       // /animate-with-text ANIMATES an existing sprite — it is NOT text-to-effect.
       // It requires `action` + `reference_image` (plus description/image_size).
@@ -127,6 +141,21 @@ export const characterIdOf = (post) => post.character_id;
 export function rotationUrlsOf(characterDetail) {
   const u = characterDetail.rotation_urls ?? {};
   return DIRECTIONS.map((dir) => u[dir]).filter(Boolean);
+}
+
+// CharacterDetail.rotation_urls (8-dir) -> the four ORDINAL facings in
+// ORDINAL_DIRECTIONS order, as { dir, url }. Key matching is normalized so it
+// tolerates 'north-east' / 'north_east' / 'northeast' spellings.
+const normDir = (s) => String(s).toLowerCase().replace(/[^a-z]/g, '');
+const ORDINAL_BY_NORM = Object.fromEntries(ORDINAL_DIRECTIONS.map((d) => [normDir(d), d]));
+export function ordinalRotationUrlsOf(characterDetail) {
+  const u = characterDetail.rotation_urls ?? {};
+  const found = {};
+  for (const [k, v] of Object.entries(u)) {
+    const canon = ORDINAL_BY_NORM[normDir(k)];
+    if (canon && v) found[canon] = v;
+  }
+  return ORDINAL_DIRECTIONS.map((dir) => ({ dir, url: found[dir] })).filter((x) => x.url);
 }
 
 // POST /animate-character -> { background_job_ids:[...one per direction...], directions:[...] }.

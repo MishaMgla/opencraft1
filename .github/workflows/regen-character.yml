@@ -1,0 +1,102 @@
+name: Regenerate Character Asset
+
+# Deterministic, manual-only regeneration of a single character asset (no agent,
+# no untrusted input). Runs `gen-asset.mjs` with the PixelLab key on the
+# self-hosted runner (egress-allowlisted to api.pixellab.ai), VALIDATES the
+# output before committing, and pushes the regenerated PNGs + manifest to the
+# branch it was dispatched on. Used to produce the ISO diagonal (ordinal) horse
+# for issue #92. Re-run on failure — nothing is committed unless validation passes.
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: "Character asset name (manifest slug)"
+        required: true
+        default: "horse"
+      prompt:
+        description: "Subject-only prompt (no style words)"
+        required: true
+        default: "sturdy brown riding horse with a readable saddle"
+      view:
+        description: "Camera view (matches iso elevation best at 'low top-down')"
+        required: false
+        default: "low top-down"
+
+jobs:
+  regen:
+    if: github.repository == 'MishaMgla/opencraft1'
+    runs-on: [self-hosted]
+    timeout-minutes: 25
+    concurrency:
+      group: regen-character-${{ github.event.inputs.name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fail fast if the PixelLab key is missing
+        env:
+          PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
+        run: |
+          if [ -z "${PIXELLAB_API_KEY}" ]; then
+            echo "PIXELLAB_API_KEY is not available to this workflow; aborting." >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web deps
+        run: cd web && npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Prune previous frames for this asset (avoid orphaned PNGs)
+        env:
+          NAME: ${{ github.event.inputs.name }}
+        run: |
+          # Remove the old stills/walk frames so a cardinal->ordinal swap (or any
+          # re-gen) doesn't leave unreferenced PNGs behind. New files are written
+          # by the next step; the manifest entry is overwritten by gen-asset.
+          git rm -f --ignore-unmatch "web/assets/characters/${NAME}-*.png" || true
+
+      - name: Generate ISO ordinal character (static, 8-direction)
+        env:
+          PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
+          NAME: ${{ github.event.inputs.name }}
+          PROMPT: ${{ github.event.inputs.prompt }}
+          VIEW: ${{ github.event.inputs.view }}
+        run: |
+          cd web
+          node tools/gen-asset.mjs \
+            --type character \
+            --name "$NAME" \
+            --prompt "$PROMPT" \
+            --facings ordinal \
+            --view "$VIEW" \
+            --size 64 \
+            --force
+
+      - name: Validate generated output before commit
+        env:
+          NAME: ${{ github.event.inputs.name }}
+        run: node .github/scripts/validate-character-asset.mjs "$NAME" ordinal
+
+      - name: Commit and push regenerated asset
+        env:
+          NAME: ${{ github.event.inputs.name }}
+        run: |
+          git add web/assets/
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit (generation produced identical bytes?)." >&2
+            exit 1
+          fi
+          git commit -m "chore: regenerate ${NAME} as ISO diagonal (ordinal) character (#92)"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

@@ -119,6 +119,39 @@ test('generate(character): a failing animation is non-fatal (static stills still
   assert.match(animation.error, /422/);
 });
 
+// ISO ordinal characters: 8-direction endpoint, keep the 4 diagonal facings,
+// static-only (no animation even if asked). rotation_urls are hyphenated.
+function char8Fetch() {
+  const json = (obj) => ({ ok: true, status: 200, json: async () => obj });
+  const bin = () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array(PNG).buffer });
+  return async (url) => {
+    const u = String(url);
+    if (u.includes('/create-character-with-8-directions')) return json({ background_job_id: 'cj8', character_id: 'cid8' });
+    if (u.includes('/create-character-with-4-directions')) throw new Error('ordinal must use the 8-direction endpoint');
+    if (u.includes('/animate-character')) throw new Error('ordinal characters must not animate');
+    if (u.includes('/background-jobs/')) return json({ status: 'completed' });
+    if (u.includes('/characters/cid8')) return json({
+      rotation_urls: {
+        south: 'https://img/s', 'south-east': 'https://img/se', east: 'https://img/e', 'north-east': 'https://img/ne',
+        north: 'https://img/n', 'north-west': 'https://img/nw', west: 'https://img/w', 'south-west': 'https://img/sw',
+      },
+    });
+    if (u.startsWith('https://img/')) return bin();
+    throw new Error(`unexpected fetch ${u}`);
+  };
+}
+
+test('generate(character, ordinal) uses the 8-dir endpoint and keeps the 4 ordinals', async () => {
+  const { images, dirs, animation } = await generate(
+    { type: 'character', prompt: 'horse', size: 64, ordinal: true, animation: 'walk' },
+    { apiKey: 'k', fetchImpl: char8Fetch(), pollMs: 1, sleep: noSleep },
+  );
+  assert.deepEqual(dirs, ['north-east', 'south-east', 'south-west', 'north-west']);
+  assert.equal(images.length, 4);
+  assert.equal(images[0].toString(), 'PNGBYTES');
+  assert.equal(animation, null, 'ordinal characters ship static (no animation)');
+});
+
 test('generate returns images directly on a sync POST response', async () => {
   // Track call count
   let callCount = 0;

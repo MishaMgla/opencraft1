@@ -64,17 +64,22 @@ rules you must follow when writing this block:
   by default. To override, add optional lines — only when the author asks:
   - `outline: <single color black outline | single color outline | selective outline | lineless>`
   - `view: <side | low top-down | high top-down>`
-  - `template: <horse | cat | dog | bear | lion | mannequin>`  # character quadruped/humanoid base
-  - `animation: <walk>`  # character only — generates a looping walk-cycle (per
-    direction) the renderer plays while the character moves. Add this whenever
-    the issue asks for movement/walk animation; omit for a static sprite.
-- character sprite requests for this isometric game use diagonal visual facings.
-  The manifest/tooling still exposes four legacy slot names from PixelLab:
-  `north`, `east`, `south`, and `west`. In specs and acceptance criteria, map
-  them to visual `north-east`, `south-east`, `south-west`, and `north-west`
-  respectively. Do not ask for straight cardinal side/front/back views.
-- character sprites must not include baked ground shadows; the renderer owns
-  grounding/shadow presentation.
+  - `facings: <cardinal | ordinal>`  # character only — `ordinal` (the default
+    choice for this ISO game) generates the four DIAGONAL facings
+    (`north-east`/`south-east`/`south-west`/`north-west`) via PixelLab's
+    8-direction endpoint, which read correctly under the iso camera.
+  - `template: <horse | cat | dog | bear | lion | mannequin>`  # character base.
+    NOTE: incompatible with `facings: ordinal` (the 8-dir endpoint has no
+    template) — for ordinal, describe the animal in the prompt instead.
+  - `animation: <walk>`  # character only, CARDINAL facings only — generates a
+    looping walk-cycle the renderer plays while moving. Ordinal facings ship
+    static (the renderer plays a procedural trot). Omit for a static sprite.
+- character sprite requests for this isometric game must use `facings: ordinal`
+  so the horse/character faces the four iso diagonals. Do not ask for straight
+  cardinal side/front/back views.
+- character sprites must not include baked ground shadows; the renderer grounds
+  the sprite itself (auto-detects the feet row), so a baked shadow only doubles up
+  and reads as hovering.
 - omit `directions` for non-character assets.
 - the issue author can correct any field via a follow-up comment before the spec
   PR merges; the block lives in the spec precisely so it is reviewable.
