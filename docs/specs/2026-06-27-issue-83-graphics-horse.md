@@ -16,9 +16,11 @@ The current client renders players as simple procedural tokens in the shared iso
 ## Asset Generation
 - type: character
 - name: horse
-- prompt: sturdy brown riding horse with readable saddle silhouette, pixel art, bold dark outline, flat shading, no background, top-down view
+- prompt: sturdy brown riding horse with a readable saddle
 - size: 64
 - directions: 4
+- template: horse
+- animation: walk
 
 ## Out of scope
 - New horse-specific gameplay, abilities, sounds, UI, or role changes.
