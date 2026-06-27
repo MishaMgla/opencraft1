@@ -7,10 +7,10 @@
       "directions": 4,
       "size": 64,
       "frames": {
-        "south": "characters/horse-south.png",
-        "north": "characters/horse-north.png",
-        "east": "characters/horse-east.png",
-        "west": "characters/horse-west.png"
+        "north-east": "characters/horse-north-east.png",
+        "south-east": "characters/horse-south-east.png",
+        "south-west": "characters/horse-south-west.png",
+        "north-west": "characters/horse-north-west.png"
       },
       "prompt": "sturdy brown riding horse with a readable saddle",
       "placement": {
@@ -24,23 +24,7 @@
         },
         "sortOffset": 0
       },
-      "animations": {
-        "walk": {
-          "fps": 12,
-          "frames": {
-            "south": [
-              "characters/horse-south-walk-0.png",
-              "characters/horse-south-walk-1.png",
-              "characters/horse-south-walk-2.png",
-              "characters/horse-south-walk-3.png",
-              "characters/horse-south-walk-4.png"
-            ],
-            "north": [],
-            "east": [],
-            "west": []
-          }
-        }
-      }
+      "facings": "ordinal"
     }
   }
 }
