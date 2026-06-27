@@ -23,12 +23,15 @@ is pre-authenticated with a ChatGPT subscription — see `docs/agents-setup.md`.
 5. **Impl PR merged** → `close-issue-on-impl-merge.yml` closes the issue.
 
 Graphics specs can include `## Asset Generation` blocks consumed by the Dev
-agent. For character sprites in the isometric game, the four generated slots are
-still stored under the PixelLab/API names `south`, `north`, `east`, and `west`,
-but specs and reviews should treat them as diagonal visual facings:
-`north` = `north-east`, `east` = `south-east`, `south` = `south-west`, and
-`west` = `north-west`. Character art should not bake in a ground shadow; the
-renderer owns grounding.
+agent. For character sprites in the isometric game, specs should set
+`facings: ordinal` so the Dev agent runs `gen-asset.mjs --facings ordinal`,
+which generates the four DIAGONAL facings (`north-east`, `south-east`,
+`south-west`, `north-west`) via PixelLab's 8-direction endpoint and stores them
+under those ordinal keys — the facings that read correctly under the iso camera.
+`facings: ordinal` is incompatible with a quadruped `template` (the 8-dir
+endpoint has no `template_id`) and ships static (no walk animation). Character
+art should not bake in a ground shadow; the renderer grounds the sprite itself
+(auto-detected feet row) — a baked shadow doubles up and reads as hovering.
 
 ## permission model
 

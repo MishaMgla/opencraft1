@@ -19,9 +19,11 @@ export interface AssetEntry {
   type: 'tile' | 'character' | 'hud' | 'effect';
   name: string;
   file?: string;
-  // Character frame objects keep the legacy south/north/east/west API slot
-  // names. The isometric renderer maps them to diagonal visual facings:
-  // north -> north-east, east -> south-east, south -> south-west, west -> north-west.
+  // Character frames are keyed by facing. ISO characters use the four diagonal
+  // (ordinal) facings — north-east/south-east/south-west/north-west — generated
+  // by the PixelLab 8-direction endpoint (see web/tools/contract.mjs). Older art
+  // may still use the cardinal south/north/east/west keys; render.ts falls back
+  // from an ordinal to the nearest cardinal when only cardinal art is present.
   frames?: string[] | Record<string, string>;
   // Per-direction frame sequences keyed by animation name (e.g. 'walk'); the
   // renderer loops the matching direction's frames while the character moves.

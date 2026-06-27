@@ -1,7 +1,8 @@
 import {
-  BASE_URL, ENDPOINTS, DIRECTIONS, requestBody,
+  BASE_URL, ENDPOINTS, DIRECTIONS, ORDINAL_DIRECTIONS, requestBody,
   jobIdOf, jobDoneOf, jobFailedOf, jobImagesOf,
-  characterIdOf, rotationUrlsOf, animateRequestBody, animationJobIdsOf, animationFramesOf,
+  characterIdOf, rotationUrlsOf, ordinalRotationUrlsOf,
+  animateRequestBody, animationJobIdsOf, animationFramesOf,
   usageOf,
 } from './contract.mjs';
 
@@ -100,14 +101,20 @@ async function generatePixflux(input, ctx) {
 // animation is a SECOND pipeline (one job per direction) whose frames are also URLs.
 async function generateCharacter(input, ctx) {
   const { prompt, size, directions = 4, view, outline, templateId, animation, frameCount } = input;
+  const ordinal = input.ordinal === true;
   const { apiKey, fetchImpl, pollMs, timeoutMs, animTimeoutMs, sleep } = ctx;
   const poll = (id) => pollJob(fetchImpl, apiKey, id, { pollMs, timeoutMs, sleep });
   const usage = [];
 
+  // ISO (ordinal) characters use the 8-direction endpoint and keep the four
+  // diagonal facings; cardinal characters use the legacy 4-direction endpoint.
+  const endpoint = ordinal ? ENDPOINTS.character8 : ENDPOINTS.character;
+  const bodyType = ordinal ? 'character8' : 'character';
+
   // 1. Create the character (async). 2. Wait for the generation job.
-  const post = await postJson(fetchImpl, `${BASE_URL}${ENDPOINTS.character}`, apiKey,
-    requestBody('character', { prompt, size, view, outline, templateId }),
-    'POST /create-character-with-4-directions');
+  const post = await postJson(fetchImpl, `${BASE_URL}${endpoint}`, apiKey,
+    requestBody(bodyType, { prompt, size, view, outline, templateId }),
+    `POST ${endpoint}`);
   if (usageOf(post)) usage.push(usageOf(post));
   const characterId = characterIdOf(post);
   const jobId = jobIdOf(post);
@@ -117,12 +124,25 @@ async function generateCharacter(input, ctx) {
 
   // 3. Fetch the character; download the directional stills from rotation_urls.
   let detail = await getJson(fetchImpl, `${BASE_URL}/characters/${characterId}`, apiKey, `GET /characters/${characterId}`);
-  const urls = rotationUrlsOf(detail);
-  if (urls.length < directions) {
-    throw new Error(`PixelLab character ${characterId} returned ${urls.length} rotation URL(s), expected ${directions}`);
+  let dirs, urls;
+  if (ordinal) {
+    const picked = ordinalRotationUrlsOf(detail);
+    if (picked.length < ORDINAL_DIRECTIONS.length) {
+      throw new Error(`PixelLab character ${characterId} returned ${picked.length}/${ORDINAL_DIRECTIONS.length} ordinal rotation URL(s) `
+        + `(have keys: ${Object.keys(detail.rotation_urls ?? {}).join(', ') || 'none'})`);
+    }
+    dirs = picked.map((p) => p.dir);
+    urls = picked.map((p) => p.url);
+  } else {
+    urls = rotationUrlsOf(detail);
+    if (urls.length < directions) {
+      throw new Error(`PixelLab character ${characterId} returned ${urls.length} rotation URL(s), expected ${directions}`);
+    }
+    dirs = DIRECTIONS.slice(0, directions);
+    urls = urls.slice(0, directions);
   }
   const images = [];
-  for (const u of urls.slice(0, directions)) images.push(await download(fetchImpl, u, 'download rotation image'));
+  for (const u of urls) images.push(await download(fetchImpl, u, 'download rotation image'));
 
   // 4. Optional animation (e.g. walk): one job per direction, then frame URLs.
   // NON-FATAL: the 4 directional stills above are the core deliverable. If the
@@ -130,7 +150,10 @@ async function generateCharacter(input, ctx) {
   // static character so the asset ships — the walk cycle is an enhancement, not a
   // gate. The failure is reported up so the caller can warn.
   let anim = null;
-  if (animation) {
+  // The text-to-animation (v3) path is only wired for the cardinal 4-direction
+  // characters; ISO ordinal characters ship STATIC (the renderer plays a
+  // procedural trot while moving), keeping regeneration to a single reliable job.
+  if (animation && !ordinal) {
     try {
       const animPost = await postJson(fetchImpl, `${BASE_URL}/animate-character`, apiKey,
         animateRequestBody({ characterId, animation, frameCount }), 'POST /animate-character');
@@ -163,7 +186,7 @@ async function generateCharacter(input, ctx) {
     }
   }
 
-  return { images, animation: anim, usage };
+  return { images, dirs, animation: anim, usage };
 }
 
 export async function generate(input, opts) {

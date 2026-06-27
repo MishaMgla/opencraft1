@@ -32,11 +32,16 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
 
    - confirm the PNG(s) appear under `web/assets/<type-dir>/` and that
      `web/assets/manifest.json` gained the `<type>:<name>` entry.
-   - for character assets in this isometric game, treat the four legacy manifest
-     slots as diagonal visual facings: `north` = `north-east`,
-     `east` = `south-east`, `south` = `south-west`, and `west` = `north-west`.
-     Do not wire or document straight cardinal side/front/back views, and do not
-     bake ground shadows into character art.
+   - for character assets in this isometric game, generate DIAGONAL (ordinal)
+     facings by passing `--facings ordinal` to `gen-asset.mjs`. That uses
+     PixelLab's 8-direction endpoint and keeps the four ordinals
+     (`north-east`/`south-east`/`south-west`/`north-west`), which are the facings
+     that read correctly under the iso camera — never straight cardinal
+     side/front/back views. Note: `--facings ordinal` does not accept a quadruped
+     `--template` (the 8-dir endpoint has no `template_id`); describe the animal in
+     `--prompt` instead, and ships static (the renderer plays a procedural trot).
+     Do not bake ground shadows into character art — the renderer grounds the
+     sprite itself (it auto-detects the feet row and drops the procedural shadow).
    - commit those generated files (`git add web/assets/ && git commit -m "chore: generate <name> asset"`).
    - only wire activation (e.g. calling `placeTile`/`setSkin` from `main.ts`)
      if the spec explicitly asks to **use** the asset; otherwise registering it
