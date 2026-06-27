@@ -1,4 +1,29 @@
 {
   "version": 1,
-  "assets": {}
+  "assets": {
+    "character:horse": {
+      "type": "character",
+      "name": "horse",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "south": "characters/horse-south.png",
+        "north": "characters/horse-north.png",
+        "east": "characters/horse-east.png",
+        "west": "characters/horse-west.png"
+      },
+      "prompt": "sturdy brown riding horse with a readable saddle",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    }
+  }
 }
