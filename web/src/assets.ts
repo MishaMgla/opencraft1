@@ -19,6 +19,9 @@ export interface AssetEntry {
   type: 'tile' | 'character' | 'hud' | 'effect';
   name: string;
   file?: string;
+  // Character frame objects keep the legacy south/north/east/west API slot
+  // names. The isometric renderer maps them to diagonal visual facings:
+  // north -> north-east, east -> south-east, south -> south-west, west -> north-west.
   frames?: string[] | Record<string, string>;
   // Per-direction frame sequences keyed by animation name (e.g. 'walk'); the
   // renderer loops the matching direction's frames while the character moves.
