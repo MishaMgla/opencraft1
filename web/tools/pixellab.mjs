@@ -102,8 +102,7 @@ async function generatePixflux(input, ctx) {
 async function generateCharacter(input, ctx) {
   const { prompt, size, directions = 4, view, outline, templateId, animation, frameCount } = input;
   const ordinal = input.ordinal === true;
-  const { apiKey, fetchImpl, pollMs, timeoutMs, animTimeoutMs, sleep } = ctx;
-  const poll = (id) => pollJob(fetchImpl, apiKey, id, { pollMs, timeoutMs, sleep });
+  const { apiKey, fetchImpl, pollMs, timeoutMs, charTimeoutMs, animTimeoutMs, sleep } = ctx;
   const usage = [];
 
   // ISO (ordinal) characters use the 8-direction endpoint and keep the four
@@ -119,7 +118,10 @@ async function generateCharacter(input, ctx) {
   const characterId = characterIdOf(post);
   const jobId = jobIdOf(post);
   if (!characterId || !jobId) throw new Error('PixelLab create-character returned no character_id/background_job_id');
-  const genJob = await poll(jobId);
+  // Character generation (esp. the 8-direction job) is heavier and has variable
+  // latency — sometimes >5min — so give it a longer poll budget than the default
+  // pixflux timeout to avoid spurious timeouts mid-generation.
+  const genJob = await pollJob(fetchImpl, apiKey, jobId, { pollMs, timeoutMs: charTimeoutMs, sleep });
   if (usageOf(genJob)) usage.push(usageOf(genJob));
 
   // 3. Fetch the character; download the directional stills from rotation_urls.
@@ -192,10 +194,10 @@ async function generateCharacter(input, ctx) {
 export async function generate(input, opts) {
   const {
     apiKey, fetchImpl = fetch, pollMs = 2000, timeoutMs = 300000,
-    animTimeoutMs = 900000, sleep = realSleep,
+    charTimeoutMs = 900000, animTimeoutMs = 900000, sleep = realSleep,
   } = opts;
   if (!apiKey) throw new Error('PIXELLAB_API_KEY is not set');
-  const ctx = { apiKey, fetchImpl, pollMs, timeoutMs, animTimeoutMs, sleep };
+  const ctx = { apiKey, fetchImpl, pollMs, timeoutMs, charTimeoutMs, animTimeoutMs, sleep };
   return input.type === 'character'
     ? generateCharacter(input, ctx)
     : generatePixflux(input, ctx);
