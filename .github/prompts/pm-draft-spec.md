@@ -68,6 +68,13 @@ rules you must follow when writing this block:
   - `animation: <walk>`  # character only — generates a looping walk-cycle (per
     direction) the renderer plays while the character moves. Add this whenever
     the issue asks for movement/walk animation; omit for a static sprite.
+- character sprite requests for this isometric game use diagonal visual facings.
+  The manifest/tooling still exposes four legacy slot names from PixelLab:
+  `north`, `east`, `south`, and `west`. In specs and acceptance criteria, map
+  them to visual `north-east`, `south-east`, `south-west`, and `north-west`
+  respectively. Do not ask for straight cardinal side/front/back views.
+- character sprites must not include baked ground shadows; the renderer owns
+  grounding/shadow presentation.
 - omit `directions` for non-character assets.
 - the issue author can correct any field via a follow-up comment before the spec
   PR merges; the block lives in the spec precisely so it is reviewable.

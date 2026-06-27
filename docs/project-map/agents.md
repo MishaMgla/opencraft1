@@ -22,6 +22,14 @@ is pre-authenticated with a ChatGPT subscription — see `docs/agents-setup.md`.
    to merge.
 5. **Impl PR merged** → `close-issue-on-impl-merge.yml` closes the issue.
 
+Graphics specs can include `## Asset Generation` blocks consumed by the Dev
+agent. For character sprites in the isometric game, the four generated slots are
+still stored under the PixelLab/API names `south`, `north`, `east`, and `west`,
+but specs and reviews should treat them as diagonal visual facings:
+`north` = `north-east`, `east` = `south-east`, `south` = `south-west`, and
+`west` = `north-west`. Character art should not bake in a ground shadow; the
+renderer owns grounding.
+
 ## permission model
 
 Comment-driven agents are gated by `.github/scripts/authorize.sh`: a commenter
