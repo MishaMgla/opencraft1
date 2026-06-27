@@ -87,6 +87,9 @@ interface SkinState {
 }
 
 const SKIN_MOVE_EPS = 0.5; // world units; below this a token is "stationary" (idle pose)
+const SKIN_FALLBACK_WALK_FPS = 8;
+const SKIN_FALLBACK_WALK_BOB = 3;
+const SKIN_FALLBACK_WALK_SWAY = 0.06;
 
 function dirOf(dvx: number, dvy: number): string {
   return Math.abs(dvx) > Math.abs(dvy) ? (dvx >= 0 ? 'east' : 'west') : (dvy >= 0 ? 'south' : 'north');
@@ -108,9 +111,22 @@ function tickSkin(token: Token): void {
     const stepMs = 1000 / (s.fps || 12);
     while (s.acc >= stepMs) { s.acc -= stepMs; s.frame++; }
     s.sprite.texture = seq[s.frame % seq.length];
+    s.sprite.y = 0;
+    s.sprite.rotation = 0;
   } else {
-    s.frame = 0; s.acc = 0;
     s.sprite.texture = s.idle[s.dir] ?? s.idle.south;
+    if (moving) {
+      s.acc += now - s.last;
+      const stepMs = 1000 / SKIN_FALLBACK_WALK_FPS;
+      while (s.acc >= stepMs) { s.acc -= stepMs; s.frame++; }
+      const phase = (s.frame % 2) === 0 ? 1 : -1;
+      s.sprite.y = phase > 0 ? -SKIN_FALLBACK_WALK_BOB : 0;
+      s.sprite.rotation = SKIN_FALLBACK_WALK_SWAY * phase;
+    } else {
+      s.frame = 0; s.acc = 0;
+      s.sprite.y = 0;
+      s.sprite.rotation = 0;
+    }
   }
   s.last = now;
 }
