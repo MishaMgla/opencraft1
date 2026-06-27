@@ -20,3 +20,6 @@ build/
 
 # Vercel CLI local link/build output
 .vercel/
+
+# Claude Code local state (agent worktrees ~198MB, locks, local skill installs)
+.claude/
