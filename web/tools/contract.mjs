@@ -136,7 +136,7 @@ export const animationJobIdsOf = (post) => post.background_job_ids ?? [];
 // `animation: 'walk'` just works. The endpoint fans out one job per direction.
 // frame_count must be even, 4–16 (v3 only).
 export function animateRequestBody({ characterId, animation, frameCount }) {
-  const fc = Math.max(4, Math.min(16, (frameCount ?? 8) & ~1)); // clamp + force even
+  const fc = Math.max(4, Math.min(16, (frameCount ?? 4) & ~1)); // clamp + force even; 4 = fastest
   return {
     character_id: characterId,
     action_description: animation,   // free text, e.g. 'walk'

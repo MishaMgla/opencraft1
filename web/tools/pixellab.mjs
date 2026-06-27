@@ -100,7 +100,7 @@ async function generatePixflux(input, ctx) {
 // animation is a SECOND pipeline (one job per direction) whose frames are also URLs.
 async function generateCharacter(input, ctx) {
   const { prompt, size, directions = 4, view, outline, templateId, animation, frameCount } = input;
-  const { apiKey, fetchImpl, pollMs, timeoutMs, sleep } = ctx;
+  const { apiKey, fetchImpl, pollMs, timeoutMs, animTimeoutMs, sleep } = ctx;
   const poll = (id) => pollJob(fetchImpl, apiKey, id, { pollMs, timeoutMs, sleep });
   const usage = [];
 
@@ -135,18 +135,28 @@ async function generateCharacter(input, ctx) {
       const animPost = await postJson(fetchImpl, `${BASE_URL}/animate-character`, apiKey,
         animateRequestBody({ characterId, animation, frameCount }), 'POST /animate-character');
       if (usageOf(animPost)) usage.push(usageOf(animPost));
-      for (const aid of animationJobIdsOf(animPost)) {
-        const aj = await poll(aid);
-        if (usageOf(aj)) usage.push(usageOf(aj));
-      }
+      // Poll the per-direction jobs in PARALLEL (independent) with a longer
+      // timeout — v3 generation is slow, and sequential polling multiplied that
+      // by 4. allSettled so a single slow/failed direction doesn't sink the rest;
+      // the finished frames persist on the character either way.
+      const settled = await Promise.allSettled(
+        animationJobIdsOf(animPost).map((aid) =>
+          pollJob(fetchImpl, apiKey, aid, { pollMs, timeoutMs: animTimeoutMs, sleep })),
+      );
+      for (const r of settled) if (r.status === 'fulfilled' && usageOf(r.value)) usage.push(usageOf(r.value));
+      // Authoritative result: GET the character (animations persist server-side,
+      // independent of whether our client poll caught each job).
       detail = await getJson(fetchImpl, `${BASE_URL}/characters/${characterId}`, apiKey, `GET /characters/${characterId}`);
       const grp = animationFramesOf(detail, animation);
-      if (!grp) throw new Error(`character ${characterId} has no '${animation}' animation after animate-character`);
       const frames = {};
+      let total = 0;
       for (const dir of DIRECTIONS.slice(0, directions)) {
         frames[dir] = [];
-        for (const u of grp.frames[dir] ?? []) frames[dir].push(await download(fetchImpl, u, `download ${animation} frame`));
+        for (const u of grp?.frames?.[dir] ?? []) { frames[dir].push(await download(fetchImpl, u, `download ${animation} frame`)); total++; }
       }
+      // Partial is fine (missing directions fall back to the idle/trot in the
+      // renderer); only a TOTAL miss counts as a failed animation → static ship.
+      if (!total) throw new Error(`no '${animation}' frames available after animate-character (all directions timed out/failed)`);
       anim = { name: animation, frames };
     } catch (e) {
       anim = { failed: true, error: e.message };
@@ -157,9 +167,12 @@ async function generateCharacter(input, ctx) {
 }
 
 export async function generate(input, opts) {
-  const { apiKey, fetchImpl = fetch, pollMs = 2000, timeoutMs = 300000, sleep = realSleep } = opts;
+  const {
+    apiKey, fetchImpl = fetch, pollMs = 2000, timeoutMs = 300000,
+    animTimeoutMs = 900000, sleep = realSleep,
+  } = opts;
   if (!apiKey) throw new Error('PIXELLAB_API_KEY is not set');
-  const ctx = { apiKey, fetchImpl, pollMs, timeoutMs, sleep };
+  const ctx = { apiKey, fetchImpl, pollMs, timeoutMs, animTimeoutMs, sleep };
   return input.type === 'character'
     ? generateCharacter(input, ctx)
     : generatePixflux(input, ctx);

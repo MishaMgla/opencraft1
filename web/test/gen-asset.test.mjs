@@ -87,6 +87,27 @@ test('run writes character walk-animation frames + manifest animations', async (
   assert.equal(e.animations.walk.frames.south[0], 'characters/testhorse-south-walk-0.png');
 });
 
+test('run regenerates an existing static character when an animation is newly requested', async () => {
+  const noAnim = async () => ({ images: [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')] });
+  const withAnim = async () => ({
+    images: [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')],
+    animation: { name: 'walk', frames: { south: [Buffer.from('s0')], north: [Buffer.from('n0')], east: [Buffer.from('e0')], west: [Buffer.from('w0')] } },
+  });
+  // First: static only.
+  await run(['--type', 'character', '--name', 'upg', '--prompt', 'p', '--size', '64', '--directions', '4'],
+    { generateImpl: noAnim, env });
+  // Re-run WITHOUT --force but now asking for walk → must NOT skip; must add animation.
+  const res = await run(['--type', 'character', '--name', 'upg', '--prompt', 'p', '--size', '64', '--directions', '4', '--animate', 'walk'],
+    { generateImpl: withAnim, env });
+  assert.equal(res.skipped, false, 'should regenerate to add the missing animation');
+  const e = JSON.parse(readFileSync(manifestPath(), 'utf8')).assets['character:upg'];
+  assert.ok(e.animations.walk, 'walk animation added on re-run');
+  // And re-running again now that it HAS walk → skips.
+  const again = await run(['--type', 'character', '--name', 'upg', '--prompt', 'p', '--size', '64', '--directions', '4', '--animate', 'walk'],
+    { generateImpl: withAnim, env });
+  assert.equal(again.skipped, true, 'skips once the animation is present');
+});
+
 test('run rejects --animate on a non-character type', async () => {
   await assert.rejects(
     run(['--type', 'tile', '--name', 'testanim', '--prompt', 'x', '--size', '128', '--animate', 'walk'],

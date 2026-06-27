@@ -57,9 +57,17 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
   enforceCaps(a.type, a.size, a.frames);
   const key = assetKey(a.type, a.name);
 
-  if (!a.force && readManifest().assets[key]) {
+  // Skip if it already exists — UNLESS a walk-style animation was requested that
+  // the existing entry doesn't have yet (then regenerate to add it). Lets a
+  // re-run upgrade a static character to an animated one without --force.
+  const existing = readManifest().assets[key];
+  const animMissing = a.animate && !existing?.animations?.[a.animate];
+  if (!a.force && existing && !animMissing) {
     console.log(`gen-asset: ${key} already exists — skipping (use --force to regenerate).`);
     return { skipped: true, key, files: [] };
+  }
+  if (animMissing && existing) {
+    console.log(`gen-asset: ${key} exists but lacks '${a.animate}' animation — regenerating with it.`);
   }
 
   const { images, animation, usage } = await generateImpl(
