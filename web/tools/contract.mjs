@@ -129,12 +129,23 @@ export function rotationUrlsOf(characterDetail) {
 // POST /animate-character -> { background_job_ids:[...one per direction...], directions:[...] }.
 export const animationJobIdsOf = (post) => post.background_job_ids ?? [];
 
-// Build the /animate-character body. Template mode drives a named walk-cycle
-// (template_animation_id e.g. 'walk'); the endpoint fans out one job per direction.
+// Build the /animate-character body. We use "v3" mode (custom text-to-animation
+// from `action_description`) rather than "template" mode: template mode requires
+// an exact `template_animation_id` from a FIXED catalog (angry/attack/crouched-
+// walking/…) with no plain `walk`, so arbitrary names 422. v3 takes free text, so
+// `animation: 'walk'` just works. The endpoint fans out one job per direction.
+// frame_count must be even, 4–16 (v3 only).
 export function animateRequestBody({ characterId, animation, frameCount }) {
-  const body = { character_id: characterId, template_animation_id: animation, mode: 'template', async_mode: true };
-  if (frameCount) body.frame_count = frameCount;
-  return body;
+  const fc = Math.max(4, Math.min(16, (frameCount ?? 8) & ~1)); // clamp + force even
+  return {
+    character_id: characterId,
+    action_description: animation,   // free text, e.g. 'walk'
+    animation_name: animation,       // so the result group is findable by name
+    mode: 'v3',
+    async_mode: true,
+    enhance_prompt: true,            // expand 'walk' into a richer motion description
+    frame_count: fc,
+  };
 }
 
 // CharacterDetail.animations -> { fps?, frames: { <dir>: [frameUrl,...] } } for the

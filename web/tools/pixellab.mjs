@@ -30,8 +30,15 @@ async function postJson(fetchImpl, url, apiKey, body, what) {
     headers: { 'Content-Type': 'application/json', ...authHeaders(apiKey) },
     body: JSON.stringify(body),
   }, what);
-  if (!res.ok) throw new Error(`PixelLab ${what} failed: HTTP ${res.status}`
-    + (res.status === 402 ? ' (insufficient credits — check `/balance`)' : ''));
+  if (!res.ok) {
+    // Surface the response body — FastAPI 422s carry a `detail` explaining exactly
+    // which field is wrong, which a bare "HTTP 422" hides.
+    let body = '';
+    try { body = (await res.text()).replace(/\s+/g, ' ').slice(0, 300); } catch { /* ignore */ }
+    throw new Error(`PixelLab ${what} failed: HTTP ${res.status}`
+      + (res.status === 402 ? ' (insufficient credits — check `/balance`)' : '')
+      + (body ? ` — ${body}` : ''));
+  }
   return res.json();
 }
 
@@ -118,24 +125,32 @@ async function generateCharacter(input, ctx) {
   for (const u of urls.slice(0, directions)) images.push(await download(fetchImpl, u, 'download rotation image'));
 
   // 4. Optional animation (e.g. walk): one job per direction, then frame URLs.
+  // NON-FATAL: the 4 directional stills above are the core deliverable. If the
+  // animation step fails (API hiccup, validation, slow job), still return the
+  // static character so the asset ships — the walk cycle is an enhancement, not a
+  // gate. The failure is reported up so the caller can warn.
   let anim = null;
   if (animation) {
-    const animPost = await postJson(fetchImpl, `${BASE_URL}/animate-character`, apiKey,
-      animateRequestBody({ characterId, animation, frameCount }), 'POST /animate-character');
-    if (usageOf(animPost)) usage.push(usageOf(animPost));
-    for (const aid of animationJobIdsOf(animPost)) {
-      const aj = await poll(aid);
-      if (usageOf(aj)) usage.push(usageOf(aj));
+    try {
+      const animPost = await postJson(fetchImpl, `${BASE_URL}/animate-character`, apiKey,
+        animateRequestBody({ characterId, animation, frameCount }), 'POST /animate-character');
+      if (usageOf(animPost)) usage.push(usageOf(animPost));
+      for (const aid of animationJobIdsOf(animPost)) {
+        const aj = await poll(aid);
+        if (usageOf(aj)) usage.push(usageOf(aj));
+      }
+      detail = await getJson(fetchImpl, `${BASE_URL}/characters/${characterId}`, apiKey, `GET /characters/${characterId}`);
+      const grp = animationFramesOf(detail, animation);
+      if (!grp) throw new Error(`character ${characterId} has no '${animation}' animation after animate-character`);
+      const frames = {};
+      for (const dir of DIRECTIONS.slice(0, directions)) {
+        frames[dir] = [];
+        for (const u of grp.frames[dir] ?? []) frames[dir].push(await download(fetchImpl, u, `download ${animation} frame`));
+      }
+      anim = { name: animation, frames };
+    } catch (e) {
+      anim = { failed: true, error: e.message };
     }
-    detail = await getJson(fetchImpl, `${BASE_URL}/characters/${characterId}`, apiKey, `GET /characters/${characterId}`);
-    const grp = animationFramesOf(detail, animation);
-    if (!grp) throw new Error(`PixelLab character ${characterId} has no '${animation}' animation after animate-character`);
-    const frames = {};
-    for (const dir of DIRECTIONS.slice(0, directions)) {
-      frames[dir] = [];
-      for (const u of grp.frames[dir] ?? []) frames[dir].push(await download(fetchImpl, u, `download ${animation} frame`));
-    }
-    anim = { name: animation, frames };
   }
 
   return { images, animation: anim, usage };

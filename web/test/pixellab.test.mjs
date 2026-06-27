@@ -96,6 +96,29 @@ test('generate(character) with animation downloads per-direction walk frames', a
   assert.equal(animation.frames.south[0].toString(), 'PNGBYTES');
 });
 
+test('generate(character): a failing animation is non-fatal (static stills still returned)', async () => {
+  // animate-character 422s, but the 4 directional stills must still come back so
+  // the asset ships; the animation is reported failed (not thrown).
+  const json = (obj) => ({ ok: true, status: 200, json: async () => obj });
+  const bin = () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array(PNG).buffer });
+  const fetchImpl = async (url) => {
+    const u = String(url);
+    if (u.includes('/create-character-with-4-directions')) return json({ background_job_id: 'cj', character_id: 'cid' });
+    if (u.includes('/animate-character')) return { ok: false, status: 422, text: async () => '{"detail":"bad template"}' };
+    if (u.includes('/background-jobs/')) return json({ id: 'x', status: 'completed' });
+    if (u.includes('/characters/cid')) return json({ rotation_urls: { south: 'https://img/s', north: 'https://img/n', east: 'https://img/e', west: 'https://img/w' } });
+    if (u.startsWith('https://img/')) return bin();
+    throw new Error(`unexpected ${u}`);
+  };
+  const { images, animation } = await generate(
+    { type: 'character', prompt: 'horse', size: 64, directions: 4, animation: 'walk' },
+    { apiKey: 'k', fetchImpl, pollMs: 1, sleep: noSleep },
+  );
+  assert.equal(images.length, 4, 'static stills still returned');
+  assert.equal(animation.failed, true);
+  assert.match(animation.error, /422/);
+});
+
 test('generate returns images directly on a sync POST response', async () => {
   // Track call count
   let callCount = 0;

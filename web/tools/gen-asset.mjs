@@ -85,7 +85,12 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     });
     entry = { type: 'character', name: a.name, directions: a.directions, size: a.size, frames, prompt: a.prompt, placement };
     // Optional walk-style animation: per-direction frame sequences the renderer
-    // loops while the character is moving.
+    // loops while the character is moving. Non-fatal — a failed animation still
+    // ships the static character (renderer falls back to the idle still).
+    if (animation && animation.failed) {
+      console.warn(`gen-asset: WARNING — '${a.animate}' animation skipped for ${key}: ${animation.error}. `
+        + 'Static character written; re-run to retry the walk cycle.');
+    }
     if (animation && animation.frames) {
       const animFrames = {};
       for (const d of DIRECTIONS.slice(0, a.directions)) {
