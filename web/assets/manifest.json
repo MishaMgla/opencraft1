@@ -23,6 +23,23 @@
           "h": 1
         },
         "sortOffset": 0
+      },
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "south": [
+              "characters/horse-south-walk-0.png",
+              "characters/horse-south-walk-1.png",
+              "characters/horse-south-walk-2.png",
+              "characters/horse-south-walk-3.png",
+              "characters/horse-south-walk-4.png"
+            ],
+            "north": [],
+            "east": [],
+            "west": []
+          }
+        }
       }
     }
   }
