@@ -40,8 +40,11 @@ export const ENDPOINTS = {
   effect:    '/animate-with-text',
 };
 
-// Cardinal facings returned by the 4-direction character endpoint.
-// The API returns an object keyed by these names; renderer expects this order.
+// 4-direction character endpoint slot keys. The API returns an object keyed by
+// these legacy cardinal names. In opencraft1's isometric renderer they are
+// interpreted as diagonal visual facings:
+//   north -> north-east, east -> south-east,
+//   south -> south-west, west -> north-west.
 export const DIRECTIONS = ['south', 'north', 'east', 'west'];
 
 // Style is expressed through the API's DEDICATED PARAMETERS — never by stuffing

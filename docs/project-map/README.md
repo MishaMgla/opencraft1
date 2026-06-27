@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-27 (branch `codex/issue-92-sprite-graphics-direction`): regenerate the horse character asset and document the four-slot isometric character-facing contract for future graphics requests (issue #92).
 - 2026-06-27 (branch `codex/issue-83-graphics-horse`): render all players as generated four-direction horse characters with movement-facing and presentation-only walk motion, falling back to procedural tokens if the asset is unavailable (issue #83).
 - 2026-06-23 (branch `codex/issue-71-game-graphics`): restyle the full client presentation with a sharp retro-symbolic world, HUD, roster, entry flow, and profile modal while preserving gameplay behavior (issue #71).
 - 2026-06-23 (branch `codex/issue-75-jump-functionality`): add a multiplayer-visible, cosmetic one-shot jump on fresh `Space` presses while preserving existing `Space` paint and hold-to-paint behavior (issue #75).

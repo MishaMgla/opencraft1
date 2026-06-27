@@ -32,6 +32,11 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
 
    - confirm the PNG(s) appear under `web/assets/<type-dir>/` and that
      `web/assets/manifest.json` gained the `<type>:<name>` entry.
+   - for character assets in this isometric game, treat the four legacy manifest
+     slots as diagonal visual facings: `north` = `north-east`,
+     `east` = `south-east`, `south` = `south-west`, and `west` = `north-west`.
+     Do not wire or document straight cardinal side/front/back views, and do not
+     bake ground shadows into character art.
    - commit those generated files (`git add web/assets/ && git commit -m "chore: generate <name> asset"`).
    - only wire activation (e.g. calling `placeTile`/`setSkin` from `main.ts`)
      if the spec explicitly asks to **use** the asset; otherwise registering it

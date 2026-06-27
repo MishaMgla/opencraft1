@@ -73,12 +73,20 @@ function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR)
 
 // Animated character skin. Textures are preloaded once in setSkin so the
 // per-frame tick is a synchronous texture swap (no async in the render loop).
+const SKIN_SLOT_ISO_FACING = {
+  north: 'north-east',
+  east: 'south-east',
+  south: 'south-west',
+  west: 'north-west',
+} as const;
+type SkinSlot = keyof typeof SKIN_SLOT_ISO_FACING;
+
 interface SkinState {
   sprite: Sprite;
   fps: number;
   idle: Record<string, Texture>;          // direction -> still
   walk: Record<string, Texture[]> | null; // direction -> walk frames (null if none)
-  dir: string;                            // current facing
+  dir: SkinSlot;                          // current four-slot facing
   frame: number;                          // walk frame cursor
   acc: number;                            // ms accumulator toward the next frame
   last: number;                           // performance.now() at last tick
@@ -91,7 +99,10 @@ const SKIN_FALLBACK_WALK_FPS = 8;
 const SKIN_FALLBACK_WALK_BOB = 3;
 const SKIN_FALLBACK_WALK_SWAY = 0.06;
 
-function dirOf(dvx: number, dvy: number): string {
+// The manifest still stores the PixelLab/API slot keys south/north/east/west,
+// but in the isometric world those slots are visual diagonal facings:
+// north -> north-east, east -> south-east, south -> south-west, west -> north-west.
+function dirOf(dvx: number, dvy: number): SkinSlot {
   return Math.abs(dvx) > Math.abs(dvy) ? (dvx >= 0 ? 'east' : 'west') : (dvy >= 0 ? 'south' : 'north');
 }
 
@@ -374,7 +385,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       }
 
       const dvx = token.tx - token.rx, dvy = token.ty - token.ry;
-      const startDir = idle[dirOf(dvx, dvy)] ? dirOf(dvx, dvy) : (idle.south ? 'south' : dirs[0]);
+      const startDir = idle[dirOf(dvx, dvy)] ? dirOf(dvx, dvy) : (idle.south ? 'south' : dirs[0] as SkinSlot);
       const sprite = new Sprite(idle[startDir]);
       sprite.anchor.set(ch.anchor.x, ch.anchor.y);
       // Swap only the procedural body (a Graphics) for the sprite; keep the name
