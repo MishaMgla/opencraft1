@@ -23,6 +23,10 @@ export interface Input {
 type KeyboardTarget = Pick<Window, 'addEventListener'>;
 
 function isPaintKey(e: KeyboardEvent): boolean {
+  return e.code === 'KeyF' || e.key.toLowerCase() === 'f';
+}
+
+function isJumpKey(e: KeyboardEvent): boolean {
   return e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
 }
 
@@ -44,6 +48,12 @@ export function createInput(target: KeyboardTarget = window): Input {
         paintHeld = true;
         if (!e.repeat) {
           paintRequested = true;
+        }
+        return;
+      }
+      if (isJumpKey(e)) {
+        e.preventDefault();
+        if (!e.repeat) {
           jumpRequested = true;
         }
         return;
@@ -63,6 +73,10 @@ export function createInput(target: KeyboardTarget = window): Input {
       if (isPaintKey(e)) {
         e.preventDefault();
         paintHeld = false;
+        return;
+      }
+      if (isJumpKey(e)) {
+        e.preventDefault();
         return;
       }
       if (isUltKey(e)) {
