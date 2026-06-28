@@ -115,6 +115,8 @@ async function start(name: string, role: number): Promise<void> {
   const profileNameInput = document.getElementById('profile-name') as HTMLInputElement;
   const profileCancel = document.getElementById('profile-cancel') as HTMLButtonElement;
   const roster = document.getElementById('roster-list')!;
+  const controlsHelpButton = document.getElementById('controls-help-toggle') as HTMLButtonElement;
+  const controlsHelpPanel = document.getElementById('controls-help-panel')!;
   const zoomOutButton = document.getElementById('zoom-out') as HTMLButtonElement;
   const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
   let currentName = name;
@@ -141,6 +143,21 @@ async function start(name: string, role: number): Promise<void> {
   zoomOutButton.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
   zoomInButton.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
   setZoom(zoom);
+
+  function setControlsHelpOpen(open: boolean): void {
+    controlsHelpPanel.hidden = !open;
+    controlsHelpButton.setAttribute('aria-expanded', String(open));
+  }
+
+  controlsHelpButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    setControlsHelpOpen(controlsHelpPanel.hidden);
+  });
+  controlsHelpPanel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => setControlsHelpOpen(false));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setControlsHelpOpen(false);
+  });
 
   hudName.addEventListener('click', () => {
     profileNameInput.value = currentName;

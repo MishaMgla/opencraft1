@@ -205,10 +205,11 @@
       background: rgba(7, 17, 15, 0.82);
       color: var(--ink);
     }
-    #hud .zoom-controls {
+    #hud .help-wrap {
+      position: relative;
       display: inline-flex;
-      gap: 5px;
     }
+    #hud .hud-help,
     #hud .hud-zoom {
       width: 30px;
       height: 30px;
@@ -220,9 +221,55 @@
       font: 700 18px/1 var(--font-pixel);
       box-shadow: 3px 3px 0 var(--shadow);
     }
+    #hud .hud-help {
+      color: var(--gold);
+    }
+    #hud .hud-help:hover,
+    #hud .hud-help[aria-expanded="true"],
     #hud .hud-zoom:hover:not(:disabled) {
       background: var(--gold);
       color: var(--shadow);
+    }
+    #hud .help-panel {
+      position: fixed;
+      top: 48px;
+      left: 8px;
+      width: min(270px, calc(100vw - 16px));
+      padding: 10px;
+      border: 2px solid var(--edge);
+      background: rgba(7, 17, 15, 0.94);
+      color: var(--ink);
+      box-shadow: 5px 5px 0 var(--shadow);
+      z-index: 6;
+      text-shadow: 2px 2px 0 var(--shadow);
+    }
+    #hud .help-panel[hidden] { display: none; }
+    #hud .help-title {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--gold);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    #hud .help-panel dl {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 6px 10px;
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+    #hud .help-panel dt {
+      color: var(--gold);
+      font-weight: 700;
+    }
+    #hud .help-panel dd {
+      margin: 0;
+      color: var(--ink);
+    }
+    #hud .zoom-controls {
+      display: inline-flex;
+      gap: 5px;
     }
     #hud .hud-zoom:disabled {
       opacity: 0.42;
@@ -327,6 +374,7 @@
         flex-wrap: wrap;
       }
       #hud-status { width: 100%; }
+      #hud .help-panel { top: 86px; }
       #roster {
         top: auto;
         right: 8px;
@@ -367,7 +415,7 @@
           <li><strong>Cross</strong><span>paints your tile plus two tiles in each cardinal direction.</span></li>
           <li><strong>Trail</strong><span>auto-paints the next 8 distinct tiles you enter.</span></li>
         </ul>
-        <p>Hold Space while moving to paint each new tile once. The roster shows every connected player, their role, and ult progress.</p>
+        <p>Hold F while moving to paint each new tile once. The roster shows every connected player, their role, and ult progress.</p>
       </section>
       <fieldset id="role-picker" aria-label="Role">
         <label>
@@ -392,7 +440,17 @@
   <div id="hud">
     <button id="hud-name" type="button" aria-haspopup="dialog" aria-controls="profile-modal"></button>
     <span id="hud-status"></span>
-    <span class="hint">Space: color cell</span>
+    <span id="controls-help" class="help-wrap">
+      <button id="controls-help-toggle" class="hud-help" type="button" aria-label="Show controls" aria-controls="controls-help-panel" aria-expanded="false">?</button>
+      <span id="controls-help-panel" class="help-panel" role="tooltip" hidden>
+        <span class="help-title">controls</span>
+        <dl>
+          <dt>Space</dt><dd>jump</dd>
+          <dt>F</dt><dd>paint / change cell color</dd>
+          <dt>E</dt><dd>perk</dd>
+        </dl>
+      </span>
+    </span>
     <span class="zoom-controls" aria-label="Viewport zoom">
       <button id="zoom-out" class="hud-zoom" type="button" aria-label="Zoom out">-</button>
       <button id="zoom-in" class="hud-zoom" type="button" aria-label="Zoom in">+</button>

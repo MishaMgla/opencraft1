@@ -33,32 +33,34 @@ class FakeKeyboardTarget {
   }
 }
 
-test('Space requests one paint action and prevents default browser handling', () => {
+test('F requests one paint action and prevents default browser handling', () => {
   const target = new FakeKeyboardTarget();
   const input = createInput(target as unknown as Window);
 
-  const event = target.dispatchKey('keydown', { code: 'Space', key: ' ', repeat: false });
+  const event = target.dispatchKey('keydown', { code: 'KeyF', key: 'f', repeat: false });
 
   assert.equal(event.defaultPrevented, true);
   assert.equal(input.consumePaint(), true);
   assert.equal(input.consumePaint(), false);
 });
 
-test('legacy Spacebar key name also requests paint', () => {
+test('Space requests jump without paint', () => {
   const target = new FakeKeyboardTarget();
   const input = createInput(target as unknown as Window);
 
-  target.dispatchKey('keydown', { code: '', key: 'Spacebar', repeat: false });
+  const event = target.dispatchKey('keydown', { code: 'Space', key: ' ', repeat: false });
 
-  assert.equal(input.consumePaint(), true);
+  assert.equal(event.defaultPrevented, true);
+  assert.equal(input.consumeJump(), true);
+  assert.equal(input.consumePaint(), false);
 });
 
-test('held Space repeat does not queue another paint action', () => {
+test('held F repeat does not queue another paint action', () => {
   const target = new FakeKeyboardTarget();
   const input = createInput(target as unknown as Window);
 
-  target.dispatchKey('keydown', { code: 'Space', key: ' ', repeat: false });
-  target.dispatchKey('keydown', { code: 'Space', key: ' ', repeat: true });
+  target.dispatchKey('keydown', { code: 'KeyF', key: 'f', repeat: false });
+  target.dispatchKey('keydown', { code: 'KeyF', key: 'f', repeat: true });
 
   assert.equal(input.consumePaint(), true);
   assert.equal(input.consumePaint(), false);
