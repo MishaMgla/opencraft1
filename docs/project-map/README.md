@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-06-28 (branch `codex/issue-102-tiles-graphics`): render the eight shared paint colors as generated terrain tile graphics (lava, grass, sand, water, copper, crystal, ice, flowers) while keeping the previous colored diamond as the missing-asset fallback (issue #102).
 - 2026-06-28 (branch `codex/issue-97-horse-animations`): extend the character asset contract for ordinal walk cycles so horse animation frames preserve the iso diagonal facings (`north-east`/`south-east`/`south-west`/`north-west`) instead of reverting to cardinal side/front/back views (issue #97).
 - 2026-06-28 (branch `fix/issue-92-horse-iso-diagonal`): actually fix the horse for the iso view (issue #92 follow-up) — add PixelLab 8-direction support so characters generate the four DIAGONAL ordinal facings (`gen-asset.mjs --facings ordinal`), and ground skinned characters in the renderer (auto-detect feet row + drop the procedural shadow) so they no longer hover with a doubled shadow. Supersedes the earlier relabel-only attempt below.
 - 2026-06-27 (branch `codex/issue-92-sprite-graphics-direction`): regenerate the horse character asset and document the four-slot isometric character-facing contract for future graphics requests (issue #92).
