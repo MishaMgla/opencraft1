@@ -18,6 +18,17 @@ const TILE_MAJOR_EDGE = 0xf2cf5b;
 const MARKER_OUTLINE = 0xfff2a8;
 const MARKER_SHADOW = 0x020605;
 
+const PAINT_TILE_BY_COLOR = new Map<number, string>([
+  [0xe6194b, 'lava-tile'],
+  [0x3cb44b, 'grass-tile'],
+  [0xffe119, 'sand-tile'],
+  [0x4363d8, 'water-tile'],
+  [0xf58231, 'copper-tile'],
+  [0x911eb4, 'crystal-tile'],
+  [0x46f0f0, 'ice-tile'],
+  [0xf032e6, 'flowers-tile'],
+]);
+
 function drawIsoDiamond(
   graphics: Graphics,
   cx: number,
@@ -277,8 +288,9 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const world = new Container();
   world.sortableChildren = true;
   app.stage.addChild(world);
-  const paintedTiles = new Map<string, Graphics>();
+  const paintedTiles = new Map<string, Container | Graphics>();
   const tileSprites = new Map<string, Sprite>();
+  const paintTileTextures = new Map<string, Texture>();
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -304,6 +316,13 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   }
   ground.zIndex = -1_000_000;
   world.addChild(ground);
+
+  await Promise.all([...PAINT_TILE_BY_COLOR.values()].map(async (name) => {
+    const tile = resolveTile(manifest, name);
+    if (!tile) return;
+    const tex = await loadTexture(tile.file);
+    if (tex) paintTileTextures.set(name, tex);
+  }));
 
   // Local player token.
   const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
@@ -331,6 +350,47 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     token.jumpUntil = now + JUMP_DURATION_MS;
   }
 
+  function removePaintedTile(key: string): void {
+    const tile = paintedTiles.get(key);
+    if (tile) {
+      world.removeChild(tile);
+      tile.destroy({ children: true });
+      paintedTiles.delete(key);
+    }
+    const sprite = tileSprites.get(key);
+    if (sprite) {
+      world.removeChild(sprite);
+      sprite.destroy();
+      tileSprites.delete(key);
+    }
+  }
+
+  function drawFallbackPaintTile(x: number, y: number, color: number): Graphics {
+    const c = worldToScreen(x, y);
+    const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.82, 0xfff2a8, 0.85, 2);
+    drawIsoDiamond(tile, c.x, c.y, hw - 6, hh - 3, color, 0, 0x07110f, 0.5, 1);
+    tile.zIndex = depth(x, y) - 500_000;
+    return tile;
+  }
+
+  function drawTexturedPaintTile(x: number, y: number, color: number, tex: Texture): Container {
+    const c = worldToScreen(x, y);
+    const tile = new Container();
+    const underlay = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.88, 0xfff2a8, 0.75, 2);
+    const sprite = new Sprite(tex);
+    sprite.anchor.set(0.5, 0.5);
+    sprite.x = c.x;
+    sprite.y = c.y;
+    sprite.width = hw * 2;
+    sprite.height = hh * 2;
+    const mask = drawIsoDiamond(new Graphics(), c.x, c.y, hw - 1, hh - 1, 0xffffff, 1, 0xffffff, 0, 0);
+    sprite.mask = mask;
+    const outline = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, 0xffffff, 0, 0xfff2a8, 0.85, 2);
+    tile.addChild(underlay, sprite, mask, outline);
+    tile.zIndex = depth(x, y) - 500_000;
+    return tile;
+  }
+
   return {
     app,
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
@@ -356,15 +416,10 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     },
     paintTile(x, y, color) {
       const key = tileKey(x, y);
-      const existing = paintedTiles.get(key);
-      if (existing) {
-        world.removeChild(existing);
-        existing.destroy();
-      }
-      const c = worldToScreen(x, y);
-      const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.82, 0xfff2a8, 0.85, 2);
-      drawIsoDiamond(tile, c.x, c.y, hw - 6, hh - 3, color, 0, 0x07110f, 0.5, 1);
-      tile.zIndex = depth(x, y) - 500_000;
+      removePaintedTile(key);
+      const tileName = PAINT_TILE_BY_COLOR.get(color);
+      const texture = tileName ? paintTileTextures.get(tileName) : undefined;
+      const tile = texture ? drawTexturedPaintTile(x, y, color, texture) : drawFallbackPaintTile(x, y, color);
       paintedTiles.set(key, tile);
       world.addChild(tile);
     },
@@ -374,8 +429,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const tex: Texture | null = await loadTexture(tile.file);
       if (!tex) { this.paintTile(x, y, 0x3a4757); return; }
       const key = tileKey(x, y);
-      const prev = tileSprites.get(key);
-      if (prev) { world.removeChild(prev); prev.destroy(); }
+      removePaintedTile(key);
       const c = worldToScreen(x, y);
       const sprite = new Sprite(tex);
       sprite.anchor.set(0.5, 0.5);

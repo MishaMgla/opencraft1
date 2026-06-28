@@ -56,6 +56,150 @@
           }
         }
       }
+    },
+    "tile:copper-tile": {
+      "type": "tile",
+      "name": "copper-tile",
+      "file": "tiles/copper-tile.png",
+      "size": 64,
+      "prompt": "copper metal ground with warm orange oxidation and plate seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:crystal-tile": {
+      "type": "tile",
+      "name": "crystal-tile",
+      "file": "tiles/crystal-tile.png",
+      "size": 64,
+      "prompt": "purple crystal ground with clustered angular shards",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:flowers-tile": {
+      "type": "tile",
+      "name": "flowers-tile",
+      "file": "tiles/flowers-tile.png",
+      "size": 64,
+      "prompt": "pink flower-covered ground with dense blossoms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:grass-tile": {
+      "type": "tile",
+      "name": "grass-tile",
+      "file": "tiles/grass-tile.png",
+      "size": 64,
+      "prompt": "grassy ground with short green blades",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ice-tile": {
+      "type": "tile",
+      "name": "ice-tile",
+      "file": "tiles/ice-tile.png",
+      "size": 64,
+      "prompt": "pale cyan ice ground with frosty cracks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:lava-tile": {
+      "type": "tile",
+      "name": "lava-tile",
+      "file": "tiles/lava-tile.png",
+      "size": 64,
+      "prompt": "molten lava ground with bright red cracks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:sand-tile": {
+      "type": "tile",
+      "name": "sand-tile",
+      "file": "tiles/sand-tile.png",
+      "size": 64,
+      "prompt": "sandy ground with soft yellow ripples",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:water-tile": {
+      "type": "tile",
+      "name": "water-tile",
+      "file": "tiles/water-tile.png",
+      "size": 64,
+      "prompt": "shallow blue water surface with gentle wave shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
     }
   }
 }
