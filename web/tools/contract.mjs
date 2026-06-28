@@ -187,7 +187,10 @@ export function animationFramesOf(characterDetail, animationType) {
   const g = groups.find((x) => x.animation_type === animationType) ?? groups[0];
   if (!g) return null;
   const frames = {};
-  for (const dir of g.directions ?? []) frames[dir.direction] = dir.frames ?? [];
+  for (const dir of g.directions ?? []) {
+    const key = ORDINAL_BY_NORM[normDir(dir.direction)] ?? dir.direction;
+    frames[key] = dir.frames ?? [];
+  }
   return { name: g.animation_type, frames };
 }
 

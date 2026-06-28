@@ -71,9 +71,10 @@ rules you must follow when writing this block:
   - `template: <horse | cat | dog | bear | lion | mannequin>`  # character base.
     NOTE: incompatible with `facings: ordinal` (the 8-dir endpoint has no
     template) — for ordinal, describe the animal in the prompt instead.
-  - `animation: <walk>`  # character only, CARDINAL facings only — generates a
-    looping walk-cycle the renderer plays while moving. Ordinal facings ship
-    static (the renderer plays a procedural trot). Omit for a static sprite.
+  - `animation: <walk>`  # character only — generates a looping walk-cycle the
+    renderer plays while moving. For `facings: ordinal`, the generated walk
+    frames must keep the same `north-east`/`south-east`/`south-west`/`north-west`
+    keys as the idle art. Omit for a static sprite.
 - character sprite requests for this isometric game must use `facings: ordinal`
   so the horse/character faces the four iso diagonals. Do not ask for straight
   cardinal side/front/back views.
