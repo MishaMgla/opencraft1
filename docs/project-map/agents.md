@@ -29,7 +29,10 @@ which generates the four DIAGONAL facings (`north-east`, `south-east`,
 `south-west`, `north-west`) via PixelLab's 8-direction endpoint and stores them
 under those ordinal keys — the facings that read correctly under the iso camera.
 `facings: ordinal` is incompatible with a quadruped `template` (the 8-dir
-endpoint has no `template_id`) and ships static (no walk animation). Character
+endpoint has no `template_id`). When a character spec asks for `animation: walk`,
+the walk frames must preserve the same facing keys as the idle art; ordinal
+horse/character walk cycles are generated per facing from the generated ordinal
+stills, not by reverting to straight cardinal side/front/back views. Character
 art should not bake in a ground shadow; the renderer grounds the sprite itself
 (auto-detected feet row) — a baked shadow doubles up and reads as hovering.
 

@@ -147,14 +147,15 @@ async function generateCharacter(input, ctx) {
   for (const u of urls) images.push(await download(fetchImpl, u, 'download rotation image'));
 
   // 4. Optional animation (e.g. walk): one job per direction, then frame URLs.
-  // NON-FATAL: the 4 directional stills above are the core deliverable. If the
-  // animation step fails (API hiccup, validation, slow job), still return the
-  // static character so the asset ships — the walk cycle is an enhancement, not a
-  // gate. The failure is reported up so the caller can warn.
+  // NON-FATAL for generic asset generation: the directional stills above are the
+  // core deliverable. If the animation step fails (API hiccup, validation, slow
+  // job), still return the static character so the asset ships — the failure is
+  // reported up so the caller can warn.
   let anim = null;
   // The text-to-animation (v3) path is only wired for the cardinal 4-direction
-  // characters; ISO ordinal characters ship STATIC (the renderer plays a
-  // procedural trot while moving), keeping regeneration to a single reliable job.
+  // characters. ISO ordinal asset upgrades that need walk PNGs are handled in
+  // gen-asset.mjs from the already-generated ordinal stills, keeping this shared
+  // API wrapper's contract stable.
   if (animation && !ordinal) {
     try {
       const animPost = await postJson(fetchImpl, `${BASE_URL}/animate-character`, apiKey,
@@ -175,7 +176,7 @@ async function generateCharacter(input, ctx) {
       const grp = animationFramesOf(detail, animation);
       const frames = {};
       let total = 0;
-      for (const dir of DIRECTIONS.slice(0, directions)) {
+      for (const dir of dirs) {
         frames[dir] = [];
         for (const u of grp?.frames?.[dir] ?? []) { frames[dir].push(await download(fetchImpl, u, `download ${animation} frame`)); total++; }
       }

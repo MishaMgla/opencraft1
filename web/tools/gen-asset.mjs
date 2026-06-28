@@ -1,6 +1,7 @@
 // web/tools/gen-asset.mjs
-import { writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { deflateSync, inflateSync } from 'node:zlib';
 import { generate, getBalance } from './pixellab.mjs';
 import { DIRECTIONS } from './contract.mjs';
 import {
@@ -8,6 +9,8 @@ import {
 } from './manifest.mjs';
 
 const TYPE_DIR = { tile: 'tiles', character: 'characters', hud: 'hud', effect: 'effects' };
+const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const ORDINALS = ['north-east', 'south-east', 'south-west', 'north-west'];
 
 function parseArgs(argv) {
   const a = { size: undefined, directions: 4, frames: 4, fps: 12, facings: 'cardinal', force: false };
@@ -43,6 +46,175 @@ function parseArgs(argv) {
   return a;
 }
 
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(buf) {
+  let c = 0xffffffff;
+  for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data = Buffer.alloc(0)) {
+  const t = Buffer.from(type);
+  const out = Buffer.alloc(12 + data.length);
+  out.writeUInt32BE(data.length, 0);
+  t.copy(out, 4);
+  data.copy(out, 8);
+  out.writeUInt32BE(crc32(Buffer.concat([t, data])), 8 + data.length);
+  return out;
+}
+
+function decodePngRgba(buf) {
+  if (!buf.subarray(0, 8).equals(PNG_SIG)) throw new Error('not a PNG file');
+  let width = 0, height = 0, bitDepth = 0, colorType = 0;
+  const idat = [];
+  for (let off = 8; off < buf.length;) {
+    const len = buf.readUInt32BE(off);
+    const type = buf.toString('ascii', off + 4, off + 8);
+    const data = buf.subarray(off + 8, off + 8 + len);
+    off += 12 + len;
+    if (type === 'IHDR') {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8];
+      colorType = data[9];
+    } else if (type === 'IDAT') {
+      idat.push(data);
+    } else if (type === 'IEND') {
+      break;
+    }
+  }
+  if (bitDepth !== 8 || colorType !== 6) throw new Error(`unsupported PNG format: bitDepth=${bitDepth} colorType=${colorType}`);
+  const bpp = 4, stride = width * bpp;
+  const raw = inflateSync(Buffer.concat(idat));
+  const pixels = Buffer.alloc(width * height * bpp);
+  let src = 0;
+  for (let y = 0; y < height; y++) {
+    const filter = raw[src++];
+    const row = pixels.subarray(y * stride, (y + 1) * stride);
+    const prev = y ? pixels.subarray((y - 1) * stride, y * stride) : null;
+    for (let x = 0; x < stride; x++) {
+      const a = x >= bpp ? row[x - bpp] : 0;
+      const b = prev ? prev[x] : 0;
+      const c = prev && x >= bpp ? prev[x - bpp] : 0;
+      const p = a + b - c;
+      const pa = Math.abs(p - a), pb = Math.abs(p - b), pc = Math.abs(p - c);
+      const pr = pa <= pb && pa <= pc ? a : (pb <= pc ? b : c);
+      const v = raw[src++];
+      row[x] = filter === 0 ? v
+        : filter === 1 ? (v + a) & 0xff
+          : filter === 2 ? (v + b) & 0xff
+            : filter === 3 ? (v + Math.floor((a + b) / 2)) & 0xff
+              : filter === 4 ? (v + pr) & 0xff
+                : v;
+    }
+  }
+  return { width, height, pixels };
+}
+
+function encodePngRgba({ width, height, pixels }) {
+  const stride = width * 4;
+  const raw = Buffer.alloc((stride + 1) * height);
+  let dst = 0;
+  for (let y = 0; y < height; y++) {
+    raw[dst++] = 0;
+    Buffer.from(pixels.subarray(y * stride, (y + 1) * stride)).copy(raw, dst);
+    dst += stride;
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8;  // bit depth
+  ihdr[9] = 6;  // RGBA
+  return Buffer.concat([PNG_SIG, pngChunk('IHDR', ihdr), pngChunk('IDAT', deflateSync(raw)), pngChunk('IEND')]);
+}
+
+function alphaBounds(pixels, width, height) {
+  let minX = width, minY = height, maxX = -1, maxY = -1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (pixels[(y * width + x) * 4 + 3] <= 24) continue;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  return maxX < minX ? null : { minX, minY, maxX, maxY };
+}
+
+function synthWalkFrame(decoded, facing, phase) {
+  const { width, height, pixels } = decoded;
+  const out = Buffer.from(pixels);
+  const bounds = alphaBounds(pixels, width, height);
+  if (!bounds) return out;
+  const lowerY = bounds.minY + Math.floor((bounds.maxY - bounds.minY + 1) * 0.56);
+  const pad = 3;
+  for (let y = lowerY; y <= Math.min(height - 1, bounds.maxY + pad); y++) {
+    for (let x = Math.max(0, bounds.minX - pad); x <= Math.min(width - 1, bounds.maxX + pad); x++) {
+      out[(y * width + x) * 4 + 3] = 0;
+    }
+  }
+  const eastSign = facing.includes('east') ? 1 : -1;
+  const span = Math.max(1, bounds.maxX - bounds.minX + 1);
+  for (let y = lowerY; y <= bounds.maxY; y++) {
+    const lowerT = (y - lowerY) / Math.max(1, bounds.maxY - lowerY);
+    for (let x = bounds.minX; x <= bounds.maxX; x++) {
+      const src = (y * width + x) * 4;
+      if (pixels[src + 3] <= 24) continue;
+      const pair = Math.floor(((x - bounds.minX) / span) * 4) % 2 === 0 ? 1 : -1;
+      const stride = phase * pair;
+      const nx = Math.max(0, Math.min(width - 1, x + eastSign * stride));
+      const ny = Math.max(0, Math.min(height - 1, y + (lowerT > 0.7 ? -stride : 0)));
+      const dst = (ny * width + nx) * 4;
+      out[dst] = pixels[src];
+      out[dst + 1] = pixels[src + 1];
+      out[dst + 2] = pixels[src + 2];
+      out[dst + 3] = pixels[src + 3];
+    }
+  }
+  return out;
+}
+
+function synthesizeExistingOrdinalWalk(a, existing) {
+  if (a.type !== 'character' || a.facings !== 'ordinal' || a.animate !== 'walk') return null;
+  if (!existing?.frames || Array.isArray(existing.frames)) return null;
+  if (!ORDINALS.every((d) => existing.frames[d])) return null;
+  const animFrames = {};
+  const files = [];
+  for (const d of ORDINALS) {
+    const sourceRel = existing.frames[d];
+    const source = readFileSync(join(assetsDir(), sourceRel));
+    const decoded = decodePngRgba(source);
+    const sequence = [
+      source,
+      encodePngRgba({ ...decoded, pixels: synthWalkFrame(decoded, d, 1) }),
+      source,
+      encodePngRgba({ ...decoded, pixels: synthWalkFrame(decoded, d, -1) }),
+    ];
+    animFrames[d] = sequence.map((buf, i) => {
+      const rel = `${TYPE_DIR.character}/${a.name}-${d}-${a.animate}-${i}.png`;
+      writeFileSync(join(assetsDir(), rel), buf);
+      files.push(rel);
+      return rel;
+    });
+  }
+  const entry = {
+    ...existing,
+    animations: { ...(existing.animations ?? {}), [a.animate]: { fps: a.fps, frames: animFrames } },
+  };
+  upsertManifest(entry);
+  return files;
+}
+
 export async function run(argv, { generateImpl = generate, env = process.env } = {}) {
   const a = parseArgs(argv);
   validateSlug(a.name);
@@ -68,6 +240,11 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
   if (!a.force && existing && !animMissing) {
     console.log(`gen-asset: ${key} already exists — skipping (use --force to regenerate).`);
     return { skipped: true, key, files: [] };
+  }
+  const synthesized = !a.force && animMissing ? synthesizeExistingOrdinalWalk(a, existing) : null;
+  if (synthesized) {
+    console.log(`gen-asset: wrote ${key} (${synthesized.length} synthesized walk frame file(s)).`);
+    return { skipped: false, key, files: synthesized };
   }
   if (animMissing && existing) {
     console.log(`gen-asset: ${key} exists but lacks '${a.animate}' animation — regenerating with it.`);
@@ -109,7 +286,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     }
     if (animation && animation.frames) {
       const animFrames = {};
-      for (const d of DIRECTIONS.slice(0, a.directions)) {
+      for (const d of dirsOut) {
         animFrames[d] = (animation.frames[d] ?? []).map((buf, i) => {
           const rel = `${dir}/${a.name}-${d}-${animation.name}-${i}.png`;
           writeFileSync(join(assetsDir(), rel), buf);
