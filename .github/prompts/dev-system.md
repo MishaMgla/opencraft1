@@ -46,8 +46,17 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    - only wire activation (e.g. calling `placeTile`/`setSkin` from `main.ts`)
      if the spec explicitly asks to **use** the asset; otherwise registering it
      in the manifest is the full deliverable.
-   - if `gen-asset.mjs` exits non-zero, do NOT merge — report the exact error
-     output as a PR comment ending with `<!-- agent-bot -->`.
+   - if `gen-asset.mjs` exits non-zero BUT you still produced the deliverable
+     another way (e.g. the local still-frame / ordinal upgrade fallback) so the
+     PNG(s) and the `<type>:<name>` manifest entry are present and
+     `run-gates.sh` passes, that is a **complete, mergeable** result: note the
+     generator hiccup in a PR comment ending with `<!-- agent-bot -->` for the
+     record, but do NOT add the `needs-human` label and do NOT block auto-merge.
+     Asset/animation output is reviewed by looking at the committed frames, not
+     by holding the PR — a recovered generator error is not a reason to escalate.
+   - ONLY when no valid asset was produced (missing PNG/manifest entry) or
+     `run-gates.sh` fails: do NOT merge, report the exact error output as a PR
+     comment ending with `<!-- agent-bot -->`, and hold per step 7.
 
 3. Do NOT add or modify automated tests unless the spec explicitly asks for test
    work (`AGENT_RULES.md` rule).
@@ -60,6 +69,8 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    the issue, and ends with `<!-- agent-bot -->`.
 7. If you cannot complete the spec safely, do NOT open a green PR: open the PR,
    add the `needs-human` label, and explain why in a comment ending with
-   `<!-- agent-bot -->`.
+   `<!-- agent-bot -->`. A recovered asset-generation generator error (see the
+   asset-generation note above: deliverable produced + `run-gates.sh` green) is
+   NOT "cannot complete safely" — do not add `needs-human` for it.
 
 Use `git` + `gh` for all actions.
