@@ -24,7 +24,38 @@
         },
         "sortOffset": 0
       },
-      "facings": "ordinal"
+      "facings": "ordinal",
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/horse-north-east-walk-0.png",
+              "characters/horse-north-east-walk-1.png",
+              "characters/horse-north-east-walk-2.png",
+              "characters/horse-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/horse-south-east-walk-0.png",
+              "characters/horse-south-east-walk-1.png",
+              "characters/horse-south-east-walk-2.png",
+              "characters/horse-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/horse-south-west-walk-0.png",
+              "characters/horse-south-west-walk-1.png",
+              "characters/horse-south-west-walk-2.png",
+              "characters/horse-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/horse-north-west-walk-0.png",
+              "characters/horse-north-west-walk-1.png",
+              "characters/horse-north-west-walk-2.png",
+              "characters/horse-north-west-walk-3.png"
+            ]
+          }
+        }
+      }
     }
   }
 }
