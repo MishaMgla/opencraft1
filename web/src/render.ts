@@ -15,6 +15,9 @@ const TILE_DARK = 0x0b1d18;
 const TILE_LIGHT = 0x102821;
 const MARKER_OUTLINE = 0xfff2a8;
 const MARKER_SHADOW = 0x020605;
+// Tiny visual overdraw hides independent sprite/mask rasterization seams while
+// keeping tile centers, grid spacing, and gameplay footprint unchanged.
+const PAINT_TILE_EDGE_OVERDRAW = 1.5;
 
 const PAINT_TILE_BY_COLOR = new Map<number, string>([
   [0xe6194b, 'lava-tile'],
@@ -364,7 +367,15 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
 
   function drawFallbackPaintTile(x: number, y: number, color: number): Graphics {
     const c = worldToScreen(x, y);
-    const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.86);
+    const tile = drawIsoDiamond(
+      new Graphics(),
+      c.x,
+      c.y,
+      hw + PAINT_TILE_EDGE_OVERDRAW,
+      hh + PAINT_TILE_EDGE_OVERDRAW,
+      color,
+      0.9,
+    );
     tile.zIndex = depth(x, y) - 500_000;
     return tile;
   }
@@ -372,14 +383,30 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   function drawTexturedPaintTile(x: number, y: number, color: number, tex: Texture): Container {
     const c = worldToScreen(x, y);
     const tile = new Container();
-    const underlay = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.88);
+    const underlay = drawIsoDiamond(
+      new Graphics(),
+      c.x,
+      c.y,
+      hw + PAINT_TILE_EDGE_OVERDRAW,
+      hh + PAINT_TILE_EDGE_OVERDRAW,
+      color,
+      0.92,
+    );
     const sprite = new Sprite(tex);
     sprite.anchor.set(0.5, 0.5);
     sprite.x = c.x;
     sprite.y = c.y;
-    sprite.width = hw * 2;
-    sprite.height = hh * 2;
-    const mask = drawIsoDiamond(new Graphics(), c.x, c.y, hw - 1, hh - 1, 0xffffff, 1);
+    sprite.width = (hw + PAINT_TILE_EDGE_OVERDRAW) * 2;
+    sprite.height = (hh + PAINT_TILE_EDGE_OVERDRAW) * 2;
+    const mask = drawIsoDiamond(
+      new Graphics(),
+      c.x,
+      c.y,
+      hw + PAINT_TILE_EDGE_OVERDRAW,
+      hh + PAINT_TILE_EDGE_OVERDRAW,
+      0xffffff,
+      1,
+    );
     sprite.mask = mask;
     tile.addChild(underlay, sprite, mask);
     tile.zIndex = depth(x, y) - 500_000;
