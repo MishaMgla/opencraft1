@@ -13,8 +13,6 @@ const LOCAL_LABEL_COLOR = 0xfff2a8;
 const WORLD_BG = '#07110f';
 const TILE_DARK = 0x0b1d18;
 const TILE_LIGHT = 0x102821;
-const TILE_EDGE = 0x3ddc84;
-const TILE_MAJOR_EDGE = 0xf2cf5b;
 const MARKER_OUTLINE = 0xfff2a8;
 const MARKER_SHADOW = 0x020605;
 
@@ -37,18 +35,21 @@ function drawIsoDiamond(
   hh: number,
   fillColor: number,
   fillAlpha: number,
-  strokeColor: number,
-  strokeAlpha: number,
-  strokeWidth: number,
+  strokeColor = 0,
+  strokeAlpha = 0,
+  strokeWidth = 0,
 ): Graphics {
-  return graphics
+  const diamond = graphics
     .moveTo(cx, cy - hh)
     .lineTo(cx + hw, cy)
     .lineTo(cx, cy + hh)
     .lineTo(cx - hw, cy)
     .lineTo(cx, cy - hh)
-    .fill({ color: fillColor, alpha: fillAlpha })
-    .stroke({ color: strokeColor, alpha: strokeAlpha, width: strokeWidth });
+    .fill({ color: fillColor, alpha: fillAlpha });
+  if (strokeWidth > 0 && strokeAlpha > 0) {
+    diamond.stroke({ color: strokeColor, alpha: strokeAlpha, width: strokeWidth });
+  }
+  return diamond;
 }
 
 function makeToken(name: string, color: number, labelColor = REMOTE_LABEL_COLOR): { container: Container; avatar: Container; label: Text } {
@@ -299,7 +300,6 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   for (let wx = 0; wx <= WORLD_SIZE; wx += GROUND_STEP) {
     for (let wy = 0; wy <= WORLD_SIZE; wy += GROUND_STEP) {
       const c = worldToScreen(wx, wy);
-      const major = wx % (GROUND_STEP * 4) === 0 || wy % (GROUND_STEP * 4) === 0;
       drawIsoDiamond(
         ground,
         c.x,
@@ -308,9 +308,6 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         hh,
         (wx / GROUND_STEP + wy / GROUND_STEP) % 2 === 0 ? TILE_DARK : TILE_LIGHT,
         0.9,
-        major ? TILE_MAJOR_EDGE : TILE_EDGE,
-        major ? 0.32 : 0.2,
-        major ? 2 : 1,
       );
     }
   }
@@ -367,8 +364,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
 
   function drawFallbackPaintTile(x: number, y: number, color: number): Graphics {
     const c = worldToScreen(x, y);
-    const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.82, 0xfff2a8, 0.85, 2);
-    drawIsoDiamond(tile, c.x, c.y, hw - 6, hh - 3, color, 0, 0x07110f, 0.5, 1);
+    const tile = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.86);
     tile.zIndex = depth(x, y) - 500_000;
     return tile;
   }
@@ -376,17 +372,16 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   function drawTexturedPaintTile(x: number, y: number, color: number, tex: Texture): Container {
     const c = worldToScreen(x, y);
     const tile = new Container();
-    const underlay = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.88, 0xfff2a8, 0.75, 2);
+    const underlay = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, color, 0.88);
     const sprite = new Sprite(tex);
     sprite.anchor.set(0.5, 0.5);
     sprite.x = c.x;
     sprite.y = c.y;
     sprite.width = hw * 2;
     sprite.height = hh * 2;
-    const mask = drawIsoDiamond(new Graphics(), c.x, c.y, hw - 1, hh - 1, 0xffffff, 1, 0xffffff, 0, 0);
+    const mask = drawIsoDiamond(new Graphics(), c.x, c.y, hw - 1, hh - 1, 0xffffff, 1);
     sprite.mask = mask;
-    const outline = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, 0xffffff, 0, 0xfff2a8, 0.85, 2);
-    tile.addChild(underlay, sprite, mask, outline);
+    tile.addChild(underlay, sprite, mask);
     tile.zIndex = depth(x, y) - 500_000;
     return tile;
   }

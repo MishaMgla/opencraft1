@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-07-02 (branch `codex/issue-107-tiles-cells-outline`): remove visible outlines from base world cells, painted tile overlays, and missing-asset fallback diamonds while preserving existing tile size, placement, color mapping, and gameplay behavior (issue #107).
 - 2026-06-28 (branch `codex/issue-101-space-key`): split the control bindings so `Space` jumps, `F` paints/changes cell color with the existing hold-to-paint behavior, and the HUD `?` help popover documents `Space`/`F`/`E` controls (issue #101).
 - 2026-06-28 (branch `codex/issue-102-tiles-graphics`): render the eight shared paint colors as generated terrain tile graphics (lava, grass, sand, water, copper, crystal, ice, flowers) while keeping the previous colored diamond as the missing-asset fallback (issue #102).
 - 2026-06-28 (branch `codex/issue-97-horse-animations`): extend the character asset contract for ordinal walk cycles so horse animation frames preserve the iso diagonal facings (`north-east`/`south-east`/`south-west`/`north-west`) instead of reverting to cardinal side/front/back views (issue #97).
