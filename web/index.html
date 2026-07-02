@@ -54,6 +54,33 @@
       z-index: 10;
       overflow: auto;
     }
+    #overlay[hidden] { display: none; }
+    #overlay[data-state="loading"] #name-form { display: none; }
+    #overlay[data-state="entry"] #startup-loader { display: none; }
+    #startup-loader {
+      display: grid;
+      gap: 10px;
+      min-width: min(320px, 100%);
+      padding: 18px;
+      border: 2px solid var(--edge);
+      background: var(--shadow);
+      color: var(--gold);
+      text-align: center;
+      text-transform: uppercase;
+      box-shadow: 8px 8px 0 rgba(61, 220, 132, 0.24);
+    }
+    #startup-loader::before {
+      content: "";
+      width: 42px;
+      height: 42px;
+      margin: 0 auto;
+      border: 2px solid var(--edge-soft);
+      border-top-color: var(--gold);
+      animation: startup-spin 0.9s steps(8, end) infinite;
+    }
+    @keyframes startup-spin {
+      to { transform: rotate(360deg); }
+    }
     #name-form {
       display: grid;
       gap: 12px;
@@ -404,7 +431,8 @@
   </style>
 </head>
 <body>
-  <div id="overlay">
+  <div id="overlay" data-state="loading" aria-busy="true">
+    <div id="startup-loader" role="status" aria-live="polite">entering world</div>
     <form id="name-form">
       <input id="name" placeholder="your name" maxlength="16" autocomplete="off" autofocus />
       <section id="issue59-guide" aria-labelledby="issue59-title">

@@ -40,6 +40,24 @@ const nameForm = document.getElementById('name-form') as HTMLFormElement;
 const nameInput = document.getElementById('name') as HTMLInputElement;
 let startPromise: Promise<void> | null = null;
 
+function showStartupLoading(): void {
+  overlay.hidden = false;
+  overlay.dataset.state = 'loading';
+  overlay.setAttribute('aria-busy', 'true');
+}
+
+function showEntryForm(): void {
+  overlay.hidden = false;
+  overlay.dataset.state = 'entry';
+  overlay.setAttribute('aria-busy', 'false');
+  nameInput.focus();
+}
+
+function hideOverlay(): void {
+  overlay.hidden = true;
+  overlay.setAttribute('aria-busy', 'false');
+}
+
 function normalizeUsername(value: string): string {
   return value.trim() || 'anon';
 }
@@ -69,9 +87,16 @@ function selectedRole(): number | null {
 async function join(name: string, role: number): Promise<void> {
   if (startPromise) return startPromise;
   saveUsername(name);
-  overlay.style.display = 'none';
+  showStartupLoading();
   startPromise = start(name, role);
-  return startPromise;
+  try {
+    await startPromise;
+    hideOverlay();
+  } catch (err) {
+    console.error('startup failed', err);
+    startPromise = null;
+    showEntryForm();
+  }
 }
 
 nameForm.addEventListener('submit', async (e) => {
@@ -85,7 +110,13 @@ const savedUsername = loadSavedUsername();
 if (savedUsername) {
   const role = selectedRole();
   nameInput.value = savedUsername;
-  if (role !== null) void join(savedUsername, role);
+  if (role !== null) {
+    void join(savedUsername, role);
+  } else {
+    showEntryForm();
+  }
+} else {
+  showEntryForm();
 }
 
 function paintTileKey(x: number, y: number, bounds: Bounds): string {
@@ -121,6 +152,30 @@ async function start(name: string, role: number): Promise<void> {
   const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
   let currentName = name;
   let zoom = 1;
+  let ready = false;
+  let startupTimer = 0;
+  let net: ReturnType<typeof connect> | null = null;
+  let resolveReady: () => void = () => {};
+  let rejectReady: (err: Error) => void = () => {};
+  const readyPromise = new Promise<void>((resolve, reject) => {
+    resolveReady = resolve;
+    rejectReady = reject;
+  });
+
+  function finishStartup(): void {
+    if (ready) return;
+    ready = true;
+    window.clearTimeout(startupTimer);
+    resolveReady();
+  }
+
+  function failStartup(message: string): void {
+    if (ready) return;
+    ready = true;
+    window.clearTimeout(startupTimer);
+    rejectReady(new Error(message));
+    if (net) net.close();
+  }
 
   function setDisplayName(nextName: string): void {
     currentName = nextName;
@@ -222,97 +277,109 @@ async function start(name: string, role: number): Promise<void> {
   if (window.__E2E) window.__game = { me, others, bounds };
   setDisplayName(currentName);
 
-  const net = connect(await resolveWsUrl(), currentName, role, {
-    welcome(m) {
-      me.id = m.id;
-      // Adopt the server's spawn position (restored for returning players, else
-      // world center). Must happen before we stream input — the loop gates
-      // sendInput on me.id so no frame leaves until this runs.
-      me.x = m.x;
-      me.y = m.y;
-      bounds.minX = m.minX;
-      bounds.minY = m.minY;
-      bounds.maxX = m.maxX;
-      bounds.maxY = m.maxY;
-      lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
-    },
-    enter(m) {
-      if (m.id === me.id) return;
-      const token = r.addToken(m.id, m.name, m.color, m.x, m.y);
-      others.set(m.id, token);
-      void r.setSkin(token, PLAYER_SKIN); // horse skin for remote players (no-op without the asset)
-    },
-    leave(m) {
-      const o = others.get(m.id);
-      if (o) {
-        r.removeToken(o);
-        others.delete(m.id);
-      }
-      rosterPlayers.delete(m.id);
-      renderRoster();
-    },
-    snapshot(m) {
-      for (const e of m.ents) {
-        if (e.id === me.id) continue;
-        const o = others.get(e.id);
+  let conn: ReturnType<typeof connect>;
+  try {
+    conn = connect(await resolveWsUrl(), currentName, role, {
+      welcome(m) {
+        me.id = m.id;
+        // Adopt the server's spawn position (restored for returning players, else
+        // world center). Must happen before we stream input — the loop gates
+        // sendInput on me.id so no frame leaves until this runs.
+        me.x = m.x;
+        me.y = m.y;
+        bounds.minX = m.minX;
+        bounds.minY = m.minY;
+        bounds.maxX = m.maxX;
+        bounds.maxY = m.maxY;
+        lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
+        finishStartup();
+      },
+      enter(m) {
+        if (m.id === me.id) return;
+        const token = r.addToken(m.id, m.name, m.color, m.x, m.y);
+        others.set(m.id, token);
+        void r.setSkin(token, PLAYER_SKIN); // horse skin for remote players (no-op without the asset)
+      },
+      leave(m) {
+        const o = others.get(m.id);
         if (o) {
-          o.tx = e.x;
-          o.ty = e.y;
+          r.removeToken(o);
+          others.delete(m.id);
         }
-      }
-    },
-    paint(m) {
-      r.paintTile(m.x, m.y, m.color);
-    },
-    shake(m) {
-      if (m.id === me.id) {
-        r.shakeLocal();
-        return;
-      }
-      const o = others.get(m.id);
-      if (o) r.shakeToken(o);
-    },
-    jump(m) {
-      if (m.id === me.id) {
-        r.jumpLocal();
-        return;
-      }
-      const o = others.get(m.id);
-      if (o) r.jumpToken(o);
-    },
-    player(m) {
-      upsertRosterPlayer(m);
-    },
-  });
+        rosterPlayers.delete(m.id);
+        renderRoster();
+      },
+      snapshot(m) {
+        for (const e of m.ents) {
+          if (e.id === me.id) continue;
+          const o = others.get(e.id);
+          if (o) {
+            o.tx = e.x;
+            o.ty = e.y;
+          }
+        }
+      },
+      paint(m) {
+        r.paintTile(m.x, m.y, m.color);
+      },
+      shake(m) {
+        if (m.id === me.id) {
+          r.shakeLocal();
+          return;
+        }
+        const o = others.get(m.id);
+        if (o) r.shakeToken(o);
+      },
+      jump(m) {
+        if (m.id === me.id) {
+          r.jumpLocal();
+          return;
+        }
+        const o = others.get(m.id);
+        if (o) r.jumpToken(o);
+      },
+      player(m) {
+        upsertRosterPlayer(m);
+      },
+      close() {
+        failStartup('Connection closed before server welcome');
+      },
+    });
+  } catch (err) {
+    r.app.canvas.remove();
+    throw err;
+  }
+  net = conn;
+  startupTimer = window.setTimeout(() => failStartup('Timed out waiting for server welcome'), 10000);
 
   let last = performance.now();
   let acc = 0;
-  r.app.ticker.add(() => {
+  const tick = () => {
     const now = performance.now();
     const dt = (now - last) / 1000;
     last = now;
 
     input.step(me, MOVE_SPEED, dt, bounds);
     if (me.id !== 0 && input.consumePaint()) {
-      net.sendInput(Math.round(me.x), Math.round(me.y));
-      net.sendPaint();
+      conn.sendInput(Math.round(me.x), Math.round(me.y));
+      conn.sendPaint();
       lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
     }
     if (me.id !== 0 && input.isPaintHeld()) {
       const currentTile = paintTileKey(me.x, me.y, bounds);
       if (currentTile !== lastHeldPaintTile) {
         lastHeldPaintTile = currentTile;
-        net.sendInput(Math.round(me.x), Math.round(me.y));
-        net.sendPaint();
+        conn.sendInput(Math.round(me.x), Math.round(me.y));
+        conn.sendPaint();
       }
     } else {
       lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
     }
     if (me.id !== 0 && input.consumeUlt()) {
-      net.sendUlt();
+      conn.sendUlt();
     }
     if (me.id !== 0 && input.consumeJump()) {
-      net.sendJump();
+      conn.sendJump();
     }
     r.setLocal(me.x, me.y);
 
@@ -329,9 +396,18 @@ async function start(name: string, role: number): Promise<void> {
       acc = 0;
       // Don't stream input until Welcome has set our id + spawn position, or the
       // first frames would overwrite a returning player's restored position.
-      if (me.id !== 0) net.sendInput(Math.round(me.x), Math.round(me.y));
+      if (me.id !== 0) conn.sendInput(Math.round(me.x), Math.round(me.y));
     }
 
     hudStatus.textContent = `players online: ${rosterPlayers.size}`;
-  });
+  };
+  r.app.ticker.add(tick);
+
+  try {
+    await readyPromise;
+  } catch (err) {
+    r.app.ticker.remove(tick);
+    r.app.canvas.remove();
+    throw err;
+  }
 }
