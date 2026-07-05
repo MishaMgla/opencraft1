@@ -57,6 +57,132 @@
         }
       }
     },
+    "hud:basalt-garden-horse-sample": {
+      "type": "hud",
+      "name": "basalt-garden-horse-sample",
+      "file": "hud/basalt-garden-horse-sample.png",
+      "size": 64,
+      "prompt": "carved stone horse with a readable saddle mass and moss accents",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ceramic-mosaic-horse-sample": {
+      "type": "hud",
+      "name": "ceramic-mosaic-horse-sample",
+      "file": "hud/ceramic-mosaic-horse-sample.png",
+      "size": 64,
+      "prompt": "glazed ceramic horse idol with a readable saddle and mosaic inlays",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:matchbox-foundry-horse-sample": {
+      "type": "hud",
+      "name": "matchbox-foundry-horse-sample",
+      "file": "hud/matchbox-foundry-horse-sample.png",
+      "size": 64,
+      "prompt": "painted toy horse with a readable saddle and stamped factory seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:paper-relic-horse-sample": {
+      "type": "hud",
+      "name": "paper-relic-horse-sample",
+      "file": "hud/paper-relic-horse-sample.png",
+      "size": 64,
+      "prompt": "folded paper horse with a readable saddle and clipped mane",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:woven-harvest-horse-sample": {
+      "type": "hud",
+      "name": "woven-harvest-horse-sample",
+      "file": "hud/woven-harvest-horse-sample.png",
+      "size": 64,
+      "prompt": "embroidered horse figure with a readable saddle patch and woven mane stripe",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:basalt-garden-grass-tile": {
+      "type": "tile",
+      "name": "basalt-garden-grass-tile",
+      "file": "tiles/basalt-garden-grass-tile.png",
+      "size": 64,
+      "prompt": "carved stone grass tile with moss channels and geometric ground cuts",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ceramic-mosaic-grass-tile": {
+      "type": "tile",
+      "name": "ceramic-mosaic-grass-tile",
+      "file": "tiles/ceramic-mosaic-grass-tile.png",
+      "size": 64,
+      "prompt": "glazed ceramic grass tile with tessellated leaf pieces and grout seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:copper-tile": {
       "type": "tile",
       "name": "copper-tile",
@@ -165,6 +291,42 @@
         "sortOffset": 0
       }
     },
+    "tile:matchbox-foundry-grass-tile": {
+      "type": "tile",
+      "name": "matchbox-foundry-grass-tile",
+      "file": "tiles/matchbox-foundry-grass-tile.png",
+      "size": 64,
+      "prompt": "miniature printed grass ground with stamped seams and compact turf shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:paper-relic-grass-tile": {
+      "type": "tile",
+      "name": "paper-relic-grass-tile",
+      "file": "tiles/paper-relic-grass-tile.png",
+      "size": 64,
+      "prompt": "layered paper grass ground with clipped blades and ink-mark accents",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:sand-tile": {
       "type": "tile",
       "name": "sand-tile",
@@ -189,6 +351,24 @@
       "file": "tiles/water-tile.png",
       "size": 64,
       "prompt": "shallow blue water surface with gentle wave shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:woven-harvest-grass-tile": {
+      "type": "tile",
+      "name": "woven-harvest-grass-tile",
+      "file": "tiles/woven-harvest-grass-tile.png",
+      "size": 64,
+      "prompt": "woven grass ground with stitched blades and patchwork field bands",
       "placement": {
         "anchor": {
           "x": 0.5,
