@@ -93,6 +93,42 @@
         "sortOffset": 0
       }
     },
+    "hud:iron-orchard-marker-horse-sample": {
+      "type": "hud",
+      "name": "iron-orchard-marker-horse-sample",
+      "file": "hud/iron-orchard-marker-horse-sample.png",
+      "size": 64,
+      "prompt": "forged farm horse icon with a readable saddle block and stamped orchard tool details",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:lantern-enamel-courier-horse-sample": {
+      "type": "hud",
+      "name": "lantern-enamel-courier-horse-sample",
+      "file": "hud/lantern-enamel-courier-horse-sample.png",
+      "size": 64,
+      "prompt": "enamel sign horse icon with a readable saddle and painted travel markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:matchbox-foundry-horse-sample": {
       "type": "hud",
       "name": "matchbox-foundry-horse-sample",
@@ -117,6 +153,60 @@
       "file": "hud/paper-relic-horse-sample.png",
       "size": 64,
       "prompt": "folded paper horse with a readable saddle and clipped mane",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:reed-delta-totem-horse-sample": {
+      "type": "hud",
+      "name": "reed-delta-totem-horse-sample",
+      "file": "hud/reed-delta-totem-horse-sample.png",
+      "size": 64,
+      "prompt": "reed-and-wood horse totem with a readable saddle bundle and carved marsh markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:salt-beacon-relic-horse-sample": {
+      "type": "hud",
+      "name": "salt-beacon-relic-horse-sample",
+      "file": "hud/salt-beacon-relic-horse-sample.png",
+      "size": 64,
+      "prompt": "salt-worn beacon horse emblem with a readable saddle and coastal marker accents",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sugar-banner-parade-horse-sample": {
+      "type": "hud",
+      "name": "sugar-banner-parade-horse-sample",
+      "file": "hud/sugar-banner-parade-horse-sample.png",
+      "size": 64,
+      "prompt": "parade candy horse figure with a readable saddle and banner-like mane shapes",
       "placement": {
         "anchor": {
           "x": 0.5,
