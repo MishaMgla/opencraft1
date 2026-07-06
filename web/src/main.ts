@@ -16,6 +16,8 @@ const MAX_ZOOM = 1.5;
 const PAINT_TILE_SIZE = 128;
 const ULT_CHARGE_NEEDED = 12;
 const USERNAME_STORAGE_KEY = 'opencraft1.username';
+const MOBILE_MAX_WIDTH_PX = 760;
+const TAP_MOVE_MAX_DRIFT_PX = 12;
 // Every player renders as this generated character (with its walk cycle) when
 // the asset is present in the manifest; resolveCharacter returns null otherwise,
 // so setSkin is a no-op and the procedural token shows (spec #83/#84 fallback).
@@ -131,6 +133,12 @@ function roleName(role: number): string {
   return ROLE_NAMES.get(role) ?? 'Pulse';
 }
 
+function shouldUseMobileControls(): boolean {
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  const mobileSize = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH_PX}px)`).matches;
+  return coarsePointer && mobileSize;
+}
+
 async function start(name: string, role: number): Promise<void> {
   const manifest = await loadManifest();
   const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
@@ -150,6 +158,10 @@ async function start(name: string, role: number): Promise<void> {
   const controlsHelpPanel = document.getElementById('controls-help-panel')!;
   const zoomOutButton = document.getElementById('zoom-out') as HTMLButtonElement;
   const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
+  const mobileControls = document.getElementById('mobile-controls') as HTMLDivElement;
+  const mobilePaint = document.getElementById('mobile-paint') as HTMLButtonElement;
+  const mobileJump = document.getElementById('mobile-jump') as HTMLButtonElement;
+  const mobileUlt = document.getElementById('mobile-ult') as HTMLButtonElement;
   let currentName = name;
   let zoom = 1;
   let ready = false;
@@ -199,6 +211,15 @@ async function start(name: string, role: number): Promise<void> {
   zoomInButton.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
   setZoom(zoom);
 
+  function syncMobileControls(): void {
+    const enabled = shouldUseMobileControls();
+    document.body.classList.toggle('mobile-controls-enabled', enabled);
+    mobileControls.hidden = !enabled;
+  }
+
+  syncMobileControls();
+  window.addEventListener('resize', syncMobileControls);
+
   function setControlsHelpOpen(open: boolean): void {
     controlsHelpPanel.hidden = !open;
     controlsHelpButton.setAttribute('aria-expanded', String(open));
@@ -234,6 +255,37 @@ async function start(name: string, role: number): Promise<void> {
   const others = new Map<number, Token>();
   const rosterPlayers = new Map<number, RosterPlayer>();
   let lastHeldPaintTile = '';
+  let tapStart: { id: number; x: number; y: number } | null = null;
+
+  r.app.canvas.addEventListener('pointerdown', (e) => {
+    if (!document.body.classList.contains('mobile-controls-enabled') || !e.isPrimary || e.button !== 0) return;
+    tapStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  });
+  r.app.canvas.addEventListener('pointerup', (e) => {
+    if (!tapStart || tapStart.id !== e.pointerId) return;
+    const drift = Math.hypot(e.clientX - tapStart.x, e.clientY - tapStart.y);
+    tapStart = null;
+    if (!document.body.classList.contains('mobile-controls-enabled') || drift > TAP_MOVE_MAX_DRIFT_PX) return;
+    e.preventDefault();
+    input.setMoveDestination(r.screenToWorld(e.clientX, e.clientY), bounds);
+  });
+  r.app.canvas.addEventListener('pointercancel', (e) => {
+    if (tapStart?.id === e.pointerId) tapStart = null;
+  });
+
+  mobilePaint.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    input.requestPaint(true);
+    mobilePaint.setPointerCapture(e.pointerId);
+  });
+  mobilePaint.addEventListener('pointerup', (e) => {
+    e.preventDefault();
+    input.releasePaint();
+    if (mobilePaint.hasPointerCapture(e.pointerId)) mobilePaint.releasePointerCapture(e.pointerId);
+  });
+  mobilePaint.addEventListener('pointercancel', () => input.releasePaint());
+  mobileJump.addEventListener('click', () => input.requestJump());
+  mobileUlt.addEventListener('click', () => input.requestUlt());
 
   function upsertRosterPlayer(state: PlayerState): void {
     rosterPlayers.set(state.id, {

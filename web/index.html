@@ -38,7 +38,10 @@
       mix-blend-mode: screen;
       opacity: 0.28;
     }
-    canvas { image-rendering: pixelated; }
+    canvas {
+      image-rendering: pixelated;
+      touch-action: none;
+    }
     #overlay {
       position: fixed;
       inset: 0;
@@ -395,6 +398,36 @@
       background: var(--panel-2);
       color: var(--ink);
     }
+    #mobile-controls {
+      position: fixed;
+      left: 50%;
+      bottom: 12px;
+      z-index: 5;
+      display: none;
+      grid-template-columns: repeat(3, minmax(72px, 1fr));
+      gap: 8px;
+      width: min(304px, calc(100vw - 92px));
+      transform: translateX(-50%);
+    }
+    body.mobile-controls-enabled #mobile-controls {
+      display: grid;
+    }
+    #mobile-controls[hidden] {
+      display: none;
+    }
+    #mobile-controls button {
+      min-width: 0;
+      min-height: 46px;
+      padding: 8px 10px;
+      background: rgba(7, 17, 15, 0.9);
+      color: var(--gold);
+      touch-action: none;
+    }
+    #mobile-controls button:hover:not(:disabled),
+    #mobile-controls button:active:not(:disabled) {
+      background: var(--gold);
+      color: var(--shadow);
+    }
     @media (max-width: 640px) {
       #hud {
         right: 8px;
@@ -405,7 +438,7 @@
       #roster {
         top: auto;
         right: 8px;
-        bottom: 42px;
+        bottom: 70px;
         min-width: 210px;
       }
       #role-picker { grid-template-columns: 1fr; }
@@ -473,6 +506,7 @@
       <span id="controls-help-panel" class="help-panel" role="tooltip" hidden>
         <span class="help-title">controls</span>
         <dl>
+          <dt>Tap</dt><dd>move on mobile</dd>
           <dt>Space</dt><dd>jump</dd>
           <dt>F</dt><dd>paint / change cell color</dd>
           <dt>E</dt><dd>perk</dd>
@@ -488,6 +522,11 @@
   <div id="roster" aria-label="Player roster">
     <div id="roster-title">players</div>
     <div id="roster-list"></div>
+  </div>
+  <div id="mobile-controls" aria-label="Mobile actions" hidden>
+    <button id="mobile-paint" type="button">paint</button>
+    <button id="mobile-jump" type="button">jump</button>
+    <button id="mobile-ult" type="button">ult</button>
   </div>
   <dialog id="profile-modal" aria-labelledby="profile-title">
     <form id="profile-form">

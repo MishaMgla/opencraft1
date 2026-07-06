@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Text, Sprite, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
-import { worldToScreen, depth, KX, KY } from './iso.js';
+import { worldToScreen, screenToWorld, depth, KX, KY } from './iso.js';
 import { resolveTile, loadTexture, resolveCharacter, resolveEffect, assetUrl, type Manifest } from './assets.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
@@ -237,6 +237,7 @@ export interface Renderer {
   setLocalName(name: string): void;
   setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
+  screenToWorld(clientX: number, clientY: number): { x: number; y: number };
   setSkin(token: Token, name: string): Promise<void>;
   skinLocal(name: string): Promise<void>;
   playEffect(x: number, y: number, name: string): void;
@@ -483,6 +484,12 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const p = worldToScreen(x, y);
       world.x = app.screen.width / 2 - p.x * world.scale.x;
       world.y = app.screen.height / 2 - p.y * world.scale.y;
+    },
+    screenToWorld(clientX, clientY) {
+      const rect = app.canvas.getBoundingClientRect();
+      const sx = (clientX - rect.left) * (app.screen.width / rect.width);
+      const sy = (clientY - rect.top) * (app.screen.height / rect.height);
+      return screenToWorld((sx - world.x) / world.scale.x, (sy - world.y) / world.scale.y);
     },
     async setSkin(token, name) {
       const ch = resolveCharacter(manifest, name);
