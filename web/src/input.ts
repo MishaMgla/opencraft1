@@ -14,6 +14,12 @@ export interface Bounds {
 export interface Input {
   // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
   step(pos: Vec2, speed: number, dt: number, bounds: Bounds): boolean;
+  setMoveDestination(destination: Vec2, bounds: Bounds): boolean;
+  clearMoveDestination(): void;
+  requestPaint(held?: boolean): void;
+  releasePaint(): void;
+  requestUlt(): void;
+  requestJump(): void;
   consumePaint(): boolean;
   isPaintHeld(): boolean;
   consumeUlt(): boolean;
@@ -34,33 +40,56 @@ function isUltKey(e: KeyboardEvent): boolean {
   return e.code === 'KeyE' || e.key.toLowerCase() === 'e';
 }
 
+function clamp(v: number, lo: number, hi: number): number {
+  return v < lo ? lo : v > hi ? hi : v;
+}
+
+function inBounds(pos: Vec2, bounds: Bounds): boolean {
+  return pos.x >= bounds.minX && pos.x <= bounds.maxX && pos.y >= bounds.minY && pos.y <= bounds.maxY;
+}
+
 export function createInput(target: KeyboardTarget = window): Input {
   const keys: Record<string, boolean> = Object.create(null);
   let paintRequested = false;
   let paintHeld = false;
   let ultRequested = false;
   let jumpRequested = false;
+  let moveDestination: Vec2 | null = null;
+
+  function requestPaint(held = false): void {
+    paintRequested = true;
+    if (held) paintHeld = true;
+  }
+
+  function releasePaint(): void {
+    paintHeld = false;
+  }
+
+  function requestUlt(): void {
+    ultRequested = true;
+  }
+
+  function requestJump(): void {
+    jumpRequested = true;
+  }
+
   target.addEventListener(
     'keydown',
     (e) => {
       if (isPaintKey(e)) {
         e.preventDefault();
-        paintHeld = true;
-        if (!e.repeat) {
-          paintRequested = true;
-        }
+        if (!e.repeat) requestPaint(true);
+        else paintHeld = true;
         return;
       }
       if (isJumpKey(e)) {
         e.preventDefault();
-        if (!e.repeat) {
-          jumpRequested = true;
-        }
+        if (!e.repeat) requestJump();
         return;
       }
       if (isUltKey(e)) {
         e.preventDefault();
-        if (!e.repeat) ultRequested = true;
+        if (!e.repeat) requestUlt();
         return;
       }
       keys[e.key.toLowerCase()] = true;
@@ -72,7 +101,7 @@ export function createInput(target: KeyboardTarget = window): Input {
     (e) => {
       if (isPaintKey(e)) {
         e.preventDefault();
-        paintHeld = false;
+        releasePaint();
         return;
       }
       if (isJumpKey(e)) {
@@ -88,10 +117,6 @@ export function createInput(target: KeyboardTarget = window): Input {
     { capture: true },
   );
 
-  function clamp(v: number, lo: number, hi: number): number {
-    return v < lo ? lo : v > hi ? hi : v;
-  }
-
   return {
     step(pos, speed, dt, bounds) {
       let dx = 0;
@@ -101,6 +126,7 @@ export function createInput(target: KeyboardTarget = window): Input {
       if (keys['a'] || keys['arrowleft']) dx -= 1;
       if (keys['d'] || keys['arrowright']) dx += 1;
       if (dx !== 0 || dy !== 0) {
+        moveDestination = null;
         const len = Math.hypot(dx, dy);
         dx /= len;
         dy /= len;
@@ -108,8 +134,43 @@ export function createInput(target: KeyboardTarget = window): Input {
         pos.y = clamp(pos.y + dy * speed * dt, bounds.minY, bounds.maxY);
         return true;
       }
+      if (moveDestination) {
+        if (!inBounds(moveDestination, bounds)) {
+          moveDestination = null;
+          return false;
+        }
+        const tx = moveDestination.x - pos.x;
+        const ty = moveDestination.y - pos.y;
+        const dist = Math.hypot(tx, ty);
+        const stepDist = speed * dt;
+        if (dist <= Math.max(stepDist, 1)) {
+          const moved = Math.hypot(pos.x - moveDestination.x, pos.y - moveDestination.y) > 0;
+          pos.x = moveDestination.x;
+          pos.y = moveDestination.y;
+          moveDestination = null;
+          return moved;
+        }
+        pos.x = clamp(pos.x + (tx / dist) * stepDist, bounds.minX, bounds.maxX);
+        pos.y = clamp(pos.y + (ty / dist) * stepDist, bounds.minY, bounds.maxY);
+        return true;
+      }
       return false;
     },
+    setMoveDestination(destination, bounds) {
+      if (!inBounds(destination, bounds)) {
+        moveDestination = null;
+        return false;
+      }
+      moveDestination = { x: destination.x, y: destination.y };
+      return true;
+    },
+    clearMoveDestination() {
+      moveDestination = null;
+    },
+    requestPaint,
+    releasePaint,
+    requestUlt,
+    requestJump,
     consumePaint() {
       if (!paintRequested) return false;
       paintRequested = false;

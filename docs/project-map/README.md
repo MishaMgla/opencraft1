@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-07-06 (branch `codex/issue-116-mobile-support`): add tap-first mobile controls with tap-to-move destinations and touch action buttons for paint, jump, and ult while preserving desktop keyboard controls (issue #116).
 - 2026-07-02 (branch `codex/issue-111-cell-tiles-stitch`): hide unintended stitch lines between adjacent painted terrain tiles with seam-safe texture masks and fallback diamonds while preserving tile placement, paint color mapping, and gameplay behavior (issue #111).
 - 2026-07-02 (branch `codex/issue-110-loader-on-website-start`): show a startup loader for saved-username auto-join until the server welcome arrives, avoiding a welcome-form flash for returning users while falling back to the normal entry form on startup failure (issue #110).
 - 2026-07-02 (branch `codex/issue-107-tiles-cells-outline`): remove visible outlines from base world cells, painted tile overlays, and missing-asset fallback diamonds while preserving existing tile size, placement, color mapping, and gameplay behavior (issue #107).
