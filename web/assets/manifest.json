@@ -129,6 +129,24 @@
         "sortOffset": 0
       }
     },
+    "hud:coal-reliquary-horse-sample": {
+      "type": "hud",
+      "name": "coal-reliquary-horse-sample",
+      "file": "hud/coal-reliquary-horse-sample.png",
+      "size": 64,
+      "prompt": "burden horse with a readable saddle chest and soot-marked reliquary details",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:iron-orchard-marker-horse-sample": {
       "type": "hud",
       "name": "iron-orchard-marker-horse-sample",
@@ -147,12 +165,48 @@
         "sortOffset": 0
       }
     },
+    "hud:kiln-oath-horse-sample": {
+      "type": "hud",
+      "name": "kiln-oath-horse-sample",
+      "file": "hud/kiln-oath-horse-sample.png",
+      "size": 64,
+      "prompt": "fired clay horse with a readable saddle slab and kiln-mark accents",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:lantern-enamel-courier-horse-sample": {
       "type": "hud",
       "name": "lantern-enamel-courier-horse-sample",
       "file": "hud/lantern-enamel-courier-horse-sample.png",
       "size": 64,
       "prompt": "enamel sign horse icon with a readable saddle and painted travel markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ledger-caravan-horse-sample": {
+      "type": "hud",
+      "name": "ledger-caravan-horse-sample",
+      "file": "hud/ledger-caravan-horse-sample.png",
+      "size": 64,
+      "prompt": "courier horse with a readable saddle pack and stamped trade-mark details",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -273,6 +327,24 @@
         "sortOffset": 0
       }
     },
+    "hud:salt-theater-horse-sample": {
+      "type": "hud",
+      "name": "salt-theater-horse-sample",
+      "file": "hud/salt-theater-horse-sample.png",
+      "size": 64,
+      "prompt": "stage-silhouette horse with a readable saddle banner and painted coastal details",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:sugar-banner-parade-horse-sample": {
       "type": "hud",
       "name": "sugar-banner-parade-horse-sample",
@@ -297,6 +369,24 @@
       "file": "hud/tundra-relay-horse-sample.png",
       "size": 64,
       "prompt": "relay-post travel horse with a readable saddle bundle and wind-cut northern markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:wire-orchard-horse-sample": {
+      "type": "hud",
+      "name": "wire-orchard-horse-sample",
+      "file": "hud/wire-orchard-horse-sample.png",
+      "size": 64,
+      "prompt": "orchard work horse with a readable saddle blanket and simple marker-tag details",
       "placement": {
         "anchor": {
           "x": 0.5,
