@@ -93,6 +93,24 @@
         "sortOffset": 0
       }
     },
+    "hud:brass-orrery-horse-sample": {
+      "type": "hud",
+      "name": "brass-orrery-horse-sample",
+      "file": "hud/brass-orrery-horse-sample.png",
+      "size": 64,
+      "prompt": "machined brass orrery horse with engraved tick marks and a cream chart saddle plate",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:canal-festival-mask-horse-sample": {
       "type": "hud",
       "name": "canal-festival-mask-horse-sample",
@@ -129,12 +147,66 @@
         "sortOffset": 0
       }
     },
+    "hud:chalk-meridian-horse-sample": {
+      "type": "hud",
+      "name": "chalk-meridian-horse-sample",
+      "file": "hud/chalk-meridian-horse-sample.png",
+      "size": 64,
+      "prompt": "solid chalk-filled horse drawn on dark slate with dashed survey marks and an ochre saddle",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:coal-reliquary-horse-sample": {
       "type": "hud",
       "name": "coal-reliquary-horse-sample",
       "file": "hud/coal-reliquary-horse-sample.png",
       "size": 64,
       "prompt": "burden horse with a readable saddle chest and soot-marked reliquary details",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:glazier-vault-horse-sample": {
+      "type": "hud",
+      "name": "glazier-vault-horse-sample",
+      "file": "hud/glazier-vault-horse-sample.png",
+      "size": 64,
+      "prompt": "leaded stained glass horse with bold dark came lines and a contrasting glass saddle panel",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ice-sawyard-horse-sample": {
+      "type": "hud",
+      "name": "ice-sawyard-horse-sample",
+      "file": "hud/ice-sawyard-horse-sample.png",
+      "size": 64,
+      "prompt": "sawn ice block horse with beveled facets, an iron harness band and sawdust dusting",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -381,6 +453,24 @@
         "sortOffset": 0
       }
     },
+    "hud:votive-apiary-horse-sample": {
+      "type": "hud",
+      "name": "votive-apiary-horse-sample",
+      "file": "hud/votive-apiary-horse-sample.png",
+      "size": 64,
+      "prompt": "molded beeswax horse with a pressed honeycomb saddle band and stamped wax seal markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:wire-orchard-horse-sample": {
       "type": "hud",
       "name": "wire-orchard-horse-sample",
@@ -435,12 +525,48 @@
         "sortOffset": 0
       }
     },
+    "tile:brass-orrery-grass-tile": {
+      "type": "tile",
+      "name": "brass-orrery-grass-tile",
+      "file": "tiles/brass-orrery-grass-tile.png",
+      "size": 64,
+      "prompt": "midnight star-chart ground tile with engraved brass graduation rings and pale grass ticks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:ceramic-mosaic-grass-tile": {
       "type": "tile",
       "name": "ceramic-mosaic-grass-tile",
       "file": "tiles/ceramic-mosaic-grass-tile.png",
       "size": 64,
       "prompt": "glazed ceramic grass tile with tessellated leaf pieces and grout seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:chalk-meridian-grass-tile": {
+      "type": "tile",
+      "name": "chalk-meridian-grass-tile",
+      "file": "tiles/chalk-meridian-grass-tile.png",
+      "size": 64,
+      "prompt": "dark slate ground tile with chalk-drawn grass ticks and dashed survey lines",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -507,12 +633,48 @@
         "sortOffset": 0
       }
     },
+    "tile:glazier-vault-grass-tile": {
+      "type": "tile",
+      "name": "glazier-vault-grass-tile",
+      "file": "tiles/glazier-vault-grass-tile.png",
+      "size": 64,
+      "prompt": "leaded glass grass panel with faceted green quarries and dark came seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:grass-tile": {
       "type": "tile",
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
       "size": 64,
       "prompt": "grassy ground with short green blades",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ice-sawyard-grass-tile": {
+      "type": "tile",
+      "name": "ice-sawyard-grass-tile",
+      "file": "tiles/ice-sawyard-grass-tile.png",
+      "size": 64,
+      "prompt": "sawn lake-ice ground tile with kerf lines, trapped air streaks and sawdust patches",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -603,6 +765,24 @@
       "file": "tiles/sand-tile.png",
       "size": 64,
       "prompt": "sandy ground with soft yellow ripples",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:votive-apiary-grass-tile": {
+      "type": "tile",
+      "name": "votive-apiary-grass-tile",
+      "file": "tiles/votive-apiary-grass-tile.png",
+      "size": 64,
+      "prompt": "pressed beeswax grass ground with faint honeycomb stamping and molded wax blades",
       "placement": {
         "anchor": {
           "x": 0.5,
