@@ -76,7 +76,7 @@ export const ORDINAL_DIRECTIONS = ['north-east', 'south-east', 'south-west', 'no
 
 // Build the POST body for a generation request.
 // "description" is the confirmed PixelLab field name (not "prompt").
-export function requestBody(type, { prompt, size, view, outline = 'lineless', noBackground, templateId }) {
+export function requestBody(type, { prompt, size, view, outline = 'lineless', noBackground, templateId, isometric }) {
   const image_size = { width: size, height: size };
   switch (type) {
     case 'tile':
@@ -85,6 +85,7 @@ export function requestBody(type, { prompt, size, view, outline = 'lineless', no
       if (outline) body.outline = outline;
       if (view) body.view = view;
       if (noBackground !== undefined) body.no_background = noBackground;
+      if (isometric) body.isometric = true; // pixflux-only: iso view hint (weakly guiding)
       return body;
     }
     case 'character': {

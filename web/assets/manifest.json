@@ -57,6 +57,24 @@
         }
       }
     },
+    "hud:anime-cel-anthro-horse-sample": {
+      "type": "hud",
+      "name": "anime-cel-anthro-horse-sample",
+      "file": "hud/anime-cel-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "clean anime cel shaded pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, red scarf, two-tone cel shading with glossy highlights and thin outlines",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:ash-signal-horse-sample": {
       "type": "hud",
       "name": "ash-signal-horse-sample",
@@ -81,6 +99,78 @@
       "file": "hud/basalt-garden-horse-sample.png",
       "size": 64,
       "prompt": "carved stone horse with a readable saddle mass and moss accents",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:bayer-onebit-anthro-horse-sample": {
+      "type": "hud",
+      "name": "bayer-onebit-anthro-horse-sample",
+      "file": "hud/bayer-onebit-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit ordered dither pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, classic retro computer graphics, coarse checkerboard bayer dithering, black and white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:bayer-onebit-jesus-sample": {
+      "type": "hud",
+      "name": "bayer-onebit-jesus-sample",
+      "file": "hud/bayer-onebit-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit ordered dither pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, classic retro computer graphics, tone from coarse checkerboard bayer dithering, black and white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:bayer-onebit-pigeon-man-sample": {
+      "type": "hud",
+      "name": "bayer-onebit-pigeon-man-sample",
+      "file": "hud/bayer-onebit-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit ordered dither pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, classic retro computer graphics, tone from coarse checkerboard bayer dithering, black and white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:bayer-onebit-pinniped-man-sample": {
+      "type": "hud",
+      "name": "bayer-onebit-pinniped-man-sample",
+      "file": "hud/bayer-onebit-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit ordered dither pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, classic retro computer graphics, tone from coarse checkerboard bayer dithering, black and white, strictly black and white only, no color",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -165,6 +255,42 @@
         "sortOffset": 0
       }
     },
+    "hud:chiaroscuro-anthro-horse-sample": {
+      "type": "hud",
+      "name": "chiaroscuro-anthro-horse-sample",
+      "file": "hud/chiaroscuro-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "chiaroscuro pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, lit hard from the left with solid black shadow covering the right side",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:clay-molded-anthro-horse-sample": {
+      "type": "hud",
+      "name": "clay-molded-anthro-horse-sample",
+      "file": "hud/clay-molded-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "claymation style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, matte hand-molded clay with slightly lumpy forms and subtle fingerprint dents, brown clay, blue clay tunic",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:coal-reliquary-horse-sample": {
       "type": "hud",
       "name": "coal-reliquary-horse-sample",
@@ -183,12 +309,426 @@
         "sortOffset": 0
       }
     },
+    "hud:cutout-collage-anthro-horse-sample": {
+      "type": "hud",
+      "name": "cutout-collage-anthro-horse-sample",
+      "file": "hud/cutout-collage-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "layered paper cutout collage pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, flat colored paper shapes with tiny drop shadows between layers, brown paper coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:cutout-collage-jesus-sample": {
+      "type": "hud",
+      "name": "cutout-collage-jesus-sample",
+      "file": "hud/cutout-collage-jesus-sample.png",
+      "size": 64,
+      "prompt": "layered paper cutout collage pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:cutout-collage-pigeon-man-sample": {
+      "type": "hud",
+      "name": "cutout-collage-pigeon-man-sample",
+      "file": "hud/cutout-collage-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "layered paper cutout collage pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small brown vest, gray feathers with an iridescent green and purple neck, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:cutout-collage-pinniped-man-sample": {
+      "type": "hud",
+      "name": "cutout-collage-pinniped-man-sample",
+      "file": "hud/cutout-collage-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "layered paper cutout collage pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:deco-poster-anthro-horse-sample": {
+      "type": "hud",
+      "name": "deco-poster-anthro-horse-sample",
+      "file": "hud/deco-poster-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "art deco travel poster style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, streamlined geometric shapes, elegant limited palette with gold accents, bold simplified forms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:deco-poster-jesus-sample": {
+      "type": "hud",
+      "name": "deco-poster-jesus-sample",
+      "file": "hud/deco-poster-jesus-sample.png",
+      "size": 64,
+      "prompt": "art deco travel poster style pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, streamlined geometric shapes, elegant limited palette with gold accents, bold simplified forms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:deco-poster-pigeon-man-sample": {
+      "type": "hud",
+      "name": "deco-poster-pigeon-man-sample",
+      "file": "hud/deco-poster-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "art deco travel poster style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, streamlined geometric shapes, elegant limited palette with gold accents, bold simplified forms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:deco-poster-pinniped-man-sample": {
+      "type": "hud",
+      "name": "deco-poster-pinniped-man-sample",
+      "file": "hud/deco-poster-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "art deco travel poster style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, streamlined geometric shapes, elegant limited palette with gold accents, bold simplified forms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:etched-plate-anthro-horse-sample": {
+      "type": "hud",
+      "name": "etched-plate-anthro-horse-sample",
+      "file": "hud/etched-plate-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "copperplate etching style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, fine directional cross-hatch lines, sepia ink on cream paper, full body",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:gilded-icon-anthro-horse-sample": {
+      "type": "hud",
+      "name": "gilded-icon-anthro-horse-sample",
+      "file": "hud/gilded-icon-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "medieval illuminated manuscript style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, flat stylized figure with dark keylines on a gold leaf background",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:gilded-icon-jesus-sample": {
+      "type": "hud",
+      "name": "gilded-icon-jesus-sample",
+      "file": "hud/gilded-icon-jesus-sample.png",
+      "size": 64,
+      "prompt": "medieval illuminated manuscript style pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, flat stylized figure with dark keylines on a gold leaf background",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:gilded-icon-pigeon-man-sample": {
+      "type": "hud",
+      "name": "gilded-icon-pigeon-man-sample",
+      "file": "hud/gilded-icon-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "medieval illuminated manuscript style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, flat stylized figure with dark keylines on a gold leaf background",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:gilded-icon-pinniped-man-sample": {
+      "type": "hud",
+      "name": "gilded-icon-pinniped-man-sample",
+      "file": "hud/gilded-icon-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "medieval illuminated manuscript style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, flat stylized figure with dark keylines on a gold leaf background",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:glazier-vault-horse-sample": {
       "type": "hud",
       "name": "glazier-vault-horse-sample",
       "file": "hud/glazier-vault-horse-sample.png",
       "size": 64,
       "prompt": "leaded stained glass horse with bold dark came lines and a contrasting glass saddle panel",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:gouache-story-anthro-horse-sample": {
+      "type": "hud",
+      "name": "gouache-story-anthro-horse-sample",
+      "file": "hud/gouache-story-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "gouache storybook illustration pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, soft brush texture, muted warm colors, brown coat, yellow scarf",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:halftone-comic-anthro-horse-sample": {
+      "type": "hud",
+      "name": "halftone-comic-anthro-horse-sample",
+      "file": "hud/halftone-comic-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "vintage comic book halftone print pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, bold black line art with visible halftone dot shading, slightly off-register colors, brown coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:halftone-comic-jesus-sample": {
+      "type": "hud",
+      "name": "halftone-comic-jesus-sample",
+      "file": "hud/halftone-comic-jesus-sample.png",
+      "size": 64,
+      "prompt": "vintage comic book halftone print pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:halftone-comic-pigeon-man-sample": {
+      "type": "hud",
+      "name": "halftone-comic-pigeon-man-sample",
+      "file": "hud/halftone-comic-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "vintage comic book halftone print pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small brown vest, gray feathers with an iridescent green and purple neck, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:halftone-comic-pinniped-man-sample": {
+      "type": "hud",
+      "name": "halftone-comic-pinniped-man-sample",
+      "file": "hud/halftone-comic-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "vintage comic book halftone print pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:hibit-painterly-anthro-horse-sample": {
+      "type": "hud",
+      "name": "hibit-painterly-anthro-horse-sample",
+      "file": "hud/hibit-painterly-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly pixel art anthropomorphic bipedal horse person standing upright like a human with horse head, arms and legs, brown coat, teal tunic, soft hue-shifted shading",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:hibit-painterly-horse-sample": {
+      "type": "hud",
+      "name": "hibit-painterly-horse-sample",
+      "file": "hud/hibit-painterly-horse-sample.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly pixel horse with brown coat, soft hue-shifted shading and a teal saddle blanket",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:hibit-painterly-jesus-sample": {
+      "type": "hud",
+      "name": "hibit-painterly-jesus-sample",
+      "file": "hud/hibit-painterly-jesus-sample.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, soft hue-shifted shading",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:hibit-painterly-pigeon-man-sample": {
+      "type": "hud",
+      "name": "hibit-painterly-pigeon-man-sample",
+      "file": "hud/hibit-painterly-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small brown vest, gray feathers with an iridescent green and purple neck, soft hue-shifted shading",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:hibit-painterly-pinniped-man-sample": {
+      "type": "hud",
+      "name": "hibit-painterly-pinniped-man-sample",
+      "file": "hud/hibit-painterly-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, soft hue-shifted shading",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -291,12 +831,390 @@
         "sortOffset": 0
       }
     },
+    "hud:lowpoly-facet-anthro-horse-sample": {
+      "type": "hud",
+      "name": "lowpoly-facet-anthro-horse-sample",
+      "file": "hud/lowpoly-facet-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "low poly faceted style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, flat triangular facets with sharp value breaks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:lowpoly-facet-jesus-sample": {
+      "type": "hud",
+      "name": "lowpoly-facet-jesus-sample",
+      "file": "hud/lowpoly-facet-jesus-sample.png",
+      "size": 64,
+      "prompt": "low poly faceted style pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, flat triangular facets with sharp value breaks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:lowpoly-facet-pigeon-man-sample": {
+      "type": "hud",
+      "name": "lowpoly-facet-pigeon-man-sample",
+      "file": "hud/lowpoly-facet-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "low poly faceted style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, flat triangular facets with sharp value breaks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:lowpoly-facet-pinniped-man-sample": {
+      "type": "hud",
+      "name": "lowpoly-facet-pinniped-man-sample",
+      "file": "hud/lowpoly-facet-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "low poly faceted style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, flat triangular facets with sharp value breaks",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:matchbox-foundry-horse-sample": {
       "type": "hud",
       "name": "matchbox-foundry-horse-sample",
       "file": "hud/matchbox-foundry-horse-sample.png",
       "size": 64,
       "prompt": "painted toy horse with a readable saddle and stamped factory seams",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:micro-chunk-anthro-horse-sample": {
+      "type": "hud",
+      "name": "micro-chunk-anthro-horse-sample",
+      "file": "hud/micro-chunk-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "extremely low resolution 16px style furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, giant chunky pixels, minimal detail, brown coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:mosaic-tesserae-anthro-horse-sample": {
+      "type": "hud",
+      "name": "mosaic-tesserae-anthro-horse-sample",
+      "file": "hud/mosaic-tesserae-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "mosaic pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat built from tiny colored square tesserae with thin grout lines between them",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:mosaic-tesserae-jesus-sample": {
+      "type": "hud",
+      "name": "mosaic-tesserae-jesus-sample",
+      "file": "hud/mosaic-tesserae-jesus-sample.png",
+      "size": 64,
+      "prompt": "mosaic pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body built from tiny colored square tesserae with thin grout lines between them",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:mosaic-tesserae-pigeon-man-sample": {
+      "type": "hud",
+      "name": "mosaic-tesserae-pigeon-man-sample",
+      "file": "hud/mosaic-tesserae-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "mosaic pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck built from tiny colored square tesserae with thin grout lines between them",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:mosaic-tesserae-pinniped-man-sample": {
+      "type": "hud",
+      "name": "mosaic-tesserae-pinniped-man-sample",
+      "file": "hud/mosaic-tesserae-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "mosaic pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat built from tiny colored square tesserae with thin grout lines between them",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:oil-impasto-anthro-horse-sample": {
+      "type": "hud",
+      "name": "oil-impasto-anthro-horse-sample",
+      "file": "hud/oil-impasto-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "thick oil painting impasto style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, heavy visible brush strokes and rich color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:oil-impasto-jesus-sample": {
+      "type": "hud",
+      "name": "oil-impasto-jesus-sample",
+      "file": "hud/oil-impasto-jesus-sample.png",
+      "size": 64,
+      "prompt": "thick oil painting impasto style pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, heavy visible brush strokes and rich color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:oil-impasto-pigeon-man-sample": {
+      "type": "hud",
+      "name": "oil-impasto-pigeon-man-sample",
+      "file": "hud/oil-impasto-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "thick oil painting impasto style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, heavy visible brush strokes and rich color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:oil-impasto-pinniped-man-sample": {
+      "type": "hud",
+      "name": "oil-impasto-pinniped-man-sample",
+      "file": "hud/oil-impasto-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "thick oil painting impasto style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, heavy visible brush strokes and rich color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:one-bit-ink-anthro-horse-sample": {
+      "type": "hud",
+      "name": "one-bit-ink-anthro-horse-sample",
+      "file": "hud/one-bit-ink-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit black and white pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, black ink lines with hatched shading on white, full body",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:one-bit-ink-jesus-sample": {
+      "type": "hud",
+      "name": "one-bit-ink-jesus-sample",
+      "file": "hud/one-bit-ink-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit black and white pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, strictly black and white only, no color, one-bit pixel art, black ink lines with hatched shading on white, full body",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:one-bit-ink-pigeon-man-sample": {
+      "type": "hud",
+      "name": "one-bit-ink-pigeon-man-sample",
+      "file": "hud/one-bit-ink-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit black and white pixel art of a large full-body anthropomorphic pigeon-headed man, pigeon head on a human body standing upright on two legs, arms with hands, wearing a vest, strictly black and white only, no color, black ink lines with hatched shading on white, character fills the frame",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:one-bit-ink-pinniped-man-sample": {
+      "type": "hud",
+      "name": "one-bit-ink-pinniped-man-sample",
+      "file": "hud/one-bit-ink-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit black and white pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, strictly black and white only, no color, one-bit pixel art, black ink lines with hatched shading on white, full body",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:onebit-poster-anthro-horse-sample": {
+      "type": "hud",
+      "name": "onebit-poster-anthro-horse-sample",
+      "file": "hud/onebit-poster-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit poster pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, full body, flat solid black and white shapes only, zero texture, strong geometric silhouette, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:onebit-poster-jesus-sample": {
+      "type": "hud",
+      "name": "onebit-poster-jesus-sample",
+      "file": "hud/onebit-poster-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit poster pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, flat solid black and white shapes only, zero texture, strong geometric silhouette, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:onebit-poster-pigeon-man-sample": {
+      "type": "hud",
+      "name": "onebit-poster-pigeon-man-sample",
+      "file": "hud/onebit-poster-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit poster pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, flat solid black and white shapes only, zero texture, strong geometric silhouette, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:onebit-poster-pinniped-man-sample": {
+      "type": "hud",
+      "name": "onebit-poster-pinniped-man-sample",
+      "file": "hud/onebit-poster-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit poster pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, flat solid black and white shapes only, zero texture, strong geometric silhouette, strictly black and white only, no color",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -327,12 +1245,318 @@
         "sortOffset": 0
       }
     },
+    "hud:ordered-dither-anthro-horse-sample": {
+      "type": "hud",
+      "name": "ordered-dither-anthro-horse-sample",
+      "file": "hud/ordered-dither-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "retro PC pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a leather vest, visible ordered dithering, muted earthy tones",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ordered-dither-horse-sample": {
+      "type": "hud",
+      "name": "ordered-dither-horse-sample",
+      "file": "hud/ordered-dither-horse-sample.png",
+      "size": 64,
+      "prompt": "retro PC pixel horse with visible ordered dithering, muted earthy brown tones and a leather saddle",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:paper-relic-horse-sample": {
       "type": "hud",
       "name": "paper-relic-horse-sample",
       "file": "hud/paper-relic-horse-sample.png",
       "size": 64,
       "prompt": "folded paper horse with a readable saddle and clipped mane",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pastel-grain-anthro-horse-sample": {
+      "type": "hud",
+      "name": "pastel-grain-anthro-horse-sample",
+      "file": "hud/pastel-grain-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "soft pastel chalk drawing pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pastel-grain-jesus-sample": {
+      "type": "hud",
+      "name": "pastel-grain-jesus-sample",
+      "file": "hud/pastel-grain-jesus-sample.png",
+      "size": 64,
+      "prompt": "soft pastel chalk drawing pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pastel-grain-pigeon-man-sample": {
+      "type": "hud",
+      "name": "pastel-grain-pigeon-man-sample",
+      "file": "hud/pastel-grain-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "soft pastel chalk drawing pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pastel-grain-pinniped-man-sample": {
+      "type": "hud",
+      "name": "pastel-grain-pinniped-man-sample",
+      "file": "hud/pastel-grain-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "soft pastel chalk drawing pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pen-crosshatch-anthro-horse-sample": {
+      "type": "hud",
+      "name": "pen-crosshatch-anthro-horse-sample",
+      "file": "hud/pen-crosshatch-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit technical pen pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, dense fine crosshatch shading, black ink on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pen-crosshatch-jesus-sample": {
+      "type": "hud",
+      "name": "pen-crosshatch-jesus-sample",
+      "file": "hud/pen-crosshatch-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit technical pen pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, dense fine crosshatch shading, black ink on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pen-crosshatch-pigeon-man-sample": {
+      "type": "hud",
+      "name": "pen-crosshatch-pigeon-man-sample",
+      "file": "hud/pen-crosshatch-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit technical pen pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, dense fine crosshatch shading, black ink on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:pen-crosshatch-pinniped-man-sample": {
+      "type": "hud",
+      "name": "pen-crosshatch-pinniped-man-sample",
+      "file": "hud/pen-crosshatch-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit technical pen pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, dense fine crosshatch shading, black ink on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:phosphor-glow-anthro-horse-sample": {
+      "type": "hud",
+      "name": "phosphor-glow-anthro-horse-sample",
+      "file": "hud/phosphor-glow-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "dark arcade phosphor glow pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, dark silhouette with glowing emissive edge highlights in cyan and magenta, brown coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:poster-flat-anthro-horse-sample": {
+      "type": "hud",
+      "name": "poster-flat-anthro-horse-sample",
+      "file": "hud/poster-flat-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "flat poster style anthropomorphic horse character standing upright on two legs in solid fills, brown coat, mustard tunic, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:poster-flat-horse-sample": {
+      "type": "hud",
+      "name": "poster-flat-horse-sample",
+      "file": "hud/poster-flat-horse-sample.png",
+      "size": 64,
+      "prompt": "flat poster style horse in solid fills with brown coat, mustard saddle, two values per color and a strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:poster-flat-jesus-sample": {
+      "type": "hud",
+      "name": "poster-flat-jesus-sample",
+      "file": "hud/poster-flat-jesus-sample.png",
+      "size": 64,
+      "prompt": "flat poster style Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:poster-flat-pigeon-man-sample": {
+      "type": "hud",
+      "name": "poster-flat-pigeon-man-sample",
+      "file": "hud/poster-flat-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "flat poster style anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a mustard vest, solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:poster-flat-pinniped-man-sample": {
+      "type": "hud",
+      "name": "poster-flat-pinniped-man-sample",
+      "file": "hud/poster-flat-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "flat poster style anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:quad-tone-anthro-horse-sample": {
+      "type": "hud",
+      "name": "quad-tone-anthro-horse-sample",
+      "file": "hud/quad-tone-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "classic handheld four-shade monochrome green pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, strict four green tones, chunky sprite",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -381,6 +1605,186 @@
         "sortOffset": 0
       }
     },
+    "hud:retro-console-anthro-horse-sample": {
+      "type": "hud",
+      "name": "retro-console-anthro-horse-sample",
+      "file": "hud/retro-console-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "chunky retro arcade pixel anthropomorphic horse character standing upright on two legs, brown coat, red tunic, three-shade cel colors and thick pixels",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:retro-console-horse-sample": {
+      "type": "hud",
+      "name": "retro-console-horse-sample",
+      "file": "hud/retro-console-horse-sample.png",
+      "size": 64,
+      "prompt": "chunky retro arcade pixel horse with brown coat, red saddle, three-shade cel colors and thick pixels",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:riso-print-anthro-horse-sample": {
+      "type": "hud",
+      "name": "riso-print-anthro-horse-sample",
+      "file": "hud/riso-print-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "risograph print style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, printed in fluorescent pink and teal spot inks with grainy overprint texture and slight misregistration",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:riso-print-jesus-sample": {
+      "type": "hud",
+      "name": "riso-print-jesus-sample",
+      "file": "hud/riso-print-jesus-sample.png",
+      "size": 64,
+      "prompt": "risograph print style pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, printed in fluorescent pink and teal spot inks with grainy overprint texture and slight misregistration",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:riso-print-pigeon-man-sample": {
+      "type": "hud",
+      "name": "riso-print-pigeon-man-sample",
+      "file": "hud/riso-print-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "risograph print style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, printed in fluorescent pink and teal spot inks with grainy overprint texture and slight misregistration",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:riso-print-pinniped-man-sample": {
+      "type": "hud",
+      "name": "riso-print-pinniped-man-sample",
+      "file": "hud/riso-print-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "risograph print style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, printed in fluorescent pink and teal spot inks with grainy overprint texture and slight misregistration",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:rubber-hose-anthro-horse-sample": {
+      "type": "hud",
+      "name": "rubber-hose-anthro-horse-sample",
+      "file": "hud/rubber-hose-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "1930s rubber hose cartoon style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, full body, smooth curved limbs, solid black fills with white gloves, grayscale film look, strictly grayscale black white and gray only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:rubber-hose-jesus-sample": {
+      "type": "hud",
+      "name": "rubber-hose-jesus-sample",
+      "file": "hud/rubber-hose-jesus-sample.png",
+      "size": 64,
+      "prompt": "1930s rubber hose cartoon style pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, smooth curved limbs, solid black fills with white gloves, grayscale film look, strictly grayscale black white and gray only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:rubber-hose-pigeon-man-sample": {
+      "type": "hud",
+      "name": "rubber-hose-pigeon-man-sample",
+      "file": "hud/rubber-hose-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "1930s rubber hose cartoon style pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, smooth curved limbs, solid black fills with white gloves, grayscale film look, strictly grayscale black white and gray only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:rubber-hose-pinniped-man-sample": {
+      "type": "hud",
+      "name": "rubber-hose-pinniped-man-sample",
+      "file": "hud/rubber-hose-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "1930s rubber hose cartoon style pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, smooth curved limbs, solid black fills with white gloves, grayscale film look, strictly grayscale black white and gray only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:salt-beacon-relic-horse-sample": {
       "type": "hud",
       "name": "salt-beacon-relic-horse-sample",
@@ -417,12 +1821,588 @@
         "sortOffset": 0
       }
     },
+    "hud:scratchboard-anthro-horse-sample": {
+      "type": "hud",
+      "name": "scratchboard-anthro-horse-sample",
+      "file": "hud/scratchboard-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit scratchboard engraving pixel art anthropomorphic bipedal horse person standing upright like a human with a horse head, arms and legs, wearing a vest, full body, fine white carved lines on solid black background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:scratchboard-jesus-sample": {
+      "type": "hud",
+      "name": "scratchboard-jesus-sample",
+      "file": "hud/scratchboard-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit scratchboard engraving pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, fine white carved lines on solid black background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:scratchboard-pigeon-man-sample": {
+      "type": "hud",
+      "name": "scratchboard-pigeon-man-sample",
+      "file": "hud/scratchboard-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit scratchboard engraving pixel art anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest, large full body, character fills the frame, fine white carved lines on solid black background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:scratchboard-pinniped-man-sample": {
+      "type": "hud",
+      "name": "scratchboard-pinniped-man-sample",
+      "file": "hud/scratchboard-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit scratchboard engraving pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, fine white carved lines on solid black background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:screentone-manga-anthro-horse-sample": {
+      "type": "hud",
+      "name": "screentone-manga-anthro-horse-sample",
+      "file": "hud/screentone-manga-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit manga pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, clean black line art with mechanical screentone dot shading on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:screentone-manga-jesus-sample": {
+      "type": "hud",
+      "name": "screentone-manga-jesus-sample",
+      "file": "hud/screentone-manga-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit manga pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, clean black line art with mechanical screentone dot shading on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:screentone-manga-pigeon-man-sample": {
+      "type": "hud",
+      "name": "screentone-manga-pigeon-man-sample",
+      "file": "hud/screentone-manga-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit manga pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, clean black line art with mechanical screentone dot shading on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:screentone-manga-pinniped-man-sample": {
+      "type": "hud",
+      "name": "screentone-manga-pinniped-man-sample",
+      "file": "hud/screentone-manga-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit manga pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, clean black line art with mechanical screentone dot shading on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:silhouette-cut-anthro-horse-sample": {
+      "type": "hud",
+      "name": "silhouette-cut-anthro-horse-sample",
+      "file": "hud/silhouette-cut-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit paper-cut silhouette pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, solid black silhouette with small white interior cutout details on white background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:silhouette-cut-jesus-sample": {
+      "type": "hud",
+      "name": "silhouette-cut-jesus-sample",
+      "file": "hud/silhouette-cut-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit paper-cut silhouette pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, solid black silhouette with small white interior cutout details on white background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:silhouette-cut-pigeon-man-sample": {
+      "type": "hud",
+      "name": "silhouette-cut-pigeon-man-sample",
+      "file": "hud/silhouette-cut-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit paper-cut silhouette pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, solid black silhouette with small white interior cutout details on white background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:silhouette-cut-pinniped-man-sample": {
+      "type": "hud",
+      "name": "silhouette-cut-pinniped-man-sample",
+      "file": "hud/silhouette-cut-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit paper-cut silhouette pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, solid black silhouette with small white interior cutout details on white background, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:soft-airbrush-anthro-horse-sample": {
+      "type": "hud",
+      "name": "soft-airbrush-anthro-horse-sample",
+      "file": "hud/soft-airbrush-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "nineties airbrush style pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, smooth soft gradients with shiny highlights, brown coat, purple vest",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:spot-black-anthro-horse-sample": {
+      "type": "hud",
+      "name": "spot-black-anthro-horse-sample",
+      "file": "hud/spot-black-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit comic inking pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, full body, bold line art with heavy solid spot blacks and feathered ink transitions on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:spot-black-jesus-sample": {
+      "type": "hud",
+      "name": "spot-black-jesus-sample",
+      "file": "hud/spot-black-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit comic inking pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, bold line art with heavy solid spot blacks and feathered ink transitions on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:spot-black-pigeon-man-sample": {
+      "type": "hud",
+      "name": "spot-black-pigeon-man-sample",
+      "file": "hud/spot-black-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit comic inking pixel art anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest, large full body, character fills the frame, bold line art with heavy solid spot blacks and feathered ink transitions on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:spot-black-pinniped-man-sample": {
+      "type": "hud",
+      "name": "spot-black-pinniped-man-sample",
+      "file": "hud/spot-black-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit comic inking pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, bold line art with heavy solid spot blacks and feathered ink transitions on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stencil-spray-anthro-horse-sample": {
+      "type": "hud",
+      "name": "stencil-spray-anthro-horse-sample",
+      "file": "hud/stencil-spray-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "stencil spray paint street art pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, hard stencil edges with spray speckle falloff, bold layered colors on concrete gray",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stencil-spray-jesus-sample": {
+      "type": "hud",
+      "name": "stencil-spray-jesus-sample",
+      "file": "hud/stencil-spray-jesus-sample.png",
+      "size": 64,
+      "prompt": "stencil spray paint street art pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, hard stencil edges with spray speckle falloff, bold layered colors on concrete gray",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stencil-spray-pigeon-man-sample": {
+      "type": "hud",
+      "name": "stencil-spray-pigeon-man-sample",
+      "file": "hud/stencil-spray-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "stencil spray paint street art pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, hard stencil edges with spray speckle falloff, bold layered colors on concrete gray",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stencil-spray-pinniped-man-sample": {
+      "type": "hud",
+      "name": "stencil-spray-pinniped-man-sample",
+      "file": "hud/stencil-spray-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "stencil spray paint street art pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, hard stencil edges with spray speckle falloff, bold layered colors on concrete gray",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sticker-cut-anthro-horse-sample": {
+      "type": "hud",
+      "name": "sticker-cut-anthro-horse-sample",
+      "file": "hud/sticker-cut-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "die-cut sticker of a furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, thick white sticker border around the silhouette, flat cartoon colors, brown coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stipple-ink-anthro-horse-sample": {
+      "type": "hud",
+      "name": "stipple-ink-anthro-horse-sample",
+      "file": "hud/stipple-ink-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit stippled ink pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, full body, tone built entirely from tiny ink dots, black stipple on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stipple-ink-jesus-sample": {
+      "type": "hud",
+      "name": "stipple-ink-jesus-sample",
+      "file": "hud/stipple-ink-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit stippled ink pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, tone built entirely from tiny ink dots, black stipple on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stipple-ink-pigeon-man-sample": {
+      "type": "hud",
+      "name": "stipple-ink-pigeon-man-sample",
+      "file": "hud/stipple-ink-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit stippled ink pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, tone built entirely from tiny ink dots, black stipple on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:stipple-ink-pinniped-man-sample": {
+      "type": "hud",
+      "name": "stipple-ink-pinniped-man-sample",
+      "file": "hud/stipple-ink-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit stippled ink pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, tone built entirely from tiny ink dots, black stipple on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:sugar-banner-parade-horse-sample": {
       "type": "hud",
       "name": "sugar-banner-parade-horse-sample",
       "file": "hud/sugar-banner-parade-horse-sample.png",
       "size": 64,
       "prompt": "parade candy horse figure with a readable saddle and banner-like mane shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sumi-brush-anthro-horse-sample": {
+      "type": "hud",
+      "name": "sumi-brush-anthro-horse-sample",
+      "file": "hud/sumi-brush-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit sumi ink brush pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, expressive black brush strokes with dry brush edges on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sumi-brush-jesus-sample": {
+      "type": "hud",
+      "name": "sumi-brush-jesus-sample",
+      "file": "hud/sumi-brush-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit sumi ink brush pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, expressive black brush strokes with dry brush edges on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sumi-brush-pigeon-man-sample": {
+      "type": "hud",
+      "name": "sumi-brush-pigeon-man-sample",
+      "file": "hud/sumi-brush-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit sumi ink brush pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, expressive black brush strokes with dry brush edges on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:sumi-brush-pinniped-man-sample": {
+      "type": "hud",
+      "name": "sumi-brush-pinniped-man-sample",
+      "file": "hud/sumi-brush-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit sumi ink brush pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, expressive black brush strokes with dry brush edges on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:toy-render-anthro-horse-sample": {
+      "type": "hud",
+      "name": "toy-render-anthro-horse-sample",
+      "file": "hud/toy-render-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "pre-rendered toy style pixel anthropomorphic horse character standing upright on two legs with rounded volumes, smooth shading, glossy plastic look, blue tunic",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:toy-render-horse-sample": {
+      "type": "hud",
+      "name": "toy-render-horse-sample",
+      "file": "hud/toy-render-horse-sample.png",
+      "size": 64,
+      "prompt": "pre-rendered toy style pixel horse with rounded volumes, smooth shading, glossy plastic look and a blue saddle",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -453,12 +2433,174 @@
         "sortOffset": 0
       }
     },
+    "hud:ukiyo-woodblock-anthro-horse-sample": {
+      "type": "hud",
+      "name": "ukiyo-woodblock-anthro-horse-sample",
+      "file": "hud/ukiyo-woodblock-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "japanese ukiyo-e woodblock print pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, brown coat, flat color planes with delicate dark keylines, muted mineral pigments on warm paper tone",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ukiyo-woodblock-jesus-sample": {
+      "type": "hud",
+      "name": "ukiyo-woodblock-jesus-sample",
+      "file": "hud/ukiyo-woodblock-jesus-sample.png",
+      "size": 64,
+      "prompt": "japanese ukiyo-e woodblock print pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, flat color planes with delicate dark keylines, muted mineral pigments on warm paper tone",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ukiyo-woodblock-pigeon-man-sample": {
+      "type": "hud",
+      "name": "ukiyo-woodblock-pigeon-man-sample",
+      "file": "hud/ukiyo-woodblock-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "japanese ukiyo-e woodblock print pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, gray feathers with an iridescent green and purple neck, flat color planes with delicate dark keylines, muted mineral pigments on warm paper tone",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:ukiyo-woodblock-pinniped-man-sample": {
+      "type": "hud",
+      "name": "ukiyo-woodblock-pinniped-man-sample",
+      "file": "hud/ukiyo-woodblock-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "japanese ukiyo-e woodblock print pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, flat color planes with delicate dark keylines, muted mineral pigments on warm paper tone",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:votive-apiary-horse-sample": {
       "type": "hud",
       "name": "votive-apiary-horse-sample",
       "file": "hud/votive-apiary-horse-sample.png",
       "size": 64,
       "prompt": "molded beeswax horse with a pressed honeycomb saddle band and stamped wax seal markings",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:voxel-form-anthro-horse-sample": {
+      "type": "hud",
+      "name": "voxel-form-anthro-horse-sample",
+      "file": "hud/voxel-form-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "voxel style anthropomorphic horse character standing upright on two legs built from small cubic blocks with flat per-face shading, brown coat, blue tunic",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:watercolor-wash-anthro-horse-sample": {
+      "type": "hud",
+      "name": "watercolor-wash-anthro-horse-sample",
+      "file": "hud/watercolor-wash-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "watercolor wash pixel art furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, translucent paint washes with soft blooming edges on white paper, brown coat",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:watercolor-wash-jesus-sample": {
+      "type": "hud",
+      "name": "watercolor-wash-jesus-sample",
+      "file": "hud/watercolor-wash-jesus-sample.png",
+      "size": 64,
+      "prompt": "watercolor wash pixel art Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:watercolor-wash-pigeon-man-sample": {
+      "type": "hud",
+      "name": "watercolor-wash-pigeon-man-sample",
+      "file": "hud/watercolor-wash-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "watercolor wash pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small brown vest, gray feathers with an iridescent green and purple neck, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:watercolor-wash-pinniped-man-sample": {
+      "type": "hud",
+      "name": "watercolor-wash-pinniped-man-sample",
+      "file": "hud/watercolor-wash-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "watercolor wash pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, sleek gray-brown coat, translucent paint washes with soft blooming edges on white paper",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -489,6 +2631,78 @@
         "sortOffset": 0
       }
     },
+    "hud:woodcut-bold-anthro-horse-sample": {
+      "type": "hud",
+      "name": "woodcut-bold-anthro-horse-sample",
+      "file": "hud/woodcut-bold-anthro-horse-sample.png",
+      "size": 64,
+      "prompt": "one-bit woodcut print pixel art of a bipedal horse-headed man walking upright like a human, horse head on a human body, two human legs, arms with hands, wearing a vest and trousers, full body, bold carved black strokes and chunky solid black masses on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:woodcut-bold-jesus-sample": {
+      "type": "hud",
+      "name": "woodcut-bold-jesus-sample",
+      "file": "hud/woodcut-bold-jesus-sample.png",
+      "size": 64,
+      "prompt": "one-bit woodcut print pixel art Jesus with long hair and a beard wearing a long robe with a sash, standing upright, full body, bold carved black strokes and chunky solid black masses with rough gouge marks on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:woodcut-bold-pigeon-man-sample": {
+      "type": "hud",
+      "name": "woodcut-bold-pigeon-man-sample",
+      "file": "hud/woodcut-bold-pigeon-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit woodcut print pixel art anthropomorphic pigeon-headed man with a pigeon head on a human body, standing upright on two legs, arms with hands, wearing a small vest, full body, bold carved black strokes and chunky solid black masses with rough gouge marks on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
+    "hud:woodcut-bold-pinniped-man-sample": {
+      "type": "hud",
+      "name": "woodcut-bold-pinniped-man-sample",
+      "file": "hud/woodcut-bold-pinniped-man-sample.png",
+      "size": 64,
+      "prompt": "one-bit woodcut print pixel art anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, full body, bold carved black strokes and chunky solid black masses with rough gouge marks on white, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 0,
+          "h": 0
+        },
+        "sortOffset": 0
+      }
+    },
     "hud:woven-harvest-horse-sample": {
       "type": "hud",
       "name": "woven-harvest-horse-sample",
@@ -507,12 +2721,48 @@
         "sortOffset": 0
       }
     },
+    "tile:anime-cel-iso-grass-tile": {
+      "type": "tile",
+      "name": "anime-cel-iso-grass-tile",
+      "file": "tiles/anime-cel-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "clean anime cel shaded seamless repeating green grass texture, small uniform two-tone grass clumps evenly scattered, no border, no vignette, flat even lighting, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:basalt-garden-grass-tile": {
       "type": "tile",
       "name": "basalt-garden-grass-tile",
       "file": "tiles/basalt-garden-grass-tile.png",
       "size": 64,
       "prompt": "carved stone grass tile with moss channels and geometric ground cuts",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:bayer-onebit-iso-grass-tile": {
+      "type": "tile",
+      "name": "bayer-onebit-iso-grass-tile",
+      "file": "tiles/bayer-onebit-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit ordered dither seamless repeating grass texture, bayer dithered grass tone in pure black and white, uniform pattern, perfectly tileable, strictly black and white only, no color",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -579,6 +2829,42 @@
         "sortOffset": 0
       }
     },
+    "tile:chiaroscuro-iso-grass-tile": {
+      "type": "tile",
+      "name": "chiaroscuro-iso-grass-tile",
+      "file": "tiles/chiaroscuro-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "chiaroscuro seamless repeating green grass texture with scattered solid black shadow patches, flat even overall lighting, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:clay-molded-iso-grass-tile": {
+      "type": "tile",
+      "name": "clay-molded-iso-grass-tile",
+      "file": "tiles/clay-molded-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "claymation style seamless repeating green grass texture of matte hand-molded clay grass lumps, even lighting, no vignette, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:copper-tile": {
       "type": "tile",
       "name": "copper-tile",
@@ -615,12 +2901,84 @@
         "sortOffset": 0
       }
     },
+    "tile:cutout-collage-iso-grass-tile": {
+      "type": "tile",
+      "name": "cutout-collage-iso-grass-tile",
+      "file": "tiles/cutout-collage-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "paper cutout seamless repeating green grass texture, uniform overlapping flat paper grass shapes, even coverage, no border, no vignette, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:deco-poster-iso-grass-tile": {
+      "type": "tile",
+      "name": "deco-poster-iso-grass-tile",
+      "file": "tiles/deco-poster-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "art deco seamless repeating grass texture, stylized geometric fan-shaped grass motifs in an elegant limited palette, uniform ornamental pattern, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:etched-plate-iso-grass-tile": {
+      "type": "tile",
+      "name": "etched-plate-iso-grass-tile",
+      "file": "tiles/etched-plate-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "copperplate etching seamless repeating grass texture, fine directional hatch lines in sepia ink on cream paper, uniform pattern, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:flowers-tile": {
       "type": "tile",
       "name": "flowers-tile",
       "file": "tiles/flowers-tile.png",
       "size": 64,
       "prompt": "pink flower-covered ground with dense blossoms",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:gilded-icon-iso-grass-tile": {
+      "type": "tile",
+      "name": "gilded-icon-iso-grass-tile",
+      "file": "tiles/gilded-icon-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "medieval illuminated manuscript seamless repeating grass texture, flat stylized grass pattern with dark keylines and small gold accents, uniform pattern, perfectly tileable",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -651,12 +3009,84 @@
         "sortOffset": 0
       }
     },
+    "tile:gouache-story-iso-grass-tile": {
+      "type": "tile",
+      "name": "gouache-story-iso-grass-tile",
+      "file": "tiles/gouache-story-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "gouache paint seamless repeating green grass texture, uniform soft brush dabs in muted greens, even coverage, no border, no vignette, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:grass-tile": {
       "type": "tile",
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
       "size": 64,
       "prompt": "grassy ground with short green blades",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:halftone-comic-iso-grass-tile": {
+      "type": "tile",
+      "name": "halftone-comic-iso-grass-tile",
+      "file": "tiles/halftone-comic-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "vintage comic book halftone seamless repeating green grass texture, bold ink grass outlines with visible halftone dot shading, uniform pattern, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:hibit-painterly-grass-tile": {
+      "type": "tile",
+      "name": "hibit-painterly-grass-tile",
+      "file": "tiles/hibit-painterly-grass-tile.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly green grass tile with soft hue-shifted shading and scattered leaf detail",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:hibit-painterly-iso-grass-tile": {
+      "type": "tile",
+      "name": "hibit-painterly-iso-grass-tile",
+      "file": "tiles/hibit-painterly-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "modern hi-bit painterly seamless repeating green grass texture of small pixel grass clusters, subtle value variation only, soft muted greens, flat even lighting, perfectly tileable",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -723,12 +3153,156 @@
         "sortOffset": 0
       }
     },
+    "tile:lowpoly-facet-iso-grass-tile": {
+      "type": "tile",
+      "name": "lowpoly-facet-iso-grass-tile",
+      "file": "tiles/lowpoly-facet-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "low poly faceted seamless repeating green grass texture of flat triangular facets, even coverage, no vignette, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:matchbox-foundry-grass-tile": {
       "type": "tile",
       "name": "matchbox-foundry-grass-tile",
       "file": "tiles/matchbox-foundry-grass-tile.png",
       "size": 64,
       "prompt": "miniature printed grass ground with stamped seams and compact turf shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:micro-chunk-iso-grass-tile": {
+      "type": "tile",
+      "name": "micro-chunk-iso-grass-tile",
+      "file": "tiles/micro-chunk-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "tiny 16 pixel style seamless green grass texture tile with giant chunky pixels and minimal detail, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:mosaic-tesserae-iso-grass-tile": {
+      "type": "tile",
+      "name": "mosaic-tesserae-iso-grass-tile",
+      "file": "tiles/mosaic-tesserae-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "mosaic seamless repeating grass texture built from tiny green square tesserae with thin grout lines, uniform grid, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:oil-impasto-iso-grass-tile": {
+      "type": "tile",
+      "name": "oil-impasto-iso-grass-tile",
+      "file": "tiles/oil-impasto-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "thick oil painting impasto seamless repeating green grass texture with heavy visible brush strokes, even coverage, no vignette, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:one-bit-ink-iso-grass-tile": {
+      "type": "tile",
+      "name": "one-bit-ink-iso-grass-tile",
+      "file": "tiles/one-bit-ink-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit black and white seamless repeating grass texture, small evenly spaced hatched ink grass tufts on white, uniform flat pattern, no border, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:onebit-poster-iso-grass-tile": {
+      "type": "tile",
+      "name": "onebit-poster-iso-grass-tile",
+      "file": "tiles/onebit-poster-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit poster seamless repeating grass texture, flat solid black geometric grass shapes on white, zero texture, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ordered-dither-grass-tile": {
+      "type": "tile",
+      "name": "ordered-dither-grass-tile",
+      "file": "tiles/ordered-dither-grass-tile.png",
+      "size": 64,
+      "prompt": "retro PC green grass tile with visible ordered dithering and muted earthy tones",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ordered-dither-iso-grass-tile": {
+      "type": "tile",
+      "name": "ordered-dither-iso-grass-tile",
+      "file": "tiles/ordered-dither-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "retro PC seamless green grass texture tile with visible ordered dithering and muted earthy tones, edges match when tiled",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -759,12 +3333,408 @@
         "sortOffset": 0
       }
     },
+    "tile:pastel-grain-iso-grass-tile": {
+      "type": "tile",
+      "name": "pastel-grain-iso-grass-tile",
+      "file": "tiles/pastel-grain-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "soft pastel chalk seamless repeating green grass texture, grainy dry pastel strokes on warm gray toned paper, even coverage, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:pen-crosshatch-iso-grass-tile": {
+      "type": "tile",
+      "name": "pen-crosshatch-iso-grass-tile",
+      "file": "tiles/pen-crosshatch-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit technical pen seamless repeating grass texture, fine crosshatched grass tufts in black ink on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:phosphor-glow-iso-grass-tile": {
+      "type": "tile",
+      "name": "phosphor-glow-iso-grass-tile",
+      "file": "tiles/phosphor-glow-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "dark arcade phosphor glow seamless repeating grass texture, dark ground with glowing green grass line highlights, uniform pattern, flat even lighting, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:poster-flat-grass-tile": {
+      "type": "tile",
+      "name": "poster-flat-grass-tile",
+      "file": "tiles/poster-flat-grass-tile.png",
+      "size": 64,
+      "prompt": "flat poster style green grass tile in solid fills with simple geometric blade shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:poster-flat-iso-grass-tile": {
+      "type": "tile",
+      "name": "poster-flat-iso-grass-tile",
+      "file": "tiles/poster-flat-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "flat poster style seamless green grass texture tile in solid fills with simple geometric blade shapes, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:quad-tone-iso-grass-tile": {
+      "type": "tile",
+      "name": "quad-tone-iso-grass-tile",
+      "file": "tiles/quad-tone-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "classic handheld four-shade monochrome green seamless repeating grass texture, strict four green tones, uniform pattern, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:retro-console-grass-tile": {
+      "type": "tile",
+      "name": "retro-console-grass-tile",
+      "file": "tiles/retro-console-grass-tile.png",
+      "size": 64,
+      "prompt": "chunky retro arcade green grass tile with three-shade cel colors and thick pixels",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:retro-console-iso-grass-tile": {
+      "type": "tile",
+      "name": "retro-console-iso-grass-tile",
+      "file": "tiles/retro-console-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "chunky retro arcade seamless green grass texture tile with three-shade cel colors and thick pixels, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:riso-print-iso-grass-tile": {
+      "type": "tile",
+      "name": "riso-print-iso-grass-tile",
+      "file": "tiles/riso-print-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "risograph print seamless repeating grass texture in teal spot ink with grainy texture and slight misregistration, uniform pattern, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:rubber-hose-iso-grass-tile": {
+      "type": "tile",
+      "name": "rubber-hose-iso-grass-tile",
+      "file": "tiles/rubber-hose-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "1930s cartoon grayscale seamless repeating grass texture, smooth curved grass tufts in black white and gray, uniform pattern, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:sand-tile": {
       "type": "tile",
       "name": "sand-tile",
       "file": "tiles/sand-tile.png",
       "size": 64,
       "prompt": "sandy ground with soft yellow ripples",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:scratchboard-iso-grass-tile": {
+      "type": "tile",
+      "name": "scratchboard-iso-grass-tile",
+      "file": "tiles/scratchboard-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit scratchboard seamless repeating grass texture, fine white carved grass lines on solid black, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:screentone-manga-iso-grass-tile": {
+      "type": "tile",
+      "name": "screentone-manga-iso-grass-tile",
+      "file": "tiles/screentone-manga-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit manga seamless repeating grass texture, clean black grass line art with screentone dot patches on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:silhouette-cut-iso-grass-tile": {
+      "type": "tile",
+      "name": "silhouette-cut-iso-grass-tile",
+      "file": "tiles/silhouette-cut-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit paper-cut seamless repeating grass texture, solid black grass silhouettes on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:soft-airbrush-iso-grass-tile": {
+      "type": "tile",
+      "name": "soft-airbrush-iso-grass-tile",
+      "file": "tiles/soft-airbrush-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "nineties airbrush seamless repeating green grass texture with smooth soft gradients, flat even lighting, no vignette, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:spot-black-iso-grass-tile": {
+      "type": "tile",
+      "name": "spot-black-iso-grass-tile",
+      "file": "tiles/spot-black-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit comic inking seamless repeating grass texture, bold ink grass clumps with heavy spot blacks on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:stencil-spray-iso-grass-tile": {
+      "type": "tile",
+      "name": "stencil-spray-iso-grass-tile",
+      "file": "tiles/stencil-spray-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "stencil spray paint seamless repeating grass texture, hard-edged stencil grass shapes with spray speckle on concrete gray, uniform pattern, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:sticker-cut-iso-grass-tile": {
+      "type": "tile",
+      "name": "sticker-cut-iso-grass-tile",
+      "file": "tiles/sticker-cut-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "die-cut sticker style seamless green grass texture tile with flat cartoon grass shapes, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:stipple-ink-iso-grass-tile": {
+      "type": "tile",
+      "name": "stipple-ink-iso-grass-tile",
+      "file": "tiles/stipple-ink-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit stippled ink seamless repeating grass texture, small grass tufts built from tiny black ink dots on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:sumi-brush-iso-grass-tile": {
+      "type": "tile",
+      "name": "sumi-brush-iso-grass-tile",
+      "file": "tiles/sumi-brush-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit sumi ink brush seamless repeating grass texture, expressive black brush grass strokes on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:toy-render-grass-tile": {
+      "type": "tile",
+      "name": "toy-render-grass-tile",
+      "file": "tiles/toy-render-grass-tile.png",
+      "size": 64,
+      "prompt": "pre-rendered toy style green grass tile with rounded plastic turf clumps and smooth shading",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:toy-render-iso-grass-tile": {
+      "type": "tile",
+      "name": "toy-render-iso-grass-tile",
+      "file": "tiles/toy-render-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "pre-rendered toy style seamless repeating green grass texture, uniform field of small rounded plastic turf bumps, flat even top-down lighting, no vignette, perfectly tileable",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:ukiyo-woodblock-iso-grass-tile": {
+      "type": "tile",
+      "name": "ukiyo-woodblock-iso-grass-tile",
+      "file": "tiles/ukiyo-woodblock-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "japanese ukiyo-e woodblock seamless repeating grass texture, flat stylized grass blade pattern with delicate keylines on warm paper tone, uniform pattern, perfectly tileable",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -795,12 +3765,66 @@
         "sortOffset": 0
       }
     },
+    "tile:voxel-form-iso-grass-tile": {
+      "type": "tile",
+      "name": "voxel-form-iso-grass-tile",
+      "file": "tiles/voxel-form-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "voxel style seamless repeating green grass texture built from small cubic grass blocks in a uniform grid, flat per-face shading, no border, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:water-tile": {
       "type": "tile",
       "name": "water-tile",
       "file": "tiles/water-tile.png",
       "size": 64,
       "prompt": "shallow blue water surface with gentle wave shapes",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:watercolor-wash-iso-grass-tile": {
+      "type": "tile",
+      "name": "watercolor-wash-iso-grass-tile",
+      "file": "tiles/watercolor-wash-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "watercolor wash seamless repeating grass texture, translucent green washes with soft blooming edges on white paper, even coverage, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:woodcut-bold-iso-grass-tile": {
+      "type": "tile",
+      "name": "woodcut-bold-iso-grass-tile",
+      "file": "tiles/woodcut-bold-iso-grass-tile.png",
+      "size": 64,
+      "prompt": "one-bit woodcut seamless repeating grass texture, bold carved black grass strokes on white, uniform pattern, perfectly tileable, strictly black and white only, no color",
       "placement": {
         "anchor": {
           "x": 0.5,

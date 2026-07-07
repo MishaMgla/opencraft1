@@ -72,12 +72,12 @@ async function pollJob(fetchImpl, apiKey, id, { pollMs, timeoutMs, sleep }) {
 // tile / hud (pixflux): synchronous inline base64, with a background-job fallback
 // for the rare async envelope. effect would route here too but is rejected upstream.
 async function generatePixflux(input, ctx) {
-  const { type, prompt, size, frames = 1, view, outline, noBackground, templateId } = input;
+  const { type, prompt, size, frames = 1, view, outline, noBackground, templateId, isometric } = input;
   const { apiKey, fetchImpl, pollMs, timeoutMs, sleep } = ctx;
   const expected = type === 'effect' ? frames : 1;
   const usage = [];
   const post = await postJson(fetchImpl, `${BASE_URL}${ENDPOINTS[type]}`, apiKey,
-    requestBody(type, { prompt, size, view, outline, noBackground, templateId }), `POST ${ENDPOINTS[type]}`);
+    requestBody(type, { prompt, size, view, outline, noBackground, templateId, isometric }), `POST ${ENDPOINTS[type]}`);
   if (usageOf(post)) usage.push(usageOf(post));
   // Accept the inline response only if COMPLETE (never a half-generated set).
   const syncImages = jobImagesOf(post);

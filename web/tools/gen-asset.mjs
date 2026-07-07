@@ -29,6 +29,7 @@ function parseArgs(argv) {
     else if (k === '--template') a.template = v;          // character only: horse, cat, dog, mannequin, ...
     else if (k === '--facings') a.facings = v;            // character only: 'cardinal' (default) | 'ordinal' (iso diagonals)
     else if (k === '--no-background') a.noBackground = v === 'true'; // pixflux only: transparent bg
+    else if (k === '--isometric') a.isometric = v === 'true';        // pixflux only: iso view hint
     else if (k === '--animate') a.animate = v;            // character only: walk-cycle template (e.g. walk)
     else if (k === '--fps') a.fps = Number(v);            // animation playback rate stamped into the manifest
     else throw new Error(`unknown flag: ${k}`);
@@ -254,6 +255,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     {
       type: a.type, prompt: a.prompt, size: a.size, frames: a.frames, directions: a.directions,
       view: a.view, outline: a.outline, noBackground: a.noBackground, templateId: a.template,
+      isometric: a.isometric,
       ordinal: a.facings === 'ordinal',
       animation: a.animate, frameCount: a.frameCount,
     },
