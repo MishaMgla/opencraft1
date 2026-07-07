@@ -57,7 +57,10 @@ rules you must follow when writing this block:
   prose. Stuffing them into the prompt is the bug this format exists to avoid.
   Just name the thing and its distinctive features (`sturdy brown riding horse
   with a readable saddle`), and stay faithful to what the issue author asked —
-  do not invent style the author didn't request.
+  do not invent style the author didn't request. The Dev agent automatically
+  appends opencraft1's house **Watercolor Wash** style suffix at generation time
+  (see `AGENT_RULES.md` → "visual style"), so the block stays subject-only and
+  the world still renders in one consistent style — you do not write the suffix.
 - **style is set by parameters, with cohesive defaults** the tool applies so
   assets read as one set: no outline (`outline: lineless`), transparent
   background where it matters (HUD transparent, floor tiles opaque), pixel-art

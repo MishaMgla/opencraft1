@@ -57,6 +57,106 @@
         }
       }
     },
+    "character:horse-wc": {
+      "type": "character",
+      "name": "horse-wc",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-wc-north-east.png",
+        "south-east": "characters/horse-wc-south-east.png",
+        "south-west": "characters/horse-wc-south-west.png",
+        "north-west": "characters/horse-wc-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-wc": {
+      "type": "character",
+      "name": "jesus-wc",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-wc-north-east.png",
+        "south-east": "characters/jesus-wc-south-east.png",
+        "south-west": "characters/jesus-wc-south-west.png",
+        "north-west": "characters/jesus-wc-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-wc": {
+      "type": "character",
+      "name": "pigeon-man-wc",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-wc-north-east.png",
+        "south-east": "characters/pigeon-man-wc-south-east.png",
+        "south-west": "characters/pigeon-man-wc-south-west.png",
+        "north-west": "characters/pigeon-man-wc-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers with an iridescent green and purple neck, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-wc": {
+      "type": "character",
+      "name": "pinniped-man-wc",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-wc-north-east.png",
+        "south-east": "characters/pinniped-man-wc-south-east.png",
+        "south-west": "characters/pinniped-man-wc-south-west.png",
+        "north-west": "characters/pinniped-man-wc-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
     "hud:anime-cel-anthro-horse-sample": {
       "type": "hud",
       "name": "anime-cel-anthro-horse-sample",

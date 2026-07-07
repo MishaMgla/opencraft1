@@ -23,10 +23,20 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    forward the OPTIONAL style fields only when the block includes them:
    `outline→--outline`, `view→--view`, `template→--template`, `animation→--animate`
    (character walk-cycle; one job per direction, so it costs more credits and
-   takes longer — only when the block has it). do NOT add style
-   words to `--prompt` — the prompt is the subject only; outline/background/view
-   are parameters the tool sets (cohesive defaults: lineless outline, transparent
-   HUD, opaque tiles, pixel-art by default).
+   takes longer — only when the block has it).
+
+   **house visual style (REQUIRED).** the `--prompt` is subject-first, then you
+   MUST append opencraft1's chosen style suffix so every asset matches the world:
+
+   > `<subject>, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper`
+
+   e.g. `--prompt "sturdy courier horse, watercolor wash pixel art, translucent
+   paint washes with soft blooming edges on white paper"`. keep `--outline
+   lineless` (watercolor has no hard keyline). palette stays free per subject —
+   the suffix controls rendering technique, not which hues appear. full rule and
+   rationale in `AGENT_RULES.md` → "visual style (house art direction)". (this
+   replaces the earlier "subject only, no style words" guidance, which predated
+   having a house style.)
    `type` is `tile` | `character` | `hud`; **`effect` is not supported** (the tool
    rejects it — `/animate-with-text` needs a base sprite). then:
 
