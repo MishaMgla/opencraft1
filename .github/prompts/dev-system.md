@@ -25,18 +25,21 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    (character walk-cycle; one job per direction, so it costs more credits and
    takes longer — only when the block has it).
 
-   **house visual style (REQUIRED).** the `--prompt` is subject-first, then you
-   MUST append opencraft1's chosen style suffix so every asset matches the world:
+   **house visual style (REQUIRED).** opencraft1's style is **Halftone Comic**.
+   the `--prompt` is subject-first, then you MUST append a style suffix — WHICH
+   suffix depends on the asset type (figure-ground rule):
 
-   > `<subject>, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper`
+   - `character` / `hud` / prop → **BOLD** suffix + `--outline "single color black outline"`:
+     > `<subject>, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors`
+   - `tile` (ground) → **QUIET** suffix + `--outline lineless`:
+     > `<subject>, soft pale halftone ground texture, light and low contrast, gentle even halftone dot field, no bold outlines, subtle muted background floor`
 
-   e.g. `--prompt "sturdy courier horse, watercolor wash pixel art, translucent
-   paint washes with soft blooming edges on white paper"`. keep `--outline
-   lineless` (watercolor has no hard keyline). palette stays free per subject —
-   the suffix controls rendering technique, not which hues appear. full rule and
-   rationale in `AGENT_RULES.md` → "visual style (house art direction)". (this
-   replaces the earlier "subject only, no style words" guidance, which predated
-   having a house style.)
+   the bold suffix makes characters/props pop; the quiet suffix keeps ground
+   tiles receding so they never fight the cast for attention. palette stays free
+   per subject — the suffix controls rendering technique, not which hues appear.
+   full rule and rationale in `AGENT_RULES.md` → "visual style (house art
+   direction)". (this replaces the earlier "subject only, no style words"
+   guidance, which predated having a house style.)
    `type` is `tile` | `character` | `hud`; **`effect` is not supported** (the tool
    rejects it — `/animate-with-text` needs a base sprite). then:
 

@@ -58,9 +58,11 @@ rules you must follow when writing this block:
   Just name the thing and its distinctive features (`sturdy brown riding horse
   with a readable saddle`), and stay faithful to what the issue author asked —
   do not invent style the author didn't request. The Dev agent automatically
-  appends opencraft1's house **Watercolor Wash** style suffix at generation time
-  (see `AGENT_RULES.md` → "visual style"), so the block stays subject-only and
-  the world still renders in one consistent style — you do not write the suffix.
+  appends opencraft1's house **Halftone Comic** style suffix at generation time
+  — a bold high-contrast suffix for characters/hud/props and a quiet low-contrast
+  one for ground tiles (see `AGENT_RULES.md` → "visual style") — so the block
+  stays subject-only and the world renders in one consistent, readable style with
+  characters popping over calm ground. you do not write the suffix.
 - **style is set by parameters, with cohesive defaults** the tool applies so
   assets read as one set: no outline (`outline: lineless`), transparent
   background where it matters (HUD transparent, floor tiles opaque), pixel-art

@@ -52,34 +52,45 @@ the security classifier (which handles spam / abuse / injection / malicious code
 
 ## visual style (house art direction)
 
-opencraft1's chosen visual identity is **Watercolor Wash** (picked from the
+opencraft1's chosen visual identity is **Halftone Comic** (picked from the
 round-5→11 style exploration in `moodboard/`). Every generated asset — tile,
 character, or hud — must be rendered in this style so the world stays cohesive.
 
-- **style suffix.** append this exact phrase to every `gen-asset.mjs --prompt`,
-  after the subject description, separated by a comma:
+**figure-ground rule (important).** characters and props must POP; ground tiles
+must RECEDE. So the style uses two suffixes, by asset type — never the loud one
+on a tile:
 
-  > `watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper`
+- **characters / hud / props — BOLD suffix.** append, after the subject:
 
-  the `--prompt` is still subject-first (`sturdy courier horse`, `market stall`),
-  then the suffix. this **overrides** the older "no style words in --prompt"
-  guidance — that rule predates having a house style. outline stays `lineless`
-  (the watercolor look has no hard keyline); keep the type-based background
-  defaults (transparent hud, opaque tiles).
-- **palette is free per subject.** watercolor is a *technique*, not a fixed
+  > `vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors`
+
+  use `--outline "single color black outline"`. high contrast, heavy ink — these
+  are the foreground, they should grab the eye.
+
+- **ground tiles — QUIET suffix.** append, after the subject:
+
+  > `soft pale halftone ground texture, light and low contrast, gentle even halftone dot field, no bold outlines, subtle muted background floor`
+
+  use `--outline lineless`. keep tiles pale, low-contrast, and sparse so they
+  sit BEHIND the characters. a tile that competes with the cast for attention is
+  a bug — regenerate it quieter. verify weight, not just seams: prefer low
+  luminance variance.
+
+- **palette is free per subject.** halftone is a *technique*, not a fixed
   palette — grass is green, lava is red, a robe is white. the suffix governs how
-  it is rendered (translucent washes, soft blooms, paper-white ground), not which
-  hues appear. do not force everything into one color.
+  it is rendered (bold ink + dot shading for foreground, pale dot field for
+  ground), not which hues appear. this **overrides** the older "no style words in
+  --prompt" guidance — that rule predates having a house style.
 - **seamless tiles.** ground tiles must tile without a visible seam. generate,
   then verify with `python3 web/tools/seamcheck.py <tile.png>` (edge mismatch
-  < 25 reads seamless); if an organic wash won't roll seamless after a few
-  tries, run `python3 web/tools/wrapblend.py <tile.png>` (a deterministic 4px
-  edge cross-fade) to close the seam.
-- **characters.** always `--facings ordinal` (four ISO diagonals); the winning
-  cast lives as `*-wc` character assets. small-scale readability rules from the
+  < 25 reads seamless); if it won't roll seamless after a few tries, run
+  `python3 web/tools/wrapblend.py <tile.png>` (a deterministic 4px edge
+  cross-fade) to close the seam.
+- **characters.** always `--facings ordinal` (four ISO diagonals); the chosen
+  cast lives as `*-hc` character assets. small-scale readability rules from the
   exploration apply: strong silhouette, no baked ground shadow.
-- **reference.** the chosen-style briefs and the full 40-style comparison are in
-  `moodboard/visual-style-round9-cast-test-report.html` (Watercolor Wash sheet)
+- **reference.** the chosen-style sheet and the full 40-style comparison are in
+  `moodboard/visual-style-round9-cast-test-report.html` (Halftone Comic sheet)
   and the round-7/8/10/11 reports.
 
 ## testing layout
