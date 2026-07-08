@@ -5,7 +5,7 @@
 //
 // CONFIRMED against live OpenAPI spec (2026-06-26):
 //   - Endpoint paths: /create-image-pixflux, /create-character-with-4-directions,
-//     /animate-with-text, /background-jobs/{job_id}
+//     /create-character-pro, /animate-with-text, /background-jobs/{job_id}
 //   - Request field: "description" (not "prompt") — carries the SUBJECT only;
 //     style is set via dedicated fields below, not adjectives in the description.
 //   - Request field: "image_size" with nested "width"/"height"
@@ -38,6 +38,7 @@ export const ENDPOINTS = {
   hud:        '/create-image-pixflux',
   character:  '/create-character-with-4-directions',
   character8: '/create-character-with-8-directions',
+  characterPro: '/create-character-pro',
   effect:     '/animate-with-text',
 };
 
@@ -103,6 +104,21 @@ export function requestBody(type, { prompt, size, view, outline = 'lineless', no
       if (view) body.view = view;
       return body;
     }
+    case 'characterPro': {
+      // Pro character generation is the issue-driven path for ISO characters:
+      // text + optional style reference, 8 rotations, persisted as a Character.
+      // It supports template_id unlike the older 8-dir endpoint; callers may
+      // still omit it for prompt-driven subjects.
+      const body = {
+        description: prompt,
+        image_size,
+        method: 'create_with_style',
+        no_background: true,
+      };
+      if (view) body.view = view;
+      if (templateId) body.template_id = templateId;
+      return body;
+    }
     case 'effect':
       // /animate-with-text ANIMATES an existing sprite — it is NOT text-to-effect.
       // It requires `action` + `reference_image` (plus description/image_size).
@@ -133,6 +149,11 @@ export const jobIdOf = (postJson) => postJson.background_job_id;
 //     with `rotation_urls` (PUBLIC URLs, NOT base64) keyed by direction, and
 //     `animations` (array of AnimationGroup, each direction's `frames` is a list
 //      of PUBLIC frame URLs). Sprite bytes are fetched by downloading those URLs.
+//   POST /create-character-pro -> { background_job_id, character_id } with
+//      method=create_with_style and 8 directional rotations. This is the issue
+//      path for opencraft1 ISO characters after issue #134; the older
+//      /create-character-with-8-directions endpoint stays only as historical
+//      context / explicit fallback material.
 // ---------------------------------------------------------------------------
 
 // character_id from the create POST (available immediately, before the job ends).

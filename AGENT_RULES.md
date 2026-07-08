@@ -86,8 +86,10 @@ on a tile:
   < 25 reads seamless); if it won't roll seamless after a few tries, run
   `python3 web/tools/wrapblend.py <tile.png>` (a deterministic 4px edge
   cross-fade) to close the seam.
-- **characters.** always `--facings ordinal` (four ISO diagonals); the chosen
-  cast lives as `*-hc` character assets. small-scale readability rules from the
+- **characters.** always `--facings ordinal` (four ISO diagonals). Issue-driven
+  character generation uses PixelLab `/create-character-pro` (`method:
+  create_with_style`) so the cast matches `moodboard/create-character-pro-cast.html`,
+  not the older character endpoint. small-scale readability rules from the
   exploration apply: strong silhouette, no baked ground shadow.
 - **reference.** the chosen-style sheet and the full 40-style comparison are in
   `moodboard/` (see `moodboard/README.md` for the index). the character

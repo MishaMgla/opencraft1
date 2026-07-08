@@ -72,17 +72,20 @@ rules you must follow when writing this block:
   - `facings: <cardinal | ordinal>`  # character only — `ordinal` (the default
     choice for this ISO game) generates the four DIAGONAL facings
     (`north-east`/`south-east`/`south-west`/`north-west`) via PixelLab's
-    8-direction endpoint, which read correctly under the iso camera.
+    `/create-character-pro` endpoint (`method: create_with_style`), which read
+    correctly under the iso camera.
   - `template: <horse | cat | dog | bear | lion | mannequin>`  # character base.
-    NOTE: incompatible with `facings: ordinal` (the 8-dir endpoint has no
-    template) — for ordinal, describe the animal in the prompt instead.
+    Pro ordinal generation supports templates, but only include this when the
+    issue author asks for a specific body base; otherwise describe the subject
+    in the prompt.
   - `animation: <walk>`  # character only — generates a looping walk-cycle the
     renderer plays while moving. For `facings: ordinal`, the generated walk
     frames must keep the same `north-east`/`south-east`/`south-west`/`north-west`
     keys as the idle art. Omit for a static sprite.
 - character sprite requests for this isometric game must use `facings: ordinal`
-  so the horse/character faces the four iso diagonals. Do not ask for straight
-  cardinal side/front/back views.
+  so the horse/character faces the four iso diagonals, and must use the
+  `create-character-pro` path rather than the older character endpoint. Do not
+  ask for straight cardinal side/front/back views.
 - character sprites must not include baked ground shadows; the renderer grounds
   the sprite itself (auto-detects the feet row), so a baked shadow only doubles up
   and reads as hovering.

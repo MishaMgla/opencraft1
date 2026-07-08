@@ -36,6 +36,14 @@ type Ent struct {
 	X, Y int16
 }
 
+func clippedText(s string) []byte {
+	b := []byte(s)
+	if len(b) > 255 {
+		b = b[:255]
+	}
+	return b
+}
+
 // EncodeWelcome carries the player's assigned id, their spawn position (x, y)
 // — which is the restored position for a returning player, or world center for
 // a new one — and the world bounds. The client must adopt x, y before it starts
@@ -68,12 +76,18 @@ func EncodeSnapshot(tick uint32, ents []Ent) []byte {
 	return b
 }
 
-func EncodeEnter(id uint32, x, y int16, color uint32, name string) []byte {
-	n := []byte(name)
-	if len(n) > 255 {
-		n = n[:255]
+func EncodeEnter(id uint32, x, y int16, color uint32, name string, character ...string) []byte {
+	chosenCharacter := ""
+	if len(character) > 0 {
+		chosenCharacter = character[0]
 	}
-	b := make([]byte, 1+4+2+2+4+1+len(n))
+	n := clippedText(name)
+	ch := clippedText(chosenCharacter)
+	characterLen := 0
+	if len(ch) > 0 {
+		characterLen = 1 + len(ch)
+	}
+	b := make([]byte, 1+4+2+2+4+1+len(n)+characterLen)
 	b[0] = SEnter
 	binary.LittleEndian.PutUint32(b[1:], id)
 	binary.LittleEndian.PutUint16(b[5:], uint16(x))
@@ -81,6 +95,11 @@ func EncodeEnter(id uint32, x, y int16, color uint32, name string) []byte {
 	binary.LittleEndian.PutUint32(b[9:], color)
 	b[13] = byte(len(n))
 	copy(b[14:], n)
+	if len(ch) > 0 {
+		off := 14 + len(n)
+		b[off] = byte(len(ch))
+		copy(b[off+1:], ch)
+	}
 	return b
 }
 
@@ -122,12 +141,18 @@ func EncodeJump(id uint32) []byte {
 	return b
 }
 
-func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string) []byte {
-	n := []byte(name)
-	if len(n) > 255 {
-		n = n[:255]
+func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string, character ...string) []byte {
+	chosenCharacter := ""
+	if len(character) > 0 {
+		chosenCharacter = character[0]
 	}
-	b := make([]byte, 1+4+1+1+1+1+len(n))
+	n := clippedText(name)
+	ch := clippedText(chosenCharacter)
+	characterLen := 0
+	if len(ch) > 0 {
+		characterLen = 1 + len(ch)
+	}
+	b := make([]byte, 1+4+1+1+1+1+len(n)+characterLen)
 	b[0] = SPlayer
 	binary.LittleEndian.PutUint32(b[1:], id)
 	b[5] = role
@@ -137,16 +162,22 @@ func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string) []
 	}
 	b[8] = byte(len(n))
 	copy(b[9:], n)
+	if len(ch) > 0 {
+		off := 9 + len(n)
+		b[off] = byte(len(ch))
+		copy(b[off+1:], ch)
+	}
 	return b
 }
 
 // ClientMsg is a decoded client->server frame. Only fields relevant to Type are set.
 type ClientMsg struct {
-	Type byte
-	Name string // CHello
-	Role byte   // CHello
-	X, Y int16  // CInput
-	T    uint32 // CPing
+	Type      byte
+	Name      string // CHello
+	Role      byte   // CHello
+	Character string // CHello
+	X, Y      int16  // CInput
+	T         uint32 // CPing
 }
 
 // ParseClient decodes one client frame. Returns ok=false on malformed input.
@@ -164,8 +195,18 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 			return ClientMsg{}, false
 		}
 		msg := ClientMsg{Type: CHello, Name: string(b[2 : 2+nlen])}
-		if len(b) >= 2+nlen+1 {
-			msg.Role = b[2+nlen]
+		off := 2 + nlen
+		if len(b) >= off+1 {
+			msg.Role = b[off]
+			off++
+		}
+		if len(b) >= off+1 {
+			clen := int(b[off])
+			off++
+			if len(b) < off+clen {
+				return ClientMsg{}, false
+			}
+			msg.Character = string(b[off : off+clen])
 		}
 		return msg, true
 	case CInput:

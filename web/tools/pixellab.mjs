@@ -105,10 +105,10 @@ async function generateCharacter(input, ctx) {
   const { apiKey, fetchImpl, pollMs, timeoutMs, charTimeoutMs, animTimeoutMs, sleep } = ctx;
   const usage = [];
 
-  // ISO (ordinal) characters use the 8-direction endpoint and keep the four
-  // diagonal facings; cardinal characters use the legacy 4-direction endpoint.
-  const endpoint = ordinal ? ENDPOINTS.character8 : ENDPOINTS.character;
-  const bodyType = ordinal ? 'character8' : 'character';
+  // ISO (ordinal) characters use Pro mode and keep the four diagonal facings;
+  // cardinal characters use the legacy 4-direction endpoint.
+  const endpoint = ordinal ? ENDPOINTS.characterPro : ENDPOINTS.character;
+  const bodyType = ordinal ? 'characterPro' : 'character';
 
   // 1. Create the character (async). 2. Wait for the generation job.
   const post = await postJson(fetchImpl, `${BASE_URL}${endpoint}`, apiKey,

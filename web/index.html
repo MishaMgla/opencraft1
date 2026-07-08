@@ -147,15 +147,25 @@
       line-height: 1.3;
     }
     #issue59-guide strong { color: var(--gold); }
-    #role-picker {
+    #role-picker,
+    #character-picker,
+    #profile-character-picker {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
       padding: 0;
       margin: 0;
       border: 0;
     }
-    #role-picker label {
+    #role-picker {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    #character-picker,
+    #profile-character-picker {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #role-picker label,
+    #character-picker label,
+    #profile-character-picker label {
       display: grid;
       gap: 4px;
       min-width: 0;
@@ -165,23 +175,31 @@
       color: var(--ink);
       cursor: pointer;
     }
-    #role-picker input {
+    #role-picker input,
+    #character-picker input,
+    #profile-character-picker input {
       position: absolute;
       opacity: 0;
       pointer-events: none;
     }
-    #role-picker .role-name {
+    #role-picker .role-name,
+    #character-picker .character-name,
+    #profile-character-picker .character-name {
       font-size: 14px;
       font-weight: 700;
       color: var(--gold);
       text-transform: uppercase;
     }
-    #role-picker .role-effect {
+    #role-picker .role-effect,
+    #character-picker .character-note,
+    #profile-character-picker .character-note {
       color: var(--ink-dim);
       font-size: 12px;
       line-height: 1.25;
     }
-    #role-picker label:has(input:checked) {
+    #role-picker label:has(input:checked),
+    #character-picker label:has(input:checked),
+    #profile-character-picker label:has(input:checked) {
       border-color: var(--gold);
       background: var(--panel-2);
       box-shadow: inset 0 0 0 2px var(--shadow);
@@ -441,7 +459,9 @@
         bottom: 70px;
         min-width: 210px;
       }
-      #role-picker { grid-template-columns: 1fr; }
+      #role-picker,
+      #character-picker,
+      #profile-character-picker { grid-template-columns: 1fr; }
       #issue59-guide li {
         grid-template-columns: 1fr;
         gap: 2px;
@@ -495,6 +515,28 @@
           <span class="role-effect">8 auto tiles</span>
         </label>
       </fieldset>
+      <fieldset id="character-picker" aria-label="Character">
+        <label>
+          <input type="radio" name="character" value="horse-pro" required />
+          <span class="character-name">Horse</span>
+          <span class="character-note">saddled runner</span>
+        </label>
+        <label>
+          <input type="radio" name="character" value="pigeon-man-pro" required />
+          <span class="character-name">Pigeon Man</span>
+          <span class="character-note">street traveler</span>
+        </label>
+        <label>
+          <input type="radio" name="character" value="pinniped-man-pro" required />
+          <span class="character-name">Pinniped Man</span>
+          <span class="character-note">flipper stride</span>
+        </label>
+        <label>
+          <input type="radio" name="character" value="jesus-pro" required />
+          <span class="character-name">Jesus</span>
+          <span class="character-note">robed walker</span>
+        </label>
+      </fieldset>
       <button type="submit">enter world</button>
     </form>
   </div>
@@ -535,6 +577,28 @@
         Username
         <input id="profile-name" maxlength="16" autocomplete="off" />
       </label>
+      <fieldset id="profile-character-picker" aria-label="Character">
+        <label>
+          <input type="radio" name="profile-character" value="horse-pro" required />
+          <span class="character-name">Horse</span>
+          <span class="character-note">saddled runner</span>
+        </label>
+        <label>
+          <input type="radio" name="profile-character" value="pigeon-man-pro" required />
+          <span class="character-name">Pigeon Man</span>
+          <span class="character-note">street traveler</span>
+        </label>
+        <label>
+          <input type="radio" name="profile-character" value="pinniped-man-pro" required />
+          <span class="character-name">Pinniped Man</span>
+          <span class="character-note">flipper stride</span>
+        </label>
+        <label>
+          <input type="radio" name="profile-character" value="jesus-pro" required />
+          <span class="character-name">Jesus</span>
+          <span class="character-note">robed walker</span>
+        </label>
+      </fieldset>
       <div id="profile-actions">
         <button id="profile-cancel" type="button">cancel</button>
         <button type="submit">save</button>

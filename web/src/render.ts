@@ -532,6 +532,10 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       // drop the procedural token shadow (a Graphics in `container`) so a skinned
       // horse isn't doubled with a detached gray rect underneath it — the
       // renderer grounds the sprite itself via the feet anchor above.
+      if (token.skin?.sprite.parent) {
+        token.skin.sprite.parent.removeChild(token.skin.sprite);
+        token.skin.sprite.destroy();
+      }
       for (const child of [...token.avatar.children]) {
         if (child instanceof Graphics) { token.avatar.removeChild(child); child.destroy(); }
       }
