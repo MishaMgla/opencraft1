@@ -207,6 +207,62 @@
       },
       "facings": "ordinal"
     },
+    "character:horse-pro": {
+      "type": "character",
+      "name": "horse-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/horse-pro-north-east.png",
+        "south-east": "characters/horse-pro-south-east.png",
+        "south-west": "characters/horse-pro-south-west.png",
+        "north-west": "characters/horse-pro-north-west.png"
+      },
+      "prompt": "horse [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/horse-pro-north-east-walk-0.png",
+              "characters/horse-pro-north-east-walk-1.png",
+              "characters/horse-pro-north-east-walk-2.png",
+              "characters/horse-pro-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/horse-pro-south-east-walk-0.png",
+              "characters/horse-pro-south-east-walk-1.png",
+              "characters/horse-pro-south-east-walk-2.png",
+              "characters/horse-pro-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/horse-pro-south-west-walk-0.png",
+              "characters/horse-pro-south-west-walk-1.png",
+              "characters/horse-pro-south-west-walk-2.png",
+              "characters/horse-pro-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/horse-pro-north-west-walk-0.png",
+              "characters/horse-pro-north-west-walk-1.png",
+              "characters/horse-pro-north-west-walk-2.png",
+              "characters/horse-pro-north-west-walk-3.png"
+            ]
+          }
+        }
+      }
+    },
     "character:horse-stencil": {
       "type": "character",
       "name": "horse-stencil",
@@ -256,6 +312,31 @@
         "sortOffset": 0
       },
       "facings": "ordinal"
+    },
+    "character:horse-wcr": {
+      "type": "character",
+      "name": "horse-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/horse-wcr-south-east.png",
+        "south-west": "characters/horse-wcr-south-west.png",
+        "north-east": "characters/horse-wcr-north-east.png",
+        "north-west": "characters/horse-wcr-north-west.png"
+      },
+      "prompt": "horse true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
     },
     "character:jesus-bayer": {
       "type": "character",
@@ -407,6 +488,62 @@
       },
       "facings": "ordinal"
     },
+    "character:jesus-pro": {
+      "type": "character",
+      "name": "jesus-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/jesus-pro-north-east.png",
+        "south-east": "characters/jesus-pro-south-east.png",
+        "south-west": "characters/jesus-pro-south-west.png",
+        "north-west": "characters/jesus-pro-north-west.png"
+      },
+      "prompt": "jesus [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/jesus-pro-north-east-walk-0.png",
+              "characters/jesus-pro-north-east-walk-1.png",
+              "characters/jesus-pro-north-east-walk-2.png",
+              "characters/jesus-pro-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/jesus-pro-south-east-walk-0.png",
+              "characters/jesus-pro-south-east-walk-1.png",
+              "characters/jesus-pro-south-east-walk-2.png",
+              "characters/jesus-pro-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/jesus-pro-south-west-walk-0.png",
+              "characters/jesus-pro-south-west-walk-1.png",
+              "characters/jesus-pro-south-west-walk-2.png",
+              "characters/jesus-pro-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/jesus-pro-north-west-walk-0.png",
+              "characters/jesus-pro-north-west-walk-1.png",
+              "characters/jesus-pro-north-west-walk-2.png",
+              "characters/jesus-pro-north-west-walk-3.png"
+            ]
+          }
+        }
+      }
+    },
     "character:jesus-stencil": {
       "type": "character",
       "name": "jesus-stencil",
@@ -456,6 +593,31 @@
         "sortOffset": 0
       },
       "facings": "ordinal"
+    },
+    "character:jesus-wcr": {
+      "type": "character",
+      "name": "jesus-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/jesus-wcr-south-east.png",
+        "south-west": "characters/jesus-wcr-south-west.png",
+        "north-east": "characters/jesus-wcr-north-east.png",
+        "north-west": "characters/jesus-wcr-north-west.png"
+      },
+      "prompt": "jesus true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
     },
     "character:pigeon-man-bayer": {
       "type": "character",
@@ -607,6 +769,62 @@
       },
       "facings": "ordinal"
     },
+    "character:pigeon-man-pro": {
+      "type": "character",
+      "name": "pigeon-man-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/pigeon-man-pro-north-east.png",
+        "south-east": "characters/pigeon-man-pro-south-east.png",
+        "south-west": "characters/pigeon-man-pro-south-west.png",
+        "north-west": "characters/pigeon-man-pro-north-west.png"
+      },
+      "prompt": "pigeon-man [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/pigeon-man-pro-north-east-walk-0.png",
+              "characters/pigeon-man-pro-north-east-walk-1.png",
+              "characters/pigeon-man-pro-north-east-walk-2.png",
+              "characters/pigeon-man-pro-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/pigeon-man-pro-south-east-walk-0.png",
+              "characters/pigeon-man-pro-south-east-walk-1.png",
+              "characters/pigeon-man-pro-south-east-walk-2.png",
+              "characters/pigeon-man-pro-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/pigeon-man-pro-south-west-walk-0.png",
+              "characters/pigeon-man-pro-south-west-walk-1.png",
+              "characters/pigeon-man-pro-south-west-walk-2.png",
+              "characters/pigeon-man-pro-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/pigeon-man-pro-north-west-walk-0.png",
+              "characters/pigeon-man-pro-north-west-walk-1.png",
+              "characters/pigeon-man-pro-north-west-walk-2.png",
+              "characters/pigeon-man-pro-north-west-walk-3.png"
+            ]
+          }
+        }
+      }
+    },
     "character:pigeon-man-stencil": {
       "type": "character",
       "name": "pigeon-man-stencil",
@@ -656,6 +874,31 @@
         "sortOffset": 0
       },
       "facings": "ordinal"
+    },
+    "character:pigeon-man-wcr": {
+      "type": "character",
+      "name": "pigeon-man-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/pigeon-man-wcr-south-east.png",
+        "south-west": "characters/pigeon-man-wcr-south-west.png",
+        "north-east": "characters/pigeon-man-wcr-north-east.png",
+        "north-west": "characters/pigeon-man-wcr-north-west.png"
+      },
+      "prompt": "pigeon-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
     },
     "character:pinniped-man-bayer": {
       "type": "character",
@@ -807,6 +1050,62 @@
       },
       "facings": "ordinal"
     },
+    "character:pinniped-man-pro": {
+      "type": "character",
+      "name": "pinniped-man-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/pinniped-man-pro-north-east.png",
+        "south-east": "characters/pinniped-man-pro-south-east.png",
+        "south-west": "characters/pinniped-man-pro-south-west.png",
+        "north-west": "characters/pinniped-man-pro-north-west.png"
+      },
+      "prompt": "pinniped-man [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/pinniped-man-pro-north-east-walk-0.png",
+              "characters/pinniped-man-pro-north-east-walk-1.png",
+              "characters/pinniped-man-pro-north-east-walk-2.png",
+              "characters/pinniped-man-pro-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/pinniped-man-pro-south-east-walk-0.png",
+              "characters/pinniped-man-pro-south-east-walk-1.png",
+              "characters/pinniped-man-pro-south-east-walk-2.png",
+              "characters/pinniped-man-pro-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/pinniped-man-pro-south-west-walk-0.png",
+              "characters/pinniped-man-pro-south-west-walk-1.png",
+              "characters/pinniped-man-pro-south-west-walk-2.png",
+              "characters/pinniped-man-pro-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/pinniped-man-pro-north-west-walk-0.png",
+              "characters/pinniped-man-pro-north-west-walk-1.png",
+              "characters/pinniped-man-pro-north-west-walk-2.png",
+              "characters/pinniped-man-pro-north-west-walk-3.png"
+            ]
+          }
+        }
+      }
+    },
     "character:pinniped-man-stencil": {
       "type": "character",
       "name": "pinniped-man-stencil",
@@ -856,6 +1155,31 @@
         "sortOffset": 0
       },
       "facings": "ordinal"
+    },
+    "character:pinniped-man-wcr": {
+      "type": "character",
+      "name": "pinniped-man-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/pinniped-man-wcr-south-east.png",
+        "south-west": "characters/pinniped-man-wcr-south-west.png",
+        "north-east": "characters/pinniped-man-wcr-north-east.png",
+        "north-west": "characters/pinniped-man-wcr-north-west.png"
+      },
+      "prompt": "pinniped-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
     },
     "hud:anime-cel-anthro-horse-sample": {
       "type": "hud",
@@ -4665,206 +4989,6 @@
         "anchor": {
           "x": 0.5,
           "y": 0.5
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:horse-pro": {
-      "type": "character",
-      "name": "horse-pro",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "north-east": "characters/horse-pro-north-east.png",
-        "south-east": "characters/horse-pro-south-east.png",
-        "south-west": "characters/horse-pro-south-west.png",
-        "north-west": "characters/horse-pro-north-west.png"
-      },
-      "prompt": "horse [create-character-pro, halftone style ref]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:pigeon-man-pro": {
-      "type": "character",
-      "name": "pigeon-man-pro",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "north-east": "characters/pigeon-man-pro-north-east.png",
-        "south-east": "characters/pigeon-man-pro-south-east.png",
-        "south-west": "characters/pigeon-man-pro-south-west.png",
-        "north-west": "characters/pigeon-man-pro-north-west.png"
-      },
-      "prompt": "pigeon-man [create-character-pro, halftone style ref]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:jesus-pro": {
-      "type": "character",
-      "name": "jesus-pro",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "north-east": "characters/jesus-pro-north-east.png",
-        "south-east": "characters/jesus-pro-south-east.png",
-        "south-west": "characters/jesus-pro-south-west.png",
-        "north-west": "characters/jesus-pro-north-west.png"
-      },
-      "prompt": "jesus [create-character-pro, halftone style ref]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:pinniped-man-pro": {
-      "type": "character",
-      "name": "pinniped-man-pro",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "north-east": "characters/pinniped-man-pro-north-east.png",
-        "south-east": "characters/pinniped-man-pro-south-east.png",
-        "south-west": "characters/pinniped-man-pro-south-west.png",
-        "north-west": "characters/pinniped-man-pro-north-west.png"
-      },
-      "prompt": "pinniped-man [create-character-pro, halftone style ref]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:horse-wcr": {
-      "type": "character",
-      "name": "horse-wcr",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "south-east": "characters/horse-wcr-south-east.png",
-        "south-west": "characters/horse-wcr-south-west.png",
-        "north-east": "characters/horse-wcr-north-east.png",
-        "north-west": "characters/horse-wcr-north-west.png"
-      },
-      "prompt": "horse true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:pigeon-man-wcr": {
-      "type": "character",
-      "name": "pigeon-man-wcr",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "south-east": "characters/pigeon-man-wcr-south-east.png",
-        "south-west": "characters/pigeon-man-wcr-south-west.png",
-        "north-east": "characters/pigeon-man-wcr-north-east.png",
-        "north-west": "characters/pigeon-man-wcr-north-west.png"
-      },
-      "prompt": "pigeon-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:jesus-wcr": {
-      "type": "character",
-      "name": "jesus-wcr",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "south-east": "characters/jesus-wcr-south-east.png",
-        "south-west": "characters/jesus-wcr-south-west.png",
-        "north-east": "characters/jesus-wcr-north-east.png",
-        "north-west": "characters/jesus-wcr-north-west.png"
-      },
-      "prompt": "jesus true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "character:pinniped-man-wcr": {
-      "type": "character",
-      "name": "pinniped-man-wcr",
-      "directions": 4,
-      "size": 64,
-      "facings": "ordinal",
-      "frames": {
-        "south-east": "characters/pinniped-man-wcr-south-east.png",
-        "south-west": "characters/pinniped-man-wcr-south-west.png",
-        "north-east": "characters/pinniped-man-wcr-north-east.png",
-        "north-west": "characters/pinniped-man-wcr-north-west.png"
-      },
-      "prompt": "pinniped-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.8
         },
         "footprint": {
           "w": 1,
