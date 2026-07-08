@@ -90,8 +90,11 @@ on a tile:
   cast lives as `*-hc` character assets. small-scale readability rules from the
   exploration apply: strong silhouette, no baked ground shadow.
 - **reference.** the chosen-style sheet and the full 40-style comparison are in
-  `moodboard/visual-style-round9-cast-test-report.html` (Halftone Comic sheet)
-  and the round-7/8/10/11 reports.
+  `moodboard/` (see `moodboard/README.md` for the index). the character
+  generation pipeline and the PixelLab API quirks (endpoint choice, the
+  `generate-8-rotations-v3` frame-order gotcha, seamless-tile tooling) are
+  documented in `docs/character-generation-pipeline.md` — read it before
+  generating multi-directional characters.
 
 ## testing layout
 

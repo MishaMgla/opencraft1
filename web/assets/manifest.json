@@ -57,6 +57,81 @@
         }
       }
     },
+    "character:horse-bayer": {
+      "type": "character",
+      "name": "horse-bayer",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-bayer-north-east.png",
+        "south-east": "characters/horse-bayer-south-east.png",
+        "south-west": "characters/horse-bayer-south-west.png",
+        "north-west": "characters/horse-bayer-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, one-bit ordered dither, classic retro computer graphics, coarse checkerboard bayer dithering, black and white",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-cutout": {
+      "type": "character",
+      "name": "horse-cutout",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-cutout-north-east.png",
+        "south-east": "characters/horse-cutout-south-east.png",
+        "south-west": "characters/horse-cutout-south-west.png",
+        "north-west": "characters/horse-cutout-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, layered paper cutout collage pixel art, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-halftone": {
+      "type": "character",
+      "name": "horse-halftone",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-halftone-north-east.png",
+        "south-east": "characters/horse-halftone-south-east.png",
+        "south-west": "characters/horse-halftone-south-west.png",
+        "north-west": "characters/horse-halftone-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
     "character:horse-hc": {
       "type": "character",
       "name": "horse-hc",
@@ -69,6 +144,181 @@
         "north-west": "characters/horse-hc-north-west.png"
       },
       "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-pastel": {
+      "type": "character",
+      "name": "horse-pastel",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-pastel-north-east.png",
+        "south-east": "characters/horse-pastel-south-east.png",
+        "south-west": "characters/horse-pastel-south-west.png",
+        "north-west": "characters/horse-pastel-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, soft pastel chalk drawing pixel art, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-poster": {
+      "type": "character",
+      "name": "horse-poster",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-poster-north-east.png",
+        "south-east": "characters/horse-poster-south-east.png",
+        "south-west": "characters/horse-poster-south-west.png",
+        "north-west": "characters/horse-poster-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, flat poster style in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-stencil": {
+      "type": "character",
+      "name": "horse-stencil",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-stencil-north-east.png",
+        "south-east": "characters/horse-stencil-south-east.png",
+        "south-west": "characters/horse-stencil-south-west.png",
+        "north-west": "characters/horse-stencil-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, stencil spray paint street art pixel art, hard stencil edges with spray speckle falloff, bold layered colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:horse-watercolor": {
+      "type": "character",
+      "name": "horse-watercolor",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/horse-watercolor-north-east.png",
+        "south-east": "characters/horse-watercolor-south-east.png",
+        "south-west": "characters/horse-watercolor-south-west.png",
+        "north-west": "characters/horse-watercolor-north-west.png"
+      },
+      "prompt": "furry anthropomorphic horse character with a horse head on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, brown coat, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-bayer": {
+      "type": "character",
+      "name": "jesus-bayer",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-bayer-north-east.png",
+        "south-east": "characters/jesus-bayer-south-east.png",
+        "south-west": "characters/jesus-bayer-south-west.png",
+        "north-west": "characters/jesus-bayer-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, one-bit ordered dither, classic retro computer graphics, coarse checkerboard bayer dithering, black and white",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-cutout": {
+      "type": "character",
+      "name": "jesus-cutout",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-cutout-north-east.png",
+        "south-east": "characters/jesus-cutout-south-east.png",
+        "south-west": "characters/jesus-cutout-south-west.png",
+        "north-west": "characters/jesus-cutout-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, layered paper cutout collage pixel art, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-halftone": {
+      "type": "character",
+      "name": "jesus-halftone",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-halftone-north-east.png",
+        "south-east": "characters/jesus-halftone-south-east.png",
+        "south-west": "characters/jesus-halftone-south-west.png",
+        "north-west": "characters/jesus-halftone-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -107,6 +357,181 @@
       },
       "facings": "ordinal"
     },
+    "character:jesus-pastel": {
+      "type": "character",
+      "name": "jesus-pastel",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-pastel-north-east.png",
+        "south-east": "characters/jesus-pastel-south-east.png",
+        "south-west": "characters/jesus-pastel-south-west.png",
+        "north-west": "characters/jesus-pastel-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, soft pastel chalk drawing pixel art, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-poster": {
+      "type": "character",
+      "name": "jesus-poster",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-poster-north-east.png",
+        "south-east": "characters/jesus-poster-south-east.png",
+        "south-west": "characters/jesus-poster-south-west.png",
+        "north-west": "characters/jesus-poster-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, flat poster style in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-stencil": {
+      "type": "character",
+      "name": "jesus-stencil",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-stencil-north-east.png",
+        "south-east": "characters/jesus-stencil-south-east.png",
+        "south-west": "characters/jesus-stencil-south-west.png",
+        "north-west": "characters/jesus-stencil-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, stencil spray paint street art pixel art, hard stencil edges with spray speckle falloff, bold layered colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:jesus-watercolor": {
+      "type": "character",
+      "name": "jesus-watercolor",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/jesus-watercolor-north-east.png",
+        "south-east": "characters/jesus-watercolor-south-east.png",
+        "south-west": "characters/jesus-watercolor-south-west.png",
+        "north-west": "characters/jesus-watercolor-north-west.png"
+      },
+      "prompt": "Jesus with long hair and a beard wearing a long white robe with a red sash, standing upright, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-bayer": {
+      "type": "character",
+      "name": "pigeon-man-bayer",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-bayer-north-east.png",
+        "south-east": "characters/pigeon-man-bayer-south-east.png",
+        "south-west": "characters/pigeon-man-bayer-south-west.png",
+        "north-west": "characters/pigeon-man-bayer-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, one-bit ordered dither, classic retro computer graphics, coarse checkerboard bayer dithering, black and white",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-cutout": {
+      "type": "character",
+      "name": "pigeon-man-cutout",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-cutout-north-east.png",
+        "south-east": "characters/pigeon-man-cutout-south-east.png",
+        "south-west": "characters/pigeon-man-cutout-south-west.png",
+        "north-west": "characters/pigeon-man-cutout-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, layered paper cutout collage pixel art, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-halftone": {
+      "type": "character",
+      "name": "pigeon-man-halftone",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-halftone-north-east.png",
+        "south-east": "characters/pigeon-man-halftone-south-east.png",
+        "south-west": "characters/pigeon-man-halftone-south-west.png",
+        "north-west": "characters/pigeon-man-halftone-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
     "character:pigeon-man-hc": {
       "type": "character",
       "name": "pigeon-man-hc",
@@ -132,6 +557,181 @@
       },
       "facings": "ordinal"
     },
+    "character:pigeon-man-pastel": {
+      "type": "character",
+      "name": "pigeon-man-pastel",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-pastel-north-east.png",
+        "south-east": "characters/pigeon-man-pastel-south-east.png",
+        "south-west": "characters/pigeon-man-pastel-south-west.png",
+        "north-west": "characters/pigeon-man-pastel-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, soft pastel chalk drawing pixel art, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-poster": {
+      "type": "character",
+      "name": "pigeon-man-poster",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-poster-north-east.png",
+        "south-east": "characters/pigeon-man-poster-south-east.png",
+        "south-west": "characters/pigeon-man-poster-south-west.png",
+        "north-west": "characters/pigeon-man-poster-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, flat poster style in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-stencil": {
+      "type": "character",
+      "name": "pigeon-man-stencil",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-stencil-north-east.png",
+        "south-east": "characters/pigeon-man-stencil-south-east.png",
+        "south-west": "characters/pigeon-man-stencil-south-west.png",
+        "north-west": "characters/pigeon-man-stencil-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, stencil spray paint street art pixel art, hard stencil edges with spray speckle falloff, bold layered colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pigeon-man-watercolor": {
+      "type": "character",
+      "name": "pigeon-man-watercolor",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pigeon-man-watercolor-north-east.png",
+        "south-east": "characters/pigeon-man-watercolor-south-east.png",
+        "south-west": "characters/pigeon-man-watercolor-south-west.png",
+        "north-west": "characters/pigeon-man-watercolor-north-west.png"
+      },
+      "prompt": "anthropomorphic pigeon-headed man with a pigeon head and beak on a human body, standing upright on two legs, arms with hands, wearing a small vest and trousers, gray feathers, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-bayer": {
+      "type": "character",
+      "name": "pinniped-man-bayer",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-bayer-north-east.png",
+        "south-east": "characters/pinniped-man-bayer-south-east.png",
+        "south-west": "characters/pinniped-man-bayer-south-west.png",
+        "north-west": "characters/pinniped-man-bayer-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, one-bit ordered dither, classic retro computer graphics, coarse checkerboard bayer dithering, black and white",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-cutout": {
+      "type": "character",
+      "name": "pinniped-man-cutout",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-cutout-north-east.png",
+        "south-east": "characters/pinniped-man-cutout-south-east.png",
+        "south-west": "characters/pinniped-man-cutout-south-west.png",
+        "north-west": "characters/pinniped-man-cutout-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, layered paper cutout collage pixel art, flat colored paper shapes with tiny drop shadows between layers",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-halftone": {
+      "type": "character",
+      "name": "pinniped-man-halftone",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-halftone-north-east.png",
+        "south-east": "characters/pinniped-man-halftone-south-east.png",
+        "south-west": "characters/pinniped-man-halftone-south-west.png",
+        "north-west": "characters/pinniped-man-halftone-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
     "character:pinniped-man-hc": {
       "type": "character",
       "name": "pinniped-man-hc",
@@ -144,6 +744,106 @@
         "north-west": "characters/pinniped-man-hc-north-west.png"
       },
       "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-pastel": {
+      "type": "character",
+      "name": "pinniped-man-pastel",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-pastel-north-east.png",
+        "south-east": "characters/pinniped-man-pastel-south-east.png",
+        "south-west": "characters/pinniped-man-pastel-south-west.png",
+        "north-west": "characters/pinniped-man-pastel-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, soft pastel chalk drawing pixel art, grainy dry pastel strokes on warm gray toned paper",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-poster": {
+      "type": "character",
+      "name": "pinniped-man-poster",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-poster-north-east.png",
+        "south-east": "characters/pinniped-man-poster-south-east.png",
+        "south-west": "characters/pinniped-man-poster-south-west.png",
+        "north-west": "characters/pinniped-man-poster-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, flat poster style in solid fills, two values per color, strong geometric silhouette",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-stencil": {
+      "type": "character",
+      "name": "pinniped-man-stencil",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-stencil-north-east.png",
+        "south-east": "characters/pinniped-man-stencil-south-east.png",
+        "south-west": "characters/pinniped-man-stencil-south-west.png",
+        "north-west": "characters/pinniped-man-stencil-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, stencil spray paint street art pixel art, hard stencil edges with spray speckle falloff, bold layered colors",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
+    "character:pinniped-man-watercolor": {
+      "type": "character",
+      "name": "pinniped-man-watercolor",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/pinniped-man-watercolor-north-east.png",
+        "south-east": "characters/pinniped-man-watercolor-south-east.png",
+        "south-west": "characters/pinniped-man-watercolor-south-west.png",
+        "north-west": "characters/pinniped-man-watercolor-north-west.png"
+      },
+      "prompt": "anthropomorphic seal character with a seal head and whiskers on a humanoid body, standing upright on two legs, arms with hands, wearing a vest and trousers, sleek gray-brown coat, full body, watercolor wash pixel art, translucent paint washes with soft blooming edges on white paper",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -3965,6 +4665,206 @@
         "anchor": {
           "x": 0.5,
           "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:horse-pro": {
+      "type": "character",
+      "name": "horse-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/horse-pro-north-east.png",
+        "south-east": "characters/horse-pro-south-east.png",
+        "south-west": "characters/horse-pro-south-west.png",
+        "north-west": "characters/horse-pro-north-west.png"
+      },
+      "prompt": "horse [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:pigeon-man-pro": {
+      "type": "character",
+      "name": "pigeon-man-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/pigeon-man-pro-north-east.png",
+        "south-east": "characters/pigeon-man-pro-south-east.png",
+        "south-west": "characters/pigeon-man-pro-south-west.png",
+        "north-west": "characters/pigeon-man-pro-north-west.png"
+      },
+      "prompt": "pigeon-man [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:jesus-pro": {
+      "type": "character",
+      "name": "jesus-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/jesus-pro-north-east.png",
+        "south-east": "characters/jesus-pro-south-east.png",
+        "south-west": "characters/jesus-pro-south-west.png",
+        "north-west": "characters/jesus-pro-north-west.png"
+      },
+      "prompt": "jesus [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:pinniped-man-pro": {
+      "type": "character",
+      "name": "pinniped-man-pro",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "north-east": "characters/pinniped-man-pro-north-east.png",
+        "south-east": "characters/pinniped-man-pro-south-east.png",
+        "south-west": "characters/pinniped-man-pro-south-west.png",
+        "north-west": "characters/pinniped-man-pro-north-west.png"
+      },
+      "prompt": "pinniped-man [create-character-pro, halftone style ref]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:horse-wcr": {
+      "type": "character",
+      "name": "horse-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/horse-wcr-south-east.png",
+        "south-west": "characters/horse-wcr-south-west.png",
+        "north-east": "characters/horse-wcr-north-east.png",
+        "north-west": "characters/horse-wcr-north-west.png"
+      },
+      "prompt": "horse true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:pigeon-man-wcr": {
+      "type": "character",
+      "name": "pigeon-man-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/pigeon-man-wcr-south-east.png",
+        "south-west": "characters/pigeon-man-wcr-south-west.png",
+        "north-east": "characters/pigeon-man-wcr-north-east.png",
+        "north-west": "characters/pigeon-man-wcr-north-west.png"
+      },
+      "prompt": "pigeon-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:jesus-wcr": {
+      "type": "character",
+      "name": "jesus-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/jesus-wcr-south-east.png",
+        "south-west": "characters/jesus-wcr-south-west.png",
+        "north-east": "characters/jesus-wcr-north-east.png",
+        "north-west": "characters/jesus-wcr-north-west.png"
+      },
+      "prompt": "jesus true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:pinniped-man-wcr": {
+      "type": "character",
+      "name": "pinniped-man-wcr",
+      "directions": 4,
+      "size": 64,
+      "facings": "ordinal",
+      "frames": {
+        "south-east": "characters/pinniped-man-wcr-south-east.png",
+        "south-west": "characters/pinniped-man-wcr-south-west.png",
+        "north-east": "characters/pinniped-man-wcr-north-east.png",
+        "north-west": "characters/pinniped-man-wcr-north-west.png"
+      },
+      "prompt": "pinniped-man true-south watercolor -> 8-rotations-v3 [doc order SE=7,SW=1,NE=5,NW=3]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
         },
         "footprint": {
           "w": 1,
