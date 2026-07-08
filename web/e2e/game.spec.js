@@ -26,7 +26,7 @@ test('loads, joins, and moves', async ({ page }) => {
 
   // Enter the world. A character pick is required for new players (no default).
   await page.fill('#name', 'e2e-tester');
-  await page.check('input[name="character"][value="horse-pro"]');
+  await page.locator('#character-picker label:has(input[value="horse-pro"])').click();
   await page.click('button[type=submit]');
 
   // The overlay hides on submit; the HUD shows once the loop runs.
