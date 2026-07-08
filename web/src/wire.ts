@@ -50,6 +50,7 @@ export interface Enter {
   y: number;
   color: number;
   name: string;
+  character: string;
 }
 export interface Leave {
   type: 'leave';
@@ -77,6 +78,7 @@ export interface PlayerState {
   charge: number;
   ready: boolean;
   name: string;
+  character: string;
 }
 export interface Jump {
   type: 'jump';
@@ -87,14 +89,21 @@ export interface Unknown {
 }
 export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Unknown;
 
-export function encodeHello(name: string, role = 0): ArrayBuffer {
+export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
+  const ch = enc.encode(character.slice(0, 255));
   const hasRole = role > 0;
-  const b = new Uint8Array(2 + n.length + (hasRole ? 1 : 0));
+  const hasCharacter = ch.length > 0;
+  const b = new Uint8Array(2 + n.length + (hasRole ? 1 : 0) + (hasCharacter ? 1 + ch.length : 0));
   b[0] = C_HELLO;
   b[1] = n.length;
   b.set(n, 2);
   if (hasRole) b[2 + n.length] = role;
+  if (hasCharacter) {
+    const off = 2 + n.length + (hasRole ? 1 : 0);
+    b[off] = ch.length;
+    b.set(ch, off + 1);
+  }
   return b.buffer;
 }
 
@@ -162,7 +171,15 @@ export function decodeServer(view: DataView): ServerMsg {
       const color = view.getUint32(9, true);
       const nlen = view.getUint8(13);
       const bytes = new Uint8Array(view.buffer, view.byteOffset + 14, nlen);
-      return { type: 'enter', id, x, y, color, name: dec.decode(bytes) };
+      let character = '';
+      const off = 14 + nlen;
+      if (view.byteLength >= off + 1) {
+        const clen = view.getUint8(off);
+        if (view.byteLength >= off + 1 + clen) {
+          character = dec.decode(new Uint8Array(view.buffer, view.byteOffset + off + 1, clen));
+        }
+      }
+      return { type: 'enter', id, x, y, color, name: dec.decode(bytes), character };
     }
     case S_LEAVE:
       return { type: 'leave', id: view.getUint32(1, true) };
@@ -185,7 +202,15 @@ export function decodeServer(view: DataView): ServerMsg {
       const ready = view.getUint8(7) !== 0;
       const nlen = view.getUint8(8);
       const bytes = new Uint8Array(view.buffer, view.byteOffset + 9, nlen);
-      return { type: 'player', id, role, charge, ready, name: dec.decode(bytes) };
+      let character = '';
+      const off = 9 + nlen;
+      if (view.byteLength >= off + 1) {
+        const clen = view.getUint8(off);
+        if (view.byteLength >= off + 1 + clen) {
+          character = dec.decode(new Uint8Array(view.buffer, view.byteOffset + off + 1, clen));
+        }
+      }
+      return { type: 'player', id, role, charge, ready, name: dec.decode(bytes), character };
     }
     case S_JUMP:
       return { type: 'jump', id: view.getUint32(1, true) };

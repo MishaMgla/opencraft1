@@ -119,15 +119,17 @@ test('generate(character): a failing animation is non-fatal (static stills still
   assert.match(animation.error, /422/);
 });
 
-// ISO ordinal characters: 8-direction endpoint, keep the 4 diagonal facings,
-// static-only (no animation even if asked). rotation_urls are hyphenated.
-function char8Fetch() {
+// ISO ordinal characters: Pro endpoint, keep the 4 diagonal facings,
+// static-only at the API layer. rotation_urls are hyphenated.
+function charProFetch() {
   const json = (obj) => ({ ok: true, status: 200, json: async () => obj });
   const bin = () => ({ ok: true, status: 200, arrayBuffer: async () => new Uint8Array(PNG).buffer });
   return async (url) => {
     const u = String(url);
-    if (u.includes('/create-character-with-8-directions')) return json({ background_job_id: 'cj8', character_id: 'cid8' });
-    if (u.includes('/create-character-with-4-directions')) throw new Error('ordinal must use the 8-direction endpoint');
+    if (u.includes('/create-character-pro')) return json({ background_job_id: 'cj8', character_id: 'cid8' });
+    if (u.includes('/create-character-with-4-directions') || u.includes('/create-character-with-8-directions')) {
+      throw new Error('ordinal must use the create-character-pro endpoint');
+    }
     if (u.includes('/animate-character')) throw new Error('ordinal characters must not animate');
     if (u.includes('/background-jobs/')) return json({ status: 'completed' });
     if (u.includes('/characters/cid8')) return json({
@@ -141,10 +143,10 @@ function char8Fetch() {
   };
 }
 
-test('generate(character, ordinal) uses the 8-dir endpoint and keeps the 4 ordinals', async () => {
+test('generate(character, ordinal) uses create-character-pro and keeps the 4 ordinals', async () => {
   const { images, dirs, animation } = await generate(
     { type: 'character', prompt: 'horse', size: 64, ordinal: true, animation: 'walk' },
-    { apiKey: 'k', fetchImpl: char8Fetch(), pollMs: 1, sleep: noSleep },
+    { apiKey: 'k', fetchImpl: charProFetch(), pollMs: 1, sleep: noSleep },
   );
   assert.deepEqual(dirs, ['north-east', 'south-east', 'south-west', 'north-west']);
   assert.equal(images.length, 4);

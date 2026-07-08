@@ -216,6 +216,29 @@ function synthesizeExistingOrdinalWalk(a, existing) {
   return files;
 }
 
+function synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) {
+  if (a.type !== 'character' || a.facings !== 'ordinal' || a.animate !== 'walk') return null;
+  if (!ORDINALS.every((d) => dirsOut.includes(d))) return null;
+  const animFrames = {};
+  for (const d of ORDINALS) {
+    const imageIndex = dirsOut.indexOf(d);
+    const decoded = decodePngRgba(images[imageIndex]);
+    const sequence = [
+      images[imageIndex],
+      encodePngRgba({ ...decoded, pixels: synthWalkFrame(decoded, d, 1) }),
+      images[imageIndex],
+      encodePngRgba({ ...decoded, pixels: synthWalkFrame(decoded, d, -1) }),
+    ];
+    animFrames[d] = sequence.map((buf, i) => {
+      const rel = `${dir}/${a.name}-${d}-${a.animate}-${i}.png`;
+      writeFileSync(join(assetsDir(), rel), buf);
+      files.push(rel);
+      return rel;
+    });
+  }
+  return { [a.animate]: { fps: a.fps, frames: animFrames } };
+}
+
 export async function run(argv, { generateImpl = generate, env = process.env } = {}) {
   const a = parseArgs(argv);
   validateSlug(a.name);
@@ -298,6 +321,8 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
       }
       entry.animations = { [animation.name]: { fps: a.fps, frames: animFrames } };
     }
+    const synthesizedAnimation = !entry.animations ? synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) : null;
+    if (synthesizedAnimation) entry.animations = synthesizedAnimation;
   } else {
     const rel = `${dir}/${a.name}.png`;
     writeFileSync(join(assetsDir(), rel), images[0]);

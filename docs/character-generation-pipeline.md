@@ -13,32 +13,41 @@ ways to make directional characters, and they are **not** equivalent:
 
 | Endpoint | Style fidelity | Rotation | Proportions | Bipedal animals |
 |---|---|---|---|---|
-| `create-character-with-8-directions` (what `gen-asset.mjs` uses) | flattens to a clean sprite; ignores render-technique words | built-in | **locked stocky template** (every character ~aspect 2.9) | reliable |
+| `create-character-with-8-directions` (older path) | flattens to a clean sprite; ignores render-technique words | built-in | **locked stocky template** (every character ~aspect 2.9) | reliable |
 | `create-character-pro` (`method: create_with_style`, `template_id: mannequin`) | style reference honored | built-in | **varies by subject** (aspect 1.6–2.4) | reliable via `mannequin` |
 | `generate-image-pixflux` (flat) | **best** — honors style fully | none (single pose) | prompt-driven | prompt-driven (unreliable) |
 | `generate-8-rotations-v3` | preserves the input frame's style | rotates an existing frame | inherits the source | inherits the source |
 | `rotate` | preserves style | one target facing per call | inherits source | inherits source |
 
-Key finding: **the dedicated character endpoints impose their own look and
+Key finding: **the older dedicated character endpoints impose their own look and
 proportions**, so the styled samples in the flat (`pixflux`) galleries do NOT
-match what the character endpoint produces. To keep a chosen style on a rotating
-character, generate the styled frame with `pixflux` and rotate it with
-`generate-8-rotations-v3`.
+match what those endpoints produce. New issue-driven opencraft1 character
+requests use PixelLab `/create-character-pro` (`method: create_with_style`) via
+`web/tools/gen-asset.mjs --facings ordinal`, matching
+`moodboard/create-character-pro-cast.html`.
 
-## The recommended pipeline (style-preserving)
+## The recommended pipeline (issue-driven characters)
 
-1. **Generate a styled, true-south front sprite** with `pixflux`:
-   - `direction: "south"`, `view: "low top-down"`, `isometric: true`,
-     `no_background: true`, 64×64.
-   - Append the house style suffix to the prompt (see `AGENT_RULES.md` →
-     "visual style").
-   - `direction`/`view`/`isometric` are **"weakly guiding"** — the model does not
-     always obey. Generate a few candidates and auto-pick the most front-facing
-     one (lowest horizontal asymmetry **and** a bright top third = a face, not a
-     symmetric *back*). The horse in particular tends to turn its head; roll more.
-2. **Rotate** the chosen frame with `generate-8-rotations-v3` (`first_frame` must
-   be a `Base64Image` object `{type, base64, format}`, max 256×256).
-3. **Slice the four ISO facings** from `last_response.images` by index — see the
+1. Run `web/tools/gen-asset.mjs` with `--type character --facings ordinal`.
+   For issue specs, append the Halftone Comic character suffix and pass
+   `--outline "single color black outline"` as required by `AGENT_RULES.md`.
+2. The tool posts ordinal character requests to `/create-character-pro` with
+   `method: create_with_style`, then keeps the four ISO diagonal facings:
+   `north-east`, `south-east`, `south-west`, `north-west`.
+3. If the spec asks for `animation: walk`, the tool writes per-facing walk frames
+   under the same ordinal keys. For Pro ordinal characters this is synthesized
+   from the generated stills so the renderer never falls back to cardinal
+   side/front/back animation frames.
+
+## Rotation fallback pipeline
+
+The older style-preserving fallback is still useful when Pro generation is not
+available or a pre-existing still frame must be rotated:
+
+1. Generate a styled, true-south front sprite with `pixflux`.
+2. Rotate the chosen frame with `generate-8-rotations-v3` (`first_frame` must be
+   a `Base64Image` object `{type, base64, format}`, max 256×256).
+3. Slice the four ISO facings from `last_response.images` by index — see the
    frame-order section below.
 
 ## generate-8-rotations frame order (the big gotcha)

@@ -39,6 +39,7 @@ type player struct {
 	id            uint32
 	x, y          int16
 	name          string
+	character     string
 	color         uint32
 	role          byte
 	out           chan []byte
@@ -70,11 +71,12 @@ type Sim struct {
 }
 
 type cmdJoin struct {
-	name  string
-	role  byte
-	out   chan []byte
-	saved *SavedPlayer // nil = brand-new player: spawn at center, derive color
-	reply chan joinResult
+	name      string
+	role      byte
+	character string
+	out       chan []byte
+	saved     *SavedPlayer // nil = brand-new player: spawn at center, derive color
+	reply     chan joinResult
 }
 
 // joinResult carries what the connection goroutine needs once a join is
@@ -132,6 +134,10 @@ func (s *Sim) Join(name string, out chan []byte) (uint32, [][]byte) {
 }
 
 func (s *Sim) JoinWithRole(name string, role byte, out chan []byte) (uint32, [][]byte) {
+	return s.JoinWithProfile(name, role, "", out)
+}
+
+func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan []byte) (uint32, [][]byte) {
 	var saved *SavedPlayer
 	if s.store != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -145,7 +151,7 @@ func (s *Sim) JoinWithRole(name string, role byte, out chan []byte) (uint32, [][
 		}
 	}
 	reply := make(chan joinResult, 1)
-	s.cmds <- cmdJoin{name: name, role: validRole(role), out: out, saved: saved, reply: reply}
+	s.cmds <- cmdJoin{name: name, role: validRole(role), character: validCharacter(character), out: out, saved: saved, reply: reply}
 	r := <-reply
 	return r.id, r.initial
 }
@@ -209,12 +215,21 @@ func validRole(role byte) byte {
 	}
 }
 
+func validCharacter(character string) string {
+	switch character {
+	case "horse-pro", "pigeon-man-pro", "pinniped-man-pro", "jesus-pro":
+		return character
+	default:
+		return "horse-pro"
+	}
+}
+
 func playerState(p *player) []byte {
 	charge := p.ultCharge
 	if p.ultReady {
 		charge = UltChargeNeeded
 	}
-	return wire.EncodePlayer(p.id, p.role, charge, p.ultReady, p.name)
+	return wire.EncodePlayer(p.id, p.role, charge, p.ultReady, p.name, p.character)
 }
 
 func broadcastPlayerState(players map[uint32]*player, p *player) {
@@ -459,7 +474,7 @@ func (s *Sim) Run(ctx context.Context) {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
-				p := &player{id: id, x: px, y: py, name: m.name, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py)}
+				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py)}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 
@@ -480,9 +495,9 @@ func (s *Sim) Run(ctx context.Context) {
 					if oid == id {
 						continue
 					}
-					initial = append(initial, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name))
+					initial = append(initial, wire.EncodeEnter(o.id, o.x, o.y, o.color, o.name, o.character))
 					initial = append(initial, playerState(o))
-					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name))
+					send(o, wire.EncodeEnter(p.id, p.x, p.y, p.color, p.name, p.character))
 					send(o, playerState(p))
 				}
 				m.reply <- joinResult{id: id, initial: initial}

@@ -26,15 +26,17 @@ Graphics specs can include `## Asset Generation` blocks consumed by the Dev
 agent. For character sprites in the isometric game, specs should set
 `facings: ordinal` so the Dev agent runs `gen-asset.mjs --facings ordinal`,
 which generates the four DIAGONAL facings (`north-east`, `south-east`,
-`south-west`, `north-west`) via PixelLab's 8-direction endpoint and stores them
-under those ordinal keys — the facings that read correctly under the iso camera.
-`facings: ordinal` is incompatible with a quadruped `template` (the 8-dir
-endpoint has no `template_id`). When a character spec asks for `animation: walk`,
-the walk frames must preserve the same facing keys as the idle art; ordinal
-horse/character walk cycles are generated per facing from the generated ordinal
-stills, not by reverting to straight cardinal side/front/back views. Character
-art should not bake in a ground shadow; the renderer grounds the sprite itself
-(auto-detected feet row) — a baked shadow doubles up and reads as hovering.
+`south-west`, `north-west`) through PixelLab `/create-character-pro`
+(`method: create_with_style`) and stores them under those ordinal keys — the
+facings that read correctly under the iso camera. This is the issue-driven
+character path after issue #134 and matches `moodboard/create-character-pro-cast.html`;
+do not send new character requests to the older character endpoint. When a
+character spec asks for `animation: walk`, the walk frames must preserve the same
+facing keys as the idle art; ordinal horse/character walk cycles are generated
+per facing from the generated ordinal stills, not by reverting to straight
+cardinal side/front/back views. Character art should not bake in a ground shadow;
+the renderer grounds the sprite itself (auto-detected feet row) — a baked shadow
+doubles up and reads as hovering.
 
 ## permission model
 

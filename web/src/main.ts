@@ -16,12 +16,17 @@ const MAX_ZOOM = 1.5;
 const PAINT_TILE_SIZE = 128;
 const ULT_CHARGE_NEEDED = 12;
 const USERNAME_STORAGE_KEY = 'opencraft1.username';
+const CHARACTER_STORAGE_KEY = 'opencraft1.character';
 const MOBILE_MAX_WIDTH_PX = 760;
 const TAP_MOVE_MAX_DRIFT_PX = 12;
-// Every player renders as this generated character (with its walk cycle) when
-// the asset is present in the manifest; resolveCharacter returns null otherwise,
-// so setSkin is a no-op and the procedural token shows (spec #83/#84 fallback).
-const PLAYER_SKIN = 'horse';
+const DEFAULT_CHARACTER = 'horse-pro';
+
+const CHARACTER_NAMES = new Map<string, string>([
+  ['horse-pro', 'Horse'],
+  ['pigeon-man-pro', 'Pigeon Man'],
+  ['pinniped-man-pro', 'Pinniped Man'],
+  ['jesus-pro', 'Jesus'],
+]);
 
 const ROLE_NAMES = new Map<number, string>([
   [ROLE_PULSE, 'Pulse'],
@@ -32,6 +37,7 @@ const ROLE_NAMES = new Map<number, string>([
 interface RosterPlayer {
   id: number;
   name: string;
+  character: string;
   role: number;
   charge: number;
   ready: boolean;
@@ -81,16 +87,48 @@ function saveUsername(name: string): void {
   }
 }
 
+function validCharacter(value: string | null): string | null {
+  return value && CHARACTER_NAMES.has(value) ? value : null;
+}
+
+function loadSavedCharacter(): string | null {
+  try {
+    return validCharacter(localStorage.getItem(CHARACTER_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function saveCharacter(character: string): void {
+  try {
+    localStorage.setItem(CHARACTER_STORAGE_KEY, character);
+  } catch {
+    // The game still works when browser storage is blocked.
+  }
+}
+
 function selectedRole(): number | null {
   const selected = document.querySelector<HTMLInputElement>('input[name="role"]:checked');
   return selected ? Number(selected.value) : null;
 }
 
-async function join(name: string, role: number): Promise<void> {
+function selectedCharacter(group = 'character'): string | null {
+  const selected = document.querySelector<HTMLInputElement>(`input[name="${group}"]:checked`);
+  return validCharacter(selected?.value ?? null);
+}
+
+function setCharacterChoice(group: string, character: string | null): void {
+  if (!character) return;
+  const input = document.querySelector<HTMLInputElement>(`input[name="${group}"][value="${character}"]`);
+  if (input) input.checked = true;
+}
+
+async function join(name: string, role: number, character: string): Promise<void> {
   if (startPromise) return startPromise;
   saveUsername(name);
+  saveCharacter(character);
   showStartupLoading();
-  startPromise = start(name, role);
+  startPromise = start(name, role, character);
   try {
     await startPromise;
     hideOverlay();
@@ -104,20 +142,24 @@ async function join(name: string, role: number): Promise<void> {
 nameForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const role = selectedRole();
-  if (role === null) return;
-  await join(normalizeUsername(nameInput.value), role);
+  const character = selectedCharacter();
+  if (role === null || character === null) return;
+  await join(normalizeUsername(nameInput.value), role, character);
 });
 
 const savedUsername = loadSavedUsername();
-if (savedUsername) {
+const savedCharacter = loadSavedCharacter();
+setCharacterChoice('character', savedCharacter);
+if (savedUsername && savedCharacter) {
   const role = selectedRole();
   nameInput.value = savedUsername;
   if (role !== null) {
-    void join(savedUsername, role);
+    void join(savedUsername, role, savedCharacter);
   } else {
     showEntryForm();
   }
 } else {
+  if (savedUsername) nameInput.value = savedUsername;
   showEntryForm();
 }
 
@@ -139,13 +181,13 @@ function shouldUseMobileControls(): boolean {
   return coarsePointer && mobileSize;
 }
 
-async function start(name: string, role: number): Promise<void> {
+async function start(name: string, role: number, character: string): Promise<void> {
   const manifest = await loadManifest();
   const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
   const bar = resolveHud(manifest, 'healthbar');
   if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
   const r = await createRenderer(manifest);
-  void r.skinLocal(PLAYER_SKIN); // horse skin for the local player (no-op without the asset)
+  void r.skinLocal(character); // no-op without the asset; procedural token remains playable
   const input = createInput();
   const hudName = document.getElementById('hud-name') as HTMLButtonElement;
   const hudStatus = document.getElementById('hud-status')!;
@@ -163,6 +205,7 @@ async function start(name: string, role: number): Promise<void> {
   const mobileJump = document.getElementById('mobile-jump') as HTMLButtonElement;
   const mobileUlt = document.getElementById('mobile-ult') as HTMLButtonElement;
   let currentName = name;
+  let currentCharacter = character;
   let zoom = 1;
   let ready = false;
   let startupTimer = 0;
@@ -196,6 +239,16 @@ async function start(name: string, role: number): Promise<void> {
     const localRosterPlayer = rosterPlayers.get(me.id);
     if (localRosterPlayer) {
       localRosterPlayer.name = nextName;
+      renderRoster();
+    }
+  }
+
+  function setDisplayCharacter(nextCharacter: string): void {
+    currentCharacter = nextCharacter;
+    void r.skinLocal(nextCharacter);
+    const localRosterPlayer = rosterPlayers.get(me.id);
+    if (localRosterPlayer) {
+      localRosterPlayer.character = nextCharacter;
       renderRoster();
     }
   }
@@ -237,6 +290,7 @@ async function start(name: string, role: number): Promise<void> {
 
   hudName.addEventListener('click', () => {
     profileNameInput.value = currentName;
+    setCharacterChoice('profile-character', currentCharacter);
     profileDialog.showModal();
     profileNameInput.focus();
     profileNameInput.select();
@@ -245,8 +299,11 @@ async function start(name: string, role: number): Promise<void> {
   profileForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const nextName = normalizeUsername(profileNameInput.value);
+    const nextCharacter = selectedCharacter('profile-character') ?? currentCharacter;
     saveUsername(nextName);
+    saveCharacter(nextCharacter);
     setDisplayName(nextName);
+    setDisplayCharacter(nextCharacter);
     profileDialog.close();
   });
 
@@ -291,10 +348,13 @@ async function start(name: string, role: number): Promise<void> {
     rosterPlayers.set(state.id, {
       id: state.id,
       name: state.id === me.id ? currentName : state.name || `player ${state.id}`,
+      character: state.id === me.id ? currentCharacter : validCharacter(state.character) ?? DEFAULT_CHARACTER,
       role: state.role,
       charge: state.charge,
       ready: state.ready,
     });
+    const token = others.get(state.id);
+    if (token) void r.setSkin(token, validCharacter(state.character) ?? DEFAULT_CHARACTER);
     renderRoster();
   }
 
@@ -331,7 +391,7 @@ async function start(name: string, role: number): Promise<void> {
 
   let conn: ReturnType<typeof connect>;
   try {
-    conn = connect(await resolveWsUrl(), currentName, role, {
+    conn = connect(await resolveWsUrl(), currentName, role, currentCharacter, {
       welcome(m) {
         me.id = m.id;
         // Adopt the server's spawn position (restored for returning players, else
@@ -350,7 +410,7 @@ async function start(name: string, role: number): Promise<void> {
         if (m.id === me.id) return;
         const token = r.addToken(m.id, m.name, m.color, m.x, m.y);
         others.set(m.id, token);
-        void r.setSkin(token, PLAYER_SKIN); // horse skin for remote players (no-op without the asset)
+        void r.setSkin(token, validCharacter(m.character) ?? DEFAULT_CHARACTER);
       },
       leave(m) {
         const o = others.get(m.id);

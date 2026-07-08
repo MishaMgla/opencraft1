@@ -43,9 +43,10 @@
         "x": 2048,
         "y": 2048,
         "color": 255,
-        "name": "Zoë"
+        "name": "Zoë",
+        "character": "pigeon-man-pro"
       },
-      "hex": "830900000000080008ff000000045a6fc3ab"
+      "hex": "830900000000080008ff000000045a6fc3ab0e706967656f6e2d6d616e2d70726f"
     },
     {
       "name": "leave",
