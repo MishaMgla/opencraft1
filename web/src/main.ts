@@ -434,14 +434,6 @@ async function start(name: string, role: number, character: string): Promise<voi
       paint(m) {
         r.paintTile(m.x, m.y, m.color);
       },
-      shake(m) {
-        if (m.id === me.id) {
-          r.shakeLocal();
-          return;
-        }
-        const o = others.get(m.id);
-        if (o) r.shakeToken(o);
-      },
       jump(m) {
         if (m.id === me.id) {
           r.jumpLocal();
