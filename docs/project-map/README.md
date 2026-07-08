@@ -39,6 +39,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-07-08 (branch `codex/issue-137-character-shake-foreign-tile`): stop applying avatar shake presentation when players enter foreign painted tiles while preserving shared paint, ult, movement, roster, and jump behavior (issue #137).
 - 2026-07-08 (branch `codex/issue-134-character-sprites`): add browser-local character selection for the four `create-character-pro` cast members, send the chosen character through join/presence state, and render selected ordinal walk-cycle skins for local and remote players (issue #134).
 - 2026-07-06 (branch `codex/issue-116-mobile-support`): add tap-first mobile controls with tap-to-move destinations and touch action buttons for paint, jump, and ult while preserving desktop keyboard controls (issue #116).
 - 2026-07-02 (branch `codex/issue-111-cell-tiles-stitch`): hide unintended stitch lines between adjacent painted terrain tiles with seam-safe texture masks and fallback diamonds while preserving tile placement, paint color mapping, and gameplay behavior (issue #111).
