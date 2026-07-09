@@ -434,6 +434,9 @@ async function start(name: string, role: number, character: string): Promise<voi
       paint(m) {
         r.paintTile(m.x, m.y, m.color);
       },
+      fire(m) {
+        r.fireTile(m.x, m.y);
+      },
       jump(m) {
         if (m.id === me.id) {
           r.jumpLocal();

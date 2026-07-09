@@ -15,6 +15,7 @@ const S_PAINT = 0x86;
 const S_SHAKE = 0x87;
 const S_PLAYER = 0x88;
 const S_JUMP = 0x89;
+const S_FIRE = 0x8a;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -84,10 +85,15 @@ export interface Jump {
   type: 'jump';
   id: number;
 }
+export interface Fire {
+  type: 'fire';
+  x: number;
+  y: number;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Unknown;
 
 export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -214,6 +220,8 @@ export function decodeServer(view: DataView): ServerMsg {
     }
     case S_JUMP:
       return { type: 'jump', id: view.getUint32(1, true) };
+    case S_FIRE:
+      return { type: 'fire', x: view.getInt16(1, true), y: view.getInt16(3, true) };
   }
   return { type: 'unknown' };
 }

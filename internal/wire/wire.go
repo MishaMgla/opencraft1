@@ -22,6 +22,7 @@ const (
 	SShake    = 0x87
 	SPlayer   = 0x88
 	SJump     = 0x89
+	SFire     = 0x8A
 )
 
 const (
@@ -138,6 +139,17 @@ func EncodeJump(id uint32) []byte {
 	b := make([]byte, 1+4)
 	b[0] = SJump
 	binary.LittleEndian.PutUint32(b[1:], id)
+	return b
+}
+
+// EncodeFire marks a tile as having just caught fire (transient overlay, like
+// SShake/SJump). The tile's persisted paint is unchanged until it burns to ash,
+// which arrives as a normal SPaint frame.
+func EncodeFire(x, y int16) []byte {
+	b := make([]byte, 1+2+2)
+	b[0] = SFire
+	binary.LittleEndian.PutUint16(b[1:], uint16(x))
+	binary.LittleEndian.PutUint16(b[3:], uint16(y))
 	return b
 }
 

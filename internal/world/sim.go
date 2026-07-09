@@ -14,6 +14,30 @@ const UltChargeNeeded byte = 12
 const TrailUltTiles = 8
 const SpawnCoord int16 = 2048
 
+// Fire — a forest-fire cellular automaton over the painted map. Lava ignites
+// flammable neighbours; fire crawls one ring per fireTickEvery ticks and each
+// burning tile turns to ash after burnTicks fire-steps. See
+// docs/superpowers/specs/2026-07-09-fire-living-materials-design.md.
+const fireTickEvery uint32 = 8 // run a fire step every N sim ticks (~2/sec at 15Hz)
+const burnTicks = 3            // fire steps a tile stays alight before becoming ash
+
+const (
+	colorLava    uint32 = 0xE6194B // ignition source (never burns itself)
+	colorGrass   uint32 = 0x3CB44B // flammable
+	colorFlowers uint32 = 0xF032E6 // flammable
+	ashColor     uint32 = 0x3A4757 // burned-out; inert, renders as the client's neutral diamond
+)
+
+func isLava(c uint32) bool      { return c == colorLava }
+func isFlammable(c uint32) bool { return c == colorGrass || c == colorFlowers }
+
+func neighbors4(k tileKey) [4]tileKey {
+	return [4]tileKey{
+		{k.x + PaintTileSize, k.y}, {k.x - PaintTileSize, k.y},
+		{k.x, k.y + PaintTileSize}, {k.x, k.y - PaintTileSize},
+	}
+}
+
 // flushEvery is how often the sim persists all online players, bounding how
 // much position is lost if the engine dies without a graceful shutdown.
 const flushEvery = 30 * time.Second
@@ -346,7 +370,7 @@ func (s *Sim) flushAll(players map[uint32]*player) {
 	}
 }
 
-func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile, p *player, key tileKey, charge bool) bool {
+func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player, key tileKey, charge bool) bool {
 	if !validPaintTile(key) {
 		return false
 	}
@@ -360,6 +384,24 @@ func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile,
 		send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
 	}
 	s.savePaint(SavedTile{X: tile.x, Y: tile.y, Color: tile.color, Owner: p.name})
+	// Ignition: painting lava lights flammable neighbours; painting flammable
+	// next to lava (or an already-burning tile) lights the new tile itself.
+	if isLava(p.color) {
+		for _, n := range neighbors4(key) {
+			s.ignite(players, painted, burning, n)
+		}
+	} else if isFlammable(p.color) {
+		for _, n := range neighbors4(key) {
+			if _, on := burning[n]; on {
+				s.ignite(players, painted, burning, key)
+				break
+			}
+			if t, ok := painted[n]; ok && isLava(t.color) {
+				s.ignite(players, painted, burning, key)
+				break
+			}
+		}
+	}
 	if charge && !p.ultReady && p.ultCharge < UltChargeNeeded {
 		p.ultCharge++
 		if p.ultCharge >= UltChargeNeeded {
@@ -371,7 +413,64 @@ func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile,
 	return true
 }
 
-func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+// ignite adds a flammable, not-yet-burning tile to the burning set and tells
+// every client to show a flame there. Non-flammable/unpainted/already-burning
+// tiles are ignored, so callers can fire it at any neighbour blindly.
+func (s *Sim) ignite(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, key tileKey) {
+	if _, on := burning[key]; on {
+		return
+	}
+	t, ok := painted[key]
+	if !ok || !isFlammable(t.color) {
+		return
+	}
+	burning[key] = burnTicks
+	for _, o := range players {
+		send(o, wire.EncodeFire(key.x, key.y))
+	}
+}
+
+// fireStep advances the fire automaton one ring: burning tiles spread to their
+// flammable neighbours, age, and turn to ash when spent. Cost is O(|burning|),
+// and every tile burns exactly once before becoming inert ash, so a fire
+// consumes a connected flammable region and self-terminates.
+// ponytail: O(burning frontier) per fire step; index burning by grid cell only
+// if the painted world ever gets huge.
+func (s *Sim) fireStep(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int) {
+	if len(burning) == 0 {
+		return
+	}
+	// Spread targets are computed from the CURRENT frontier and ignited only
+	// after ageing, so a tile lit this step spreads on the NEXT step (one ring).
+	var newly []tileKey
+	for k := range burning {
+		for _, n := range neighbors4(k) {
+			if _, on := burning[n]; on {
+				continue
+			}
+			if t, ok := painted[n]; ok && isFlammable(t.color) {
+				newly = append(newly, n)
+			}
+		}
+	}
+	for k := range burning {
+		burning[k]--
+		if burning[k] <= 0 {
+			delete(burning, k)
+			ash := paintedTile{x: k.x, y: k.y, color: ashColor, ownerID: 0}
+			painted[k] = ash
+			for _, o := range players {
+				send(o, wire.EncodePaint(ash.x, ash.y, ash.color, ash.ownerID))
+			}
+			s.savePaint(SavedTile{X: ash.x, Y: ash.y, Color: ash.color, Owner: ""})
+		}
+	}
+	for _, n := range newly {
+		s.ignite(players, painted, burning, n)
+	}
+}
+
+func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
 	center := paintTileFor(p.x, p.y)
 	for dx := -1; dx <= 1; dx++ {
 		for dy := -1; dy <= 1; dy++ {
@@ -379,14 +478,14 @@ func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]painted
 				x: center.x + int16(dx)*PaintTileSize,
 				y: center.y + int16(dy)*PaintTileSize,
 			}
-			s.paint(players, painted, p, key, false)
+			s.paint(players, painted, burning, p, key, false)
 		}
 	}
 }
 
-func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
 	center := paintTileFor(p.x, p.y)
-	s.paint(players, painted, p, center, false)
+	s.paint(players, painted, burning, p, center, false)
 	directions := []tileKey{{x: 1}, {x: -1}, {y: 1}, {y: -1}}
 	for _, d := range directions {
 		for step := int16(1); step <= 2; step++ {
@@ -394,12 +493,12 @@ func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]painted
 				x: center.x + d.x*PaintTileSize*step,
 				y: center.y + d.y*PaintTileSize*step,
 			}
-			s.paint(players, painted, p, key, false)
+			s.paint(players, painted, burning, p, key, false)
 		}
 	}
 }
 
-func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]paintedTile, p *player) {
+func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
 	if !p.ultReady {
 		return
 	}
@@ -410,9 +509,9 @@ func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]painte
 
 	switch p.role {
 	case wire.RolePulse:
-		s.paintPulse(players, painted, p)
+		s.paintPulse(players, painted, burning, p)
 	case wire.RoleCross:
-		s.paintCross(players, painted, p)
+		s.paintCross(players, painted, burning, p)
 	case wire.RoleTrail:
 		p.trailLeft = TrailUltTiles
 		p.trailTiles = map[tileKey]struct{}{}
@@ -420,7 +519,7 @@ func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]painte
 	broadcastPlayerState(players, p)
 }
 
-func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]paintedTile, p *player, key tileKey) {
+func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player, key tileKey) {
 	if p.trailLeft <= 0 {
 		return
 	}
@@ -429,7 +528,7 @@ func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]painted
 	}
 	p.trailTiles[key] = struct{}{}
 	p.trailLeft--
-	s.paint(players, painted, p, key, false)
+	s.paint(players, painted, burning, p, key, false)
 	if p.trailLeft == 0 {
 		p.trailTiles = nil
 	}
@@ -441,6 +540,7 @@ func (s *Sim) Run(ctx context.Context) {
 
 	players := map[uint32]*player{}
 	painted := map[tileKey]paintedTile{}
+	burning := map[tileKey]int{} // tile -> fire-steps remaining (transient, never persisted)
 	s.loadPaints(painted)
 	grid := NewGrid()
 	var nextID uint32 = 1
@@ -518,7 +618,7 @@ func (s *Sim) Run(ctx context.Context) {
 							send(o, wire.EncodeShake(p.id))
 						}
 					}
-					s.applyTrail(players, painted, p, tile)
+					s.applyTrail(players, painted, burning, p, tile)
 				}
 
 			case cmdPaint:
@@ -526,14 +626,14 @@ func (s *Sim) Run(ctx context.Context) {
 				if p == nil {
 					continue
 				}
-				s.paint(players, painted, p, paintTileFor(p.x, p.y), true)
+				s.paint(players, painted, burning, p, paintTileFor(p.x, p.y), true)
 
 			case cmdUlt:
 				p := players[m.id]
 				if p == nil {
 					continue
 				}
-				s.activateUlt(players, painted, p)
+				s.activateUlt(players, painted, burning, p)
 
 			case cmdJump:
 				p := players[m.id]
@@ -564,6 +664,9 @@ func (s *Sim) Run(ctx context.Context) {
 
 		case <-ticker.C:
 			tick++
+			if tick%fireTickEvery == 0 {
+				s.fireStep(players, painted, burning)
+			}
 			for _, p := range players {
 				ents := make([]wire.Ent, 0, len(players))
 				for _, o := range players {

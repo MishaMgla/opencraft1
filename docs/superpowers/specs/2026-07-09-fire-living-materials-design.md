@@ -1,6 +1,9 @@
 # Fire — living materials on the paint grid
 
-Status: **design approved, not yet implemented** (2026-07-09).
+Status: **implemented** (2026-07-09). Server automaton verified end-to-end via a
+throwaway public-API driver (lava ignites a grass strip, fire crawls, water
+firebreak stops it, tiles burn to ash); `go test ./...` + `cd web && npm test`
+green; `go vet` + `tsc --noEmit` clean.
 
 ## Summary
 

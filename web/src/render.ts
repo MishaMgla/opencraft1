@@ -229,6 +229,7 @@ export interface Renderer {
   placeToken(token: Token): void;
   setLocal(x: number, y: number): void;
   paintTile(x: number, y: number, color: number): void;
+  fireTile(x: number, y: number): void;
   placeTile(x: number, y: number, name: string): Promise<void>;
   shakeLocal(): void;
   shakeToken(token: Token): void;
@@ -296,6 +297,10 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const paintedTiles = new Map<string, Container | Graphics>();
   const tileSprites = new Map<string, Sprite>();
   const paintTileTextures = new Map<string, Texture>();
+  // Active fire overlays, keyed by tile. Procedural (no asset) — the generator
+  // rejects animated effects, so flame is drawn Graphics flickered by one shared
+  // ticker below. Cleared when the tile's paint changes (ash lands / repaint).
+  const fireTiles = new Map<string, { container: Container; phase: number }>();
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -414,6 +419,46 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     return tile;
   }
 
+  // A flame is two upward triangles (orange body + yellow core) sized to the
+  // tile; only moveTo/lineTo/fill, matching the rest of this module.
+  function drawFlame(): Graphics {
+    return new Graphics()
+      .moveTo(-hw * 0.55, hh * 0.2).lineTo(0, -hh * 1.9).lineTo(hw * 0.55, hh * 0.2).lineTo(0, hh * 0.4).fill({ color: 0xff6a00, alpha: 0.9 })
+      .moveTo(-hw * 0.28, hh * 0.1).lineTo(0, -hh * 1.15).lineTo(hw * 0.28, hh * 0.1).lineTo(0, hh * 0.3).fill({ color: 0xffe24a, alpha: 0.95 });
+  }
+
+  function fireTile(x: number, y: number): void {
+    const key = tileKey(x, y);
+    if (fireTiles.has(key)) return;
+    const c = worldToScreen(x, y);
+    const container = new Container();
+    container.x = c.x;
+    container.y = c.y;
+    container.zIndex = depth(x, y) - 100_000; // above tiles, below player tokens
+    container.addChild(drawFlame());
+    world.addChild(container);
+    // Phase from coords so neighbouring flames flicker out of sync (no RNG).
+    fireTiles.set(key, { container, phase: (x + y) % 628 / 100 });
+  }
+
+  function clearFire(key: string): void {
+    const f = fireTiles.get(key);
+    if (!f) return;
+    world.removeChild(f.container);
+    f.container.destroy({ children: true });
+    fireTiles.delete(key);
+  }
+
+  // One shared ticker flickers every active flame (alpha + vertical pulse).
+  app.ticker.add(() => {
+    if (!fireTiles.size) return;
+    const t = performance.now() / 1000;
+    for (const f of fireTiles.values()) {
+      f.container.alpha = 0.75 + 0.25 * Math.sin(t * 12 + f.phase);
+      f.container.scale.set(1, 0.85 + 0.2 * (0.5 + 0.5 * Math.sin(t * 9 + f.phase)));
+    }
+  });
+
   return {
     app,
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
@@ -439,12 +484,16 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     },
     paintTile(x, y, color) {
       const key = tileKey(x, y);
+      clearFire(key); // tile's material changed (ash / repaint) → flame is done
       removePaintedTile(key);
       const tileName = PAINT_TILE_BY_COLOR.get(color);
       const texture = tileName ? paintTileTextures.get(tileName) : undefined;
       const tile = texture ? drawTexturedPaintTile(x, y, color, texture) : drawFallbackPaintTile(x, y, color);
       paintedTiles.set(key, tile);
       world.addChild(tile);
+    },
+    fireTile(x, y) {
+      fireTile(x, y);
     },
     async placeTile(this: Renderer, x, y, name) {
       const tile = resolveTile(manifest, name);

@@ -1,5 +1,5 @@
 import { encodeHello, encodeInput, encodePaint, encodeUlt, encodeJump, decodeServer } from './wire.js';
-import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, ServerMsg } from './wire.js';
+import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, Fire, ServerMsg } from './wire.js';
 
 export interface Handlers {
   welcome?: (m: Welcome) => void;
@@ -11,6 +11,7 @@ export interface Handlers {
   shake?: (m: Shake) => void;
   player?: (m: PlayerState) => void;
   jump?: (m: Jump) => void;
+  fire?: (m: Fire) => void;
   close?: () => void;
 }
 
