@@ -3979,6 +3979,24 @@
         "sortOffset": 0
       }
     },
+    "tile:ash-tile": {
+      "type": "tile",
+      "name": "ash-tile",
+      "file": "tiles/ash-tile.png",
+      "size": 128,
+      "prompt": "pale light gray ash and soot ground, cold charcoal gray powder with fine even grain, flat and smooth, very low contrast, no bold shapes, no dark blobs, soft muted background floor, gentle faint halftone",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:basalt-garden-grass-tile": {
       "type": "tile",
       "name": "basalt-garden-grass-tile",
@@ -4003,6 +4021,24 @@
       "file": "tiles/bayer-onebit-iso-grass-tile.png",
       "size": 64,
       "prompt": "one-bit ordered dither seamless repeating grass texture, bayer dithered grass tone in pure black and white, uniform pattern, perfectly tileable, strictly black and white only, no color",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:bomb": {
+      "type": "tile",
+      "name": "bomb",
+      "file": "tiles/bomb.png",
+      "size": 128,
+      "prompt": "a round black cartoon bomb with a short lit sparking fuse on transparent background, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4183,6 +4219,24 @@
       "file": "tiles/etched-plate-iso-grass-tile.png",
       "size": 64,
       "prompt": "copperplate etching seamless repeating grass texture, fine directional hatch lines in sepia ink on cream paper, uniform pattern, perfectly tileable, edges match when tiled",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:fire": {
+      "type": "tile",
+      "name": "fire",
+      "file": "tiles/fire.png",
+      "size": 128,
+      "prompt": "a single bright tongue of orange and yellow flame fire on transparent background, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
       "placement": {
         "anchor": {
           "x": 0.5,

@@ -28,7 +28,13 @@ const PAINT_TILE_BY_COLOR = new Map<number, string>([
   [0x911eb4, 'crystal-tile'],
   [0x46f0f0, 'ice-tile'],
   [0xf032e6, 'flowers-tile'],
+  [0x3a4757, 'ash-tile'], // burned-out / bomb-destroyed terrain (matches sim ashColor)
 ]);
+
+// Transparent prop sprite (bomb) resolved by tile-name; a procedural fallback
+// in bombTile draws if the texture is missing. (Fire uses the animated
+// fireEffect frames, not a prop.)
+const PROP_TILE_NAMES = ['bomb'];
 
 function drawIsoDiamond(
   graphics: Graphics,
@@ -367,6 +373,15 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     }
   }
   const fireFps = fireEffect?.fps ?? 8;
+  // Prop sprites (bomb) — transparent PNGs resolved by name. Fire uses the
+  // animated fireEffect frames above, not a single prop.
+  const propTextures = new Map<string, Texture>();
+  await Promise.all(PROP_TILE_NAMES.map(async (name) => {
+    const tile = resolveTile(manifest, name);
+    if (!tile) return;
+    const tex = await loadTexture(tile.file);
+    if (tex) propTextures.set(name, tex);
+  }));
 
   // Local player token.
   const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
@@ -502,18 +517,30 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     fireTiles.delete(key);
   }
 
+  function bombVisual(): Sprite | Graphics {
+    const tex = propTextures.get('bomb');
+    if (!tex) {
+      return new Graphics() // procedural fallback: dark disc + fuse spark
+        .circle(0, -hh * 0.3, hw * 0.5).fill({ color: 0x14161c }).stroke({ color: 0x000000, width: 2 })
+        .circle(hw * 0.16, -hh * 0.3 - hw * 0.3, 2.2).fill({ color: 0xffcc33 });
+    }
+    const s = new Sprite(tex);
+    s.anchor.set(0.5, 0.82);
+    s.y = hh * 0.35;
+    s.width = hw * 1.3;
+    s.height = hw * 1.3;
+    return s;
+  }
+
   function bombTile(x: number, y: number): void {
     const key = tileKey(x, y);
     if (bombSprites.has(key)) return;
     const c = worldToScreen(x, y);
-    const g = new Graphics()
-      .circle(0, -hh * 0.3, hw * 0.5).fill({ color: 0x14161c }).stroke({ color: 0x000000, width: 2 })
-      .circle(hw * 0.16, -hh * 0.3 - hw * 0.3, 2.2).fill({ color: 0xffcc33 }); // fuse spark
     const container = new Container();
     container.x = c.x;
     container.y = c.y;
     container.zIndex = depth(x, y) - 50_000; // above tiles, below player tokens
-    container.addChild(g);
+    container.addChild(bombVisual());
     world.addChild(container);
     bombSprites.set(key, container);
   }

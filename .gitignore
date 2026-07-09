@@ -23,3 +23,4 @@ build/
 
 # Claude Code local state (agent worktrees ~198MB, locks, local skill installs)
 .claude/
+__pycache__/
