@@ -33,6 +33,19 @@ const (
 func isLava(c uint32) bool      { return c == colorLava }
 func isFlammable(c uint32) bool { return c == colorGrass || c == colorFlowers }
 
+// Bombs — a Bomberman-like layer. A dropped bomb fuses, then explodes in a +
+// cross that destroys terrain (reusing the fire automaton). Player elimination
+// and walls land in later increments. See
+// docs/superpowers/specs/2026-07-09-bombs-pvp-elimination-design.md.
+const bombFuseTicks = 38 // ~2.5s at 15Hz
+const bombRange = 2      // tiles per arm
+const maxBombsPerPlayer = 2
+
+type bomb struct {
+	ownerID uint32
+	fuse    int
+}
+
 func neighbors4(k tileKey) [4]tileKey {
 	return [4]tileKey{
 		{k.x + PaintTileSize, k.y}, {k.x - PaintTileSize, k.y},
@@ -127,6 +140,7 @@ type cmdPing struct {
 type cmdPaint struct{ id uint32 }
 type cmdUlt struct{ id uint32 }
 type cmdJump struct{ id uint32 }
+type cmdBomb struct{ id uint32 }
 
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
@@ -189,6 +203,7 @@ func (s *Sim) Ping(id uint32, t uint32)    { s.cmds <- cmdPing{id, t} }
 func (s *Sim) Paint(id uint32)             { s.cmds <- cmdPaint{id} }
 func (s *Sim) Ult(id uint32)               { s.cmds <- cmdUlt{id} }
 func (s *Sim) Jump(id uint32)              { s.cmds <- cmdJump{id} }
+func (s *Sim) Bomb(id uint32)              { s.cmds <- cmdBomb{id} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -518,6 +533,82 @@ func (s *Sim) ashStep(players map[uint32]*player, painted map[tileKey]paintedTil
 	}
 }
 
+// placeBomb drops a bomb on the player's current tile, subject to the one-per-
+// tile and per-player-count caps, and tells everyone to render it.
+func (s *Sim) placeBomb(players map[uint32]*player, bombs map[tileKey]*bomb, p *player) {
+	key := paintTileFor(p.x, p.y)
+	if _, taken := bombs[key]; taken {
+		return
+	}
+	live := 0
+	for _, b := range bombs {
+		if b.ownerID == p.id {
+			live++
+		}
+	}
+	if live >= maxBombsPerPlayer {
+		return
+	}
+	bombs[key] = &bomb{ownerID: p.id, fuse: bombFuseTicks}
+	for _, o := range players {
+		send(o, wire.EncodeBomb(key.x, key.y, p.id))
+	}
+}
+
+// blastTile applies one detonation cell: chains a bomb sitting there, ignites
+// flammable terrain, or destroys other painted terrain to ash. Empty ground is
+// left to the client flash. (Increment 3 adds indestructible walls here.)
+func (s *Sim) blastTile(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, bombs map[tileKey]*bomb, t tileKey, queue *[]tileKey) {
+	if _, ok := bombs[t]; ok {
+		*queue = append(*queue, t) // chain reaction
+	}
+	existing, ok := painted[t]
+	if !ok {
+		return
+	}
+	if isFlammable(existing.color) {
+		s.ignite(players, painted, burning, t)
+		return
+	}
+	ash := paintedTile{x: t.x, y: t.y, color: ashColor, ownerID: 0}
+	painted[t] = ash
+	for _, o := range players {
+		send(o, wire.EncodePaint(ash.x, ash.y, ash.color, ash.ownerID))
+	}
+	s.savePaint(SavedTile{X: ash.x, Y: ash.y, Color: ash.color, Owner: ""})
+}
+
+// detonateBombs explodes each seed bomb in a + cross (arms clipped at the world
+// edge), broadcasting a blast per bomb and chaining any bomb caught in a blast.
+// A bomb is removed before its blast runs, so chains cannot double-fire.
+func (s *Sim) detonateBombs(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, bombs map[tileKey]*bomb, seeds []tileKey) {
+	dirs := [4]tileKey{{PaintTileSize, 0}, {-PaintTileSize, 0}, {0, PaintTileSize}, {0, -PaintTileSize}}
+	queue := seeds
+	for len(queue) > 0 {
+		center := queue[0]
+		queue = queue[1:]
+		if _, ok := bombs[center]; !ok {
+			continue // already detonated (chained earlier)
+		}
+		delete(bombs, center)
+		var arms [4]byte
+		s.blastTile(players, painted, burning, bombs, center, &queue)
+		for i, d := range dirs {
+			for step := int16(1); step <= bombRange; step++ {
+				t := tileKey{x: center.x + d.x*step, y: center.y + d.y*step}
+				if !validPaintTile(t) {
+					break
+				}
+				arms[i] = byte(step)
+				s.blastTile(players, painted, burning, bombs, t, &queue)
+			}
+		}
+		for _, o := range players {
+			send(o, wire.EncodeBlast(center.x, center.y, arms[0], arms[1], arms[2], arms[3]))
+		}
+	}
+}
+
 func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player) {
 	center := paintTileFor(p.x, p.y)
 	for dx := -1; dx <= 1; dx++ {
@@ -595,6 +686,7 @@ func (s *Sim) Run(ctx context.Context) {
 	painted := map[tileKey]paintedTile{}
 	burning := map[tileKey]int{} // tile -> fire-steps remaining (transient, never persisted)
 	ashTimers := map[tileKey]int{}
+	bombs := map[tileKey]*bomb{} // tile -> live bomb (transient, never persisted)
 	s.loadPaints(painted)
 	grid := NewGrid()
 	var nextID uint32 = 1
@@ -698,6 +790,13 @@ func (s *Sim) Run(ctx context.Context) {
 					send(o, wire.EncodeJump(p.id))
 				}
 
+			case cmdBomb:
+				p := players[m.id]
+				if p == nil {
+					continue
+				}
+				s.placeBomb(players, bombs, p)
+
 			case cmdPing:
 				if p := players[m.id]; p != nil {
 					send(p, wire.EncodePong(m.t))
@@ -719,6 +818,18 @@ func (s *Sim) Run(ctx context.Context) {
 		case <-ticker.C:
 			tick++
 			s.ashStep(players, painted, ashTimers)
+			if len(bombs) > 0 {
+				var seeds []tileKey
+				for k, b := range bombs {
+					b.fuse--
+					if b.fuse <= 0 {
+						seeds = append(seeds, k)
+					}
+				}
+				if len(seeds) > 0 {
+					s.detonateBombs(players, painted, burning, bombs, seeds)
+				}
+			}
 			if tick%fireTickEvery == 0 {
 				s.fireStep(players, painted, burning, ashTimers)
 			}

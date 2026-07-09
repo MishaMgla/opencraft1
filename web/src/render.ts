@@ -246,6 +246,8 @@ export interface Renderer {
   setLocal(x: number, y: number): void;
   paintTile(x: number, y: number, color: number): void;
   fireTile(x: number, y: number): void;
+  bombTile(x: number, y: number): void;
+  blast(cx: number, cy: number, arms: [number, number, number, number]): void;
   placeTile(x: number, y: number, name: string): Promise<void>;
   shakeLocal(): void;
   shakeToken(token: Token): void;
@@ -321,6 +323,9 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     container: Container; phase: number;
     sprite: Sprite | null; frame: number; acc: number; last: number;
   }>();
+  // Ticking bomb sprites (keyed by tile) and transient explosion-flash graphics.
+  const bombSprites = new Map<string, Container>();
+  const flashes: { gfx: Graphics; born: number }[] = [];
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -497,12 +502,51 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     fireTiles.delete(key);
   }
 
-  // One shared ticker animates every active flame. Sprite flames swap through
-  // the flicker frames (phase-offset per tile) with a subtle alpha shimmer;
-  // procedural fallback flames keep the old alpha + vertical-pulse wobble.
+  function bombTile(x: number, y: number): void {
+    const key = tileKey(x, y);
+    if (bombSprites.has(key)) return;
+    const c = worldToScreen(x, y);
+    const g = new Graphics()
+      .circle(0, -hh * 0.3, hw * 0.5).fill({ color: 0x14161c }).stroke({ color: 0x000000, width: 2 })
+      .circle(hw * 0.16, -hh * 0.3 - hw * 0.3, 2.2).fill({ color: 0xffcc33 }); // fuse spark
+    const container = new Container();
+    container.x = c.x;
+    container.y = c.y;
+    container.zIndex = depth(x, y) - 50_000; // above tiles, below player tokens
+    container.addChild(g);
+    world.addChild(container);
+    bombSprites.set(key, container);
+  }
+
+  function removeBomb(key: string): void {
+    const b = bombSprites.get(key);
+    if (!b) return;
+    world.removeChild(b);
+    b.destroy({ children: true });
+    bombSprites.delete(key);
+  }
+
+  function blast(cx: number, cy: number, arms: [number, number, number, number]): void {
+    removeBomb(tileKey(cx, cy));
+    const tiles: [number, number][] = [[cx, cy]];
+    const dirs: [number, number][] = [[GROUND_STEP, 0], [-GROUND_STEP, 0], [0, GROUND_STEP], [0, -GROUND_STEP]];
+    for (let i = 0; i < 4; i++) {
+      for (let s = 1; s <= arms[i]; s++) tiles.push([cx + dirs[i][0] * s, cy + dirs[i][1] * s]);
+    }
+    for (const [tx, ty] of tiles) {
+      const c = worldToScreen(tx, ty);
+      const g = drawIsoDiamond(new Graphics(), c.x, c.y, hw, hh, 0xff7a1a, 0.85);
+      g.zIndex = depth(tx, ty) - 40_000;
+      world.addChild(g);
+      flashes.push({ gfx: g, born: performance.now() });
+    }
+  }
+
+  const FLASH_MS = 400;
   const fireStepMs = 1000 / fireFps;
+  // One shared ticker animates flames (sprite frame-swap or procedural wobble),
+  // bomb fuses (pulse), and fades out explosion flashes.
   app.ticker.add(() => {
-    if (!fireTiles.size) return;
     const now = performance.now();
     const t = now / 1000;
     for (const f of fireTiles.values()) {
@@ -516,6 +560,17 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         f.container.alpha = 0.75 + 0.25 * Math.sin(t * 12 + f.phase);
         f.container.scale.set(1, 0.85 + 0.2 * (0.5 + 0.5 * Math.sin(t * 9 + f.phase)));
       }
+    }
+    for (const b of bombSprites.values()) b.scale.set(1, 1 + 0.08 * Math.sin(t * 10));
+    for (let i = flashes.length - 1; i >= 0; i--) {
+      const age = now - flashes[i].born;
+      if (age >= FLASH_MS) {
+        world.removeChild(flashes[i].gfx);
+        flashes[i].gfx.destroy();
+        flashes.splice(i, 1);
+        continue;
+      }
+      flashes[i].gfx.alpha = 0.85 * (1 - age / FLASH_MS);
     }
   });
 
@@ -555,6 +610,12 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     },
     fireTile(x, y) {
       fireTile(x, y);
+    },
+    bombTile(x, y) {
+      bombTile(x, y);
+    },
+    blast(cx, cy, arms) {
+      blast(cx, cy, arms);
     },
     async placeTile(this: Renderer, x, y, name) {
       const tile = resolveTile(manifest, name);

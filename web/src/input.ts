@@ -20,10 +20,12 @@ export interface Input {
   releasePaint(): void;
   requestUlt(): void;
   requestJump(): void;
+  requestBomb(): void;
   consumePaint(): boolean;
   isPaintHeld(): boolean;
   consumeUlt(): boolean;
   consumeJump(): boolean;
+  consumeBomb(): boolean;
 }
 
 type KeyboardTarget = Pick<Window, 'addEventListener'>;
@@ -40,6 +42,10 @@ function isUltKey(e: KeyboardEvent): boolean {
   return e.code === 'KeyE' || e.key.toLowerCase() === 'e';
 }
 
+function isBombKey(e: KeyboardEvent): boolean {
+  return e.code === 'KeyB' || e.key.toLowerCase() === 'b';
+}
+
 function clamp(v: number, lo: number, hi: number): number {
   return v < lo ? lo : v > hi ? hi : v;
 }
@@ -54,6 +60,7 @@ export function createInput(target: KeyboardTarget = window): Input {
   let paintHeld = false;
   let ultRequested = false;
   let jumpRequested = false;
+  let bombRequested = false;
   let moveDestination: Vec2 | null = null;
 
   function requestPaint(held = false): void {
@@ -71,6 +78,10 @@ export function createInput(target: KeyboardTarget = window): Input {
 
   function requestJump(): void {
     jumpRequested = true;
+  }
+
+  function requestBomb(): void {
+    bombRequested = true;
   }
 
   target.addEventListener(
@@ -92,6 +103,11 @@ export function createInput(target: KeyboardTarget = window): Input {
         if (!e.repeat) requestUlt();
         return;
       }
+      if (isBombKey(e)) {
+        e.preventDefault();
+        if (!e.repeat) requestBomb();
+        return;
+      }
       keys[e.key.toLowerCase()] = true;
     },
     { capture: true },
@@ -109,6 +125,10 @@ export function createInput(target: KeyboardTarget = window): Input {
         return;
       }
       if (isUltKey(e)) {
+        e.preventDefault();
+        return;
+      }
+      if (isBombKey(e)) {
         e.preventDefault();
         return;
       }
@@ -171,6 +191,7 @@ export function createInput(target: KeyboardTarget = window): Input {
     releasePaint,
     requestUlt,
     requestJump,
+    requestBomb,
     consumePaint() {
       if (!paintRequested) return false;
       paintRequested = false;
@@ -187,6 +208,11 @@ export function createInput(target: KeyboardTarget = window): Input {
     consumeJump() {
       if (!jumpRequested) return false;
       jumpRequested = false;
+      return true;
+    },
+    consumeBomb() {
+      if (!bombRequested) return false;
+      bombRequested = false;
       return true;
     },
   };

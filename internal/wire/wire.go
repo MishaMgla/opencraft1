@@ -12,6 +12,7 @@ const (
 	CPaint = 0x04
 	CUlt   = 0x05
 	CJump  = 0x06
+	CBomb  = 0x07
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
@@ -23,6 +24,8 @@ const (
 	SPlayer   = 0x88
 	SJump     = 0x89
 	SFire     = 0x8A
+	SBomb     = 0x8B
+	SBlast    = 0x8C
 )
 
 const (
@@ -144,6 +147,31 @@ func EncodeJump(id uint32) []byte {
 	return b
 }
 
+// EncodeBomb announces a bomb placed on a tile, ticking toward detonation.
+func EncodeBomb(x, y int16, ownerID uint32) []byte {
+	b := make([]byte, 1+2+2+4)
+	b[0] = SBomb
+	binary.LittleEndian.PutUint16(b[1:], uint16(x))
+	binary.LittleEndian.PutUint16(b[3:], uint16(y))
+	binary.LittleEndian.PutUint32(b[5:], ownerID)
+	return b
+}
+
+// EncodeBlast announces a bomb detonation centred at (x,y) with the reached arm
+// lengths in tiles for +x, -x, +y, -y (0..range). Transient; the client draws a
+// cross explosion flash. Terrain changes arrive as separate SPaint/SFire frames.
+func EncodeBlast(x, y int16, armXPos, armXNeg, armYPos, armYNeg byte) []byte {
+	b := make([]byte, 1+2+2+4)
+	b[0] = SBlast
+	binary.LittleEndian.PutUint16(b[1:], uint16(x))
+	binary.LittleEndian.PutUint16(b[3:], uint16(y))
+	b[5] = armXPos
+	b[6] = armXNeg
+	b[7] = armYPos
+	b[8] = armYNeg
+	return b
+}
+
 // EncodeFire marks a tile as having just caught fire (transient overlay, like
 // SShake/SJump). The tile's persisted paint is unchanged until it burns to ash,
 // which arrives as a normal SPaint frame.
@@ -241,6 +269,8 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 		return ClientMsg{Type: CUlt}, true
 	case CJump:
 		return ClientMsg{Type: CJump}, true
+	case CBomb:
+		return ClientMsg{Type: CBomb}, true
 	}
 	return ClientMsg{}, false
 }

@@ -5,6 +5,7 @@ const C_INPUT = 0x02;
 const C_PAINT = 0x04;
 const C_ULT = 0x05;
 const C_JUMP = 0x06;
+const C_BOMB = 0x07;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
@@ -16,6 +17,8 @@ const S_SHAKE = 0x87;
 const S_PLAYER = 0x88;
 const S_JUMP = 0x89;
 const S_FIRE = 0x8a;
+const S_BOMB = 0x8b;
+const S_BLAST = 0x8c;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -90,10 +93,22 @@ export interface Fire {
   x: number;
   y: number;
 }
+export interface Bomb {
+  type: 'bomb';
+  x: number;
+  y: number;
+  ownerId: number;
+}
+export interface Blast {
+  type: 'blast';
+  x: number;
+  y: number;
+  arms: [number, number, number, number]; // +x, -x, +y, -y tile lengths
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | Unknown;
 
 export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -137,6 +152,12 @@ export function encodeUlt(): ArrayBuffer {
 export function encodeJump(): ArrayBuffer {
   const b = new Uint8Array(1);
   b[0] = C_JUMP;
+  return b.buffer;
+}
+
+export function encodeBomb(): ArrayBuffer {
+  const b = new Uint8Array(1);
+  b[0] = C_BOMB;
   return b.buffer;
 }
 
@@ -222,6 +243,15 @@ export function decodeServer(view: DataView): ServerMsg {
       return { type: 'jump', id: view.getUint32(1, true) };
     case S_FIRE:
       return { type: 'fire', x: view.getInt16(1, true), y: view.getInt16(3, true) };
+    case S_BOMB:
+      return { type: 'bomb', x: view.getInt16(1, true), y: view.getInt16(3, true), ownerId: view.getUint32(5, true) };
+    case S_BLAST:
+      return {
+        type: 'blast',
+        x: view.getInt16(1, true),
+        y: view.getInt16(3, true),
+        arms: [view.getUint8(5), view.getUint8(6), view.getUint8(7), view.getUint8(8)],
+      };
   }
   return { type: 'unknown' };
 }

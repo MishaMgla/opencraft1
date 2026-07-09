@@ -420,6 +420,12 @@ async function start(name: string, role: number, character: string): Promise<voi
       fire(m) {
         r.fireTile(m.x, m.y);
       },
+      bomb(m) {
+        r.bombTile(m.x, m.y);
+      },
+      blast(m) {
+        r.blast(m.x, m.y, m.arms);
+      },
       jump(m) {
         if (m.id === me.id) {
           r.jumpLocal();
@@ -470,6 +476,9 @@ async function start(name: string, role: number, character: string): Promise<voi
     }
     if (me.id !== 0 && input.consumeJump()) {
       conn.sendJump();
+    }
+    if (me.id !== 0 && input.consumeBomb()) {
+      conn.sendBomb();
     }
     r.setLocal(me.x, me.y);
 
