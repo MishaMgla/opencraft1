@@ -40,6 +40,7 @@ func isFlammable(c uint32) bool { return c == colorGrass || c == colorFlowers }
 const bombFuseTicks = 38 // ~2.5s at 15Hz
 const bombRange = 2      // tiles per arm
 const maxBombsPerPlayer = 2
+const respawnTicks = 60 // ~4s dead before respawn (Increment 2)
 
 type bomb struct {
 	ownerID uint32
@@ -87,6 +88,9 @@ type player struct {
 	ultReady      bool
 	trailLeft     int
 	trailTiles    map[tileKey]struct{}
+	alive         bool
+	kills         byte
+	respawnLeft   int // ticks until respawn while dead (0 = alive)
 }
 
 type tileKey struct {
@@ -273,7 +277,7 @@ func playerState(p *player) []byte {
 	if p.ultReady {
 		charge = UltChargeNeeded
 	}
-	return wire.EncodePlayer(p.id, p.role, charge, p.ultReady, p.name, p.character)
+	return wire.EncodePlayer(p.id, p.role, charge, p.ultReady, p.kills, p.name, p.character)
 }
 
 func broadcastPlayerState(players map[uint32]*player, p *player) {
@@ -555,10 +559,37 @@ func (s *Sim) placeBomb(players map[uint32]*player, bombs map[tileKey]*bomb, p *
 	}
 }
 
-// blastTile applies one detonation cell: chains a bomb sitting there, ignites
-// flammable terrain, or destroys other painted terrain to ash. Empty ground is
-// left to the client flash. (Increment 3 adds indestructible walls here.)
-func (s *Sim) blastTile(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, bombs map[tileKey]*bomb, t tileKey, queue *[]tileKey) {
+// koPlayer eliminates a live player: marks it dead, starts its respawn timer,
+// announces the kill, and credits the killer (self-kills credit nobody).
+func (s *Sim) koPlayer(players map[uint32]*player, victim *player, killerID uint32) {
+	if !victim.alive {
+		return
+	}
+	victim.alive = false
+	victim.respawnLeft = respawnTicks
+	for _, o := range players {
+		send(o, wire.EncodeKO(victim.id, killerID))
+	}
+	if killerID != 0 && killerID != victim.id {
+		if killer := players[killerID]; killer != nil {
+			if killer.kills < 255 {
+				killer.kills++
+			}
+			broadcastPlayerState(players, killer)
+		}
+	}
+}
+
+// blastTile applies one detonation cell: KOs any live player standing on it,
+// chains a bomb sitting there, ignites flammable terrain, or destroys other
+// painted terrain to ash. Empty ground is left to the client flash. (Increment 3
+// adds indestructible walls here.)
+func (s *Sim) blastTile(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, bombs map[tileKey]*bomb, t tileKey, ownerID uint32, queue *[]tileKey) {
+	for _, p := range players {
+		if p.alive && paintTileFor(p.x, p.y) == t {
+			s.koPlayer(players, p, ownerID)
+		}
+	}
 	if _, ok := bombs[t]; ok {
 		*queue = append(*queue, t) // chain reaction
 	}
@@ -587,12 +618,14 @@ func (s *Sim) detonateBombs(players map[uint32]*player, painted map[tileKey]pain
 	for len(queue) > 0 {
 		center := queue[0]
 		queue = queue[1:]
-		if _, ok := bombs[center]; !ok {
+		b, ok := bombs[center]
+		if !ok {
 			continue // already detonated (chained earlier)
 		}
+		owner := b.ownerID
 		delete(bombs, center)
 		var arms [4]byte
-		s.blastTile(players, painted, burning, bombs, center, &queue)
+		s.blastTile(players, painted, burning, bombs, center, owner, &queue)
 		for i, d := range dirs {
 			for step := int16(1); step <= bombRange; step++ {
 				t := tileKey{x: center.x + d.x*step, y: center.y + d.y*step}
@@ -600,7 +633,7 @@ func (s *Sim) detonateBombs(players map[uint32]*player, painted map[tileKey]pain
 					break
 				}
 				arms[i] = byte(step)
-				s.blastTile(players, painted, burning, bombs, t, &queue)
+				s.blastTile(players, painted, burning, bombs, t, owner, &queue)
 			}
 		}
 		for _, o := range players {
@@ -720,7 +753,7 @@ func (s *Sim) Run(ctx context.Context) {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
-				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py)}
+				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py), alive: true}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 
@@ -750,8 +783,8 @@ func (s *Sim) Run(ctx context.Context) {
 
 			case cmdInput:
 				p := players[m.id]
-				if p == nil {
-					continue
+				if p == nil || !p.alive {
+					continue // dead players are frozen at their death spot until respawn
 				}
 				nx, ny := clamp(m.x), clamp(m.y)
 				grid.Move(p.id, p.x, p.y, nx, ny)
@@ -769,21 +802,21 @@ func (s *Sim) Run(ctx context.Context) {
 
 			case cmdPaint:
 				p := players[m.id]
-				if p == nil {
+				if p == nil || !p.alive {
 					continue
 				}
 				s.paint(players, painted, burning, ashTimers, p, paintTileFor(p.x, p.y), true)
 
 			case cmdUlt:
 				p := players[m.id]
-				if p == nil {
+				if p == nil || !p.alive {
 					continue
 				}
 				s.activateUlt(players, painted, burning, ashTimers, p)
 
 			case cmdJump:
 				p := players[m.id]
-				if p == nil {
+				if p == nil || !p.alive {
 					continue
 				}
 				for _, o := range players {
@@ -792,7 +825,7 @@ func (s *Sim) Run(ctx context.Context) {
 
 			case cmdBomb:
 				p := players[m.id]
-				if p == nil {
+				if p == nil || !p.alive {
 					continue
 				}
 				s.placeBomb(players, bombs, p)
@@ -832,6 +865,22 @@ func (s *Sim) Run(ctx context.Context) {
 			}
 			if tick%fireTickEvery == 0 {
 				s.fireStep(players, painted, burning, ashTimers)
+			}
+			for _, p := range players {
+				if p.alive {
+					continue
+				}
+				p.respawnLeft--
+				if p.respawnLeft <= 0 {
+					ox, oy := p.x, p.y
+					p.alive = true
+					p.x, p.y = SpawnCoord, SpawnCoord
+					p.lastPaintTile = paintTileFor(p.x, p.y)
+					grid.Move(p.id, ox, oy, p.x, p.y)
+					for _, o := range players {
+						send(o, wire.EncodeRespawn(p.id, p.x, p.y))
+					}
+				}
 			}
 			for _, p := range players {
 				ents := make([]wire.Ent, 0, len(players))

@@ -1,6 +1,10 @@
 # Bombs & PvP elimination (Bomberman-like)
 
-Status: **Increment 1 shipped; Increments 2–3 pending** (2026-07-09). Inc 1
+Status: **Increments 1–2 shipped; Increment 3 (walls) pending** (2026-07-09).
+Inc 2 verified end-to-end: a Go driver (kill+credit, self-kill-credits-nobody,
+respawn-at-spawn) and a browser drive (server `koPlayer` fires on the blast tile;
+client `me.alive` flips false and the token ghosts to 0.35 alpha; roster shows
+the ☠ kill count). `go test ./...` + `cd web && npm test` green. Inc 1
 verified end-to-end via a throwaway public-API driver (bomb detonates, cross
 destroys terrain to ash, flammable arms ignite, a second bomb chain-detonates
 before its own fuse); `go test ./...` + `cd web && npm test` green, `go vet` +

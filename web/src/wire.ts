@@ -19,6 +19,8 @@ const S_JUMP = 0x89;
 const S_FIRE = 0x8a;
 const S_BOMB = 0x8b;
 const S_BLAST = 0x8c;
+const S_KO = 0x8d;
+const S_RESPAWN = 0x8e;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -81,6 +83,7 @@ export interface PlayerState {
   role: number;
   charge: number;
   ready: boolean;
+  kills: number;
   name: string;
   character: string;
 }
@@ -105,10 +108,21 @@ export interface Blast {
   y: number;
   arms: [number, number, number, number]; // +x, -x, +y, -y tile lengths
 }
+export interface KO {
+  type: 'ko';
+  victimId: number;
+  killerId: number;
+}
+export interface Respawn {
+  type: 'respawn';
+  id: number;
+  x: number;
+  y: number;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | KO | Respawn | Unknown;
 
 export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -227,17 +241,18 @@ export function decodeServer(view: DataView): ServerMsg {
       const role = view.getUint8(5);
       const charge = view.getUint8(6);
       const ready = view.getUint8(7) !== 0;
-      const nlen = view.getUint8(8);
-      const bytes = new Uint8Array(view.buffer, view.byteOffset + 9, nlen);
+      const kills = view.getUint8(8);
+      const nlen = view.getUint8(9);
+      const bytes = new Uint8Array(view.buffer, view.byteOffset + 10, nlen);
       let character = '';
-      const off = 9 + nlen;
+      const off = 10 + nlen;
       if (view.byteLength >= off + 1) {
         const clen = view.getUint8(off);
         if (view.byteLength >= off + 1 + clen) {
           character = dec.decode(new Uint8Array(view.buffer, view.byteOffset + off + 1, clen));
         }
       }
-      return { type: 'player', id, role, charge, ready, name: dec.decode(bytes), character };
+      return { type: 'player', id, role, charge, ready, kills, name: dec.decode(bytes), character };
     }
     case S_JUMP:
       return { type: 'jump', id: view.getUint32(1, true) };
@@ -252,6 +267,10 @@ export function decodeServer(view: DataView): ServerMsg {
         y: view.getInt16(3, true),
         arms: [view.getUint8(5), view.getUint8(6), view.getUint8(7), view.getUint8(8)],
       };
+    case S_KO:
+      return { type: 'ko', victimId: view.getUint32(1, true), killerId: view.getUint32(5, true) };
+    case S_RESPAWN:
+      return { type: 'respawn', id: view.getUint32(1, true), x: view.getInt16(5, true), y: view.getInt16(7, true) };
   }
   return { type: 'unknown' };
 }

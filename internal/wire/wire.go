@@ -26,6 +26,8 @@ const (
 	SFire     = 0x8A
 	SBomb     = 0x8B
 	SBlast    = 0x8C
+	SKO       = 0x8D
+	SRespawn  = 0x8E
 )
 
 const (
@@ -183,7 +185,7 @@ func EncodeFire(x, y int16) []byte {
 	return b
 }
 
-func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string, character ...string) []byte {
+func EncodePlayer(id uint32, role byte, charge byte, ready bool, kills byte, name string, character ...string) []byte {
 	chosenCharacter := ""
 	if len(character) > 0 {
 		chosenCharacter = character[0]
@@ -194,7 +196,7 @@ func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string, ch
 	if len(ch) > 0 {
 		characterLen = 1 + len(ch)
 	}
-	b := make([]byte, 1+4+1+1+1+1+len(n)+characterLen)
+	b := make([]byte, 1+4+1+1+1+1+1+len(n)+characterLen)
 	b[0] = SPlayer
 	binary.LittleEndian.PutUint32(b[1:], id)
 	b[5] = role
@@ -202,13 +204,35 @@ func EncodePlayer(id uint32, role byte, charge byte, ready bool, name string, ch
 	if ready {
 		b[7] = 1
 	}
-	b[8] = byte(len(n))
-	copy(b[9:], n)
+	b[8] = kills
+	b[9] = byte(len(n))
+	copy(b[10:], n)
 	if len(ch) > 0 {
-		off := 9 + len(n)
+		off := 10 + len(n)
 		b[off] = byte(len(ch))
 		copy(b[off+1:], ch)
 	}
+	return b
+}
+
+// EncodeKO announces that victimID was eliminated by killerID's blast
+// (killerID == 0 or == victimID for a self-kill / ownerless blast).
+func EncodeKO(victimID, killerID uint32) []byte {
+	b := make([]byte, 1+4+4)
+	b[0] = SKO
+	binary.LittleEndian.PutUint32(b[1:], victimID)
+	binary.LittleEndian.PutUint32(b[5:], killerID)
+	return b
+}
+
+// EncodeRespawn announces a player returning to life at (x,y). The client must
+// adopt x,y for its OWN id (movement is client-authoritative), same as Welcome.
+func EncodeRespawn(id uint32, x, y int16) []byte {
+	b := make([]byte, 1+4+2+2)
+	b[0] = SRespawn
+	binary.LittleEndian.PutUint32(b[1:], id)
+	binary.LittleEndian.PutUint16(b[5:], uint16(x))
+	binary.LittleEndian.PutUint16(b[7:], uint16(y))
 	return b
 }
 

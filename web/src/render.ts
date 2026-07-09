@@ -255,6 +255,8 @@ export interface Renderer {
   bombTile(x: number, y: number): void;
   blast(cx: number, cy: number, arms: [number, number, number, number]): void;
   placeTile(x: number, y: number, name: string): Promise<void>;
+  setGhost(token: Token, ghost: boolean): void;
+  setLocalGhost(ghost: boolean): void;
   shakeLocal(): void;
   shakeToken(token: Token): void;
   jumpLocal(): void;
@@ -659,6 +661,12 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       sprite.zIndex = depth(x, y) - 400_000;
       tileSprites.set(key, sprite);
       world.addChild(sprite);
+    },
+    setGhost(token, ghost) {
+      token.container.alpha = ghost ? 0.35 : 1; // dimmed while dead
+    },
+    setLocalGhost(ghost) {
+      localToken.container.alpha = ghost ? 0.35 : 1;
     },
     shakeLocal() {
       shakeToken(localToken);

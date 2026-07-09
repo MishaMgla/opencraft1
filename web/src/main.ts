@@ -38,6 +38,7 @@ interface RosterPlayer {
   role: number;
   charge: number;
   ready: boolean;
+  kills: number;
 }
 
 const overlay = document.getElementById('overlay')!;
@@ -290,7 +291,7 @@ async function start(name: string, role: number, character: string): Promise<voi
     profileDialog.close();
   });
 
-  const me = { id: 0, x: 2048, y: 2048 };
+  const me = { id: 0, x: 2048, y: 2048, alive: true };
   const bounds: Bounds = { minX: 0, minY: 0, maxX: 8191, maxY: 8191 };
   const others = new Map<number, Token>();
   const rosterPlayers = new Map<number, RosterPlayer>();
@@ -335,6 +336,7 @@ async function start(name: string, role: number, character: string): Promise<voi
       role: state.role,
       charge: state.charge,
       ready: state.ready,
+      kills: state.kills,
     });
     const token = others.get(state.id);
     if (token) void r.setSkin(token, validCharacter(state.character) ?? DEFAULT_CHARACTER);
@@ -360,7 +362,11 @@ async function start(name: string, role: number, character: string): Promise<voi
         ult.className = p.ready ? 'roster-ult ready' : 'roster-ult';
         ult.textContent = p.ready ? 'ready' : `${Math.min(p.charge, ULT_CHARGE_NEEDED)}/${ULT_CHARGE_NEEDED}`;
 
-        row.append(identity, roleLabel, ult);
+        const kills = document.createElement('span');
+        kills.className = 'roster-kills';
+        kills.textContent = `☠ ${p.kills}`;
+
+        row.append(identity, roleLabel, ult, kills);
         return row;
       }),
     );
@@ -426,6 +432,31 @@ async function start(name: string, role: number, character: string): Promise<voi
       blast(m) {
         r.blast(m.x, m.y, m.arms);
       },
+      ko(m) {
+        if (m.victimId === me.id) {
+          me.alive = false;
+          r.setLocalGhost(true);
+          return;
+        }
+        const o = others.get(m.victimId);
+        if (o) r.setGhost(o, true);
+      },
+      respawn(m) {
+        if (m.id === me.id) {
+          me.x = m.x;
+          me.y = m.y;
+          me.alive = true;
+          input.clearMoveDestination();
+          lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
+          r.setLocalGhost(false);
+          return;
+        }
+        const o = others.get(m.id);
+        if (o) {
+          o.tx = m.x; o.ty = m.y; o.rx = m.x; o.ry = m.y;
+          r.setGhost(o, false);
+        }
+      },
       jump(m) {
         if (m.id === me.id) {
           r.jumpLocal();
@@ -455,13 +486,14 @@ async function start(name: string, role: number, character: string): Promise<voi
     const dt = (now - last) / 1000;
     last = now;
 
-    input.step(me, MOVE_SPEED, dt, bounds);
-    if (me.id !== 0 && input.consumePaint()) {
+    const canAct = me.id !== 0 && me.alive; // dead players are frozen ghosts until respawn
+    if (me.alive) input.step(me, MOVE_SPEED, dt, bounds);
+    if (canAct && input.consumePaint()) {
       conn.sendInput(Math.round(me.x), Math.round(me.y));
       conn.sendPaint();
       lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
     }
-    if (me.id !== 0 && input.isPaintHeld()) {
+    if (canAct && input.isPaintHeld()) {
       const currentTile = paintTileKey(me.x, me.y, bounds);
       if (currentTile !== lastHeldPaintTile) {
         lastHeldPaintTile = currentTile;
@@ -471,13 +503,13 @@ async function start(name: string, role: number, character: string): Promise<voi
     } else {
       lastHeldPaintTile = paintTileKey(me.x, me.y, bounds);
     }
-    if (me.id !== 0 && input.consumeUlt()) {
+    if (canAct && input.consumeUlt()) {
       conn.sendUlt();
     }
-    if (me.id !== 0 && input.consumeJump()) {
+    if (canAct && input.consumeJump()) {
       conn.sendJump();
     }
-    if (me.id !== 0 && input.consumeBomb()) {
+    if (canAct && input.consumeBomb()) {
       conn.sendBomb();
     }
     r.setLocal(me.x, me.y);

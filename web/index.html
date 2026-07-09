@@ -336,7 +336,7 @@
     #roster-list { display: grid; }
     .roster-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
       align-items: center;
       gap: 8px;
       padding: 8px 10px;
@@ -358,6 +358,11 @@
     .roster-ult.ready {
       color: var(--edge);
       font-weight: 700;
+    }
+    .roster-kills {
+      min-width: 28px;
+      text-align: right;
+      color: var(--ink-dim);
     }
     #profile-modal {
       width: min(380px, calc(100vw - 32px));
