@@ -260,6 +260,35 @@
               "characters/horse-pro-north-west-walk-3.png"
             ]
           }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/horse-pro-north-east-idle-0.png",
+              "characters/horse-pro-north-east-idle-1.png",
+              "characters/horse-pro-north-east-idle-2.png",
+              "characters/horse-pro-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/horse-pro-south-east-idle-0.png",
+              "characters/horse-pro-south-east-idle-1.png",
+              "characters/horse-pro-south-east-idle-2.png",
+              "characters/horse-pro-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/horse-pro-south-west-idle-0.png",
+              "characters/horse-pro-south-west-idle-1.png",
+              "characters/horse-pro-south-west-idle-2.png",
+              "characters/horse-pro-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/horse-pro-north-west-idle-0.png",
+              "characters/horse-pro-north-west-idle-1.png",
+              "characters/horse-pro-north-west-idle-2.png",
+              "characters/horse-pro-north-west-idle-3.png"
+            ]
+          }
         }
       }
     },
@@ -539,6 +568,35 @@
               "characters/jesus-pro-north-west-walk-1.png",
               "characters/jesus-pro-north-west-walk-2.png",
               "characters/jesus-pro-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/jesus-pro-north-east-idle-0.png",
+              "characters/jesus-pro-north-east-idle-1.png",
+              "characters/jesus-pro-north-east-idle-2.png",
+              "characters/jesus-pro-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/jesus-pro-south-east-idle-0.png",
+              "characters/jesus-pro-south-east-idle-1.png",
+              "characters/jesus-pro-south-east-idle-2.png",
+              "characters/jesus-pro-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/jesus-pro-south-west-idle-0.png",
+              "characters/jesus-pro-south-west-idle-1.png",
+              "characters/jesus-pro-south-west-idle-2.png",
+              "characters/jesus-pro-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/jesus-pro-north-west-idle-0.png",
+              "characters/jesus-pro-north-west-idle-1.png",
+              "characters/jesus-pro-north-west-idle-2.png",
+              "characters/jesus-pro-north-west-idle-3.png"
             ]
           }
         }
@@ -822,6 +880,35 @@
               "characters/pigeon-man-pro-north-west-walk-3.png"
             ]
           }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/pigeon-man-pro-north-east-idle-0.png",
+              "characters/pigeon-man-pro-north-east-idle-1.png",
+              "characters/pigeon-man-pro-north-east-idle-2.png",
+              "characters/pigeon-man-pro-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/pigeon-man-pro-south-east-idle-0.png",
+              "characters/pigeon-man-pro-south-east-idle-1.png",
+              "characters/pigeon-man-pro-south-east-idle-2.png",
+              "characters/pigeon-man-pro-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/pigeon-man-pro-south-west-idle-0.png",
+              "characters/pigeon-man-pro-south-west-idle-1.png",
+              "characters/pigeon-man-pro-south-west-idle-2.png",
+              "characters/pigeon-man-pro-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/pigeon-man-pro-north-west-idle-0.png",
+              "characters/pigeon-man-pro-north-west-idle-1.png",
+              "characters/pigeon-man-pro-north-west-idle-2.png",
+              "characters/pigeon-man-pro-north-west-idle-3.png"
+            ]
+          }
         }
       }
     },
@@ -1101,6 +1188,35 @@
               "characters/pinniped-man-pro-north-west-walk-1.png",
               "characters/pinniped-man-pro-north-west-walk-2.png",
               "characters/pinniped-man-pro-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/pinniped-man-pro-north-east-idle-0.png",
+              "characters/pinniped-man-pro-north-east-idle-1.png",
+              "characters/pinniped-man-pro-north-east-idle-2.png",
+              "characters/pinniped-man-pro-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/pinniped-man-pro-south-east-idle-0.png",
+              "characters/pinniped-man-pro-south-east-idle-1.png",
+              "characters/pinniped-man-pro-south-east-idle-2.png",
+              "characters/pinniped-man-pro-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/pinniped-man-pro-south-west-idle-0.png",
+              "characters/pinniped-man-pro-south-west-idle-1.png",
+              "characters/pinniped-man-pro-south-west-idle-2.png",
+              "characters/pinniped-man-pro-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/pinniped-man-pro-north-west-idle-0.png",
+              "characters/pinniped-man-pro-north-west-idle-1.png",
+              "characters/pinniped-man-pro-north-west-idle-2.png",
+              "characters/pinniped-man-pro-north-west-idle-3.png"
             ]
           }
         }

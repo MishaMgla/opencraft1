@@ -93,9 +93,13 @@ interface SkinState {
   fps: number;
   idle: Record<string, Texture>;          // facing -> still
   walk: Record<string, Texture[]> | null; // facing -> walk frames (null if none)
+  idleAnim: Record<string, Texture[]> | null; // facing -> idle-loop frames (null if none)
+  idleFps: number;                        // idle-loop playback rate
   anchorY: Record<string, number>;        // facing -> per-texture feet anchor (normalized)
   dir: string;                            // current facing (always a key present in `idle`)
   frame: number;                          // walk frame cursor
+  idleFrame: number;                      // idle-loop frame cursor
+  idleAcc: number;                        // ms accumulator toward the next idle frame
   acc: number;                            // ms accumulator toward the next frame
   last: number;                           // performance.now() at last tick
   prevX: number;                          // last sampled world pos (movement detection)
@@ -190,8 +194,9 @@ function tickSkin(token: Token): void {
     s.sprite.y = 0;
     s.sprite.rotation = 0;
   } else {
-    s.sprite.texture = s.idle[s.dir] ?? s.idle.south;
     if (moving) {
+      // No walk art for this facing: fall back to the still + a procedural bob/sway.
+      s.sprite.texture = s.idle[s.dir] ?? s.idle.south;
       s.acc += now - s.last;
       const stepMs = 1000 / SKIN_FALLBACK_WALK_FPS;
       while (s.acc >= stepMs) { s.acc -= stepMs; s.frame++; }
@@ -199,6 +204,17 @@ function tickSkin(token: Token): void {
       s.sprite.y = phase > 0 ? -SKIN_FALLBACK_WALK_BOB : 0;
       s.sprite.rotation = SKIN_FALLBACK_WALK_SWAY * phase;
     } else {
+      // Stationary: loop the idle animation if present (so the sprite keeps
+      // churning/breathing in place), else hold the static idle still frame.
+      const iseq = s.idleAnim ? s.idleAnim[s.dir] : null;
+      if (iseq && iseq.length) {
+        s.idleAcc += now - s.last;
+        const stepMs = 1000 / (s.idleFps || 8);
+        while (s.idleAcc >= stepMs) { s.idleAcc -= stepMs; s.idleFrame++; }
+        s.sprite.texture = iseq[s.idleFrame % iseq.length];
+      } else {
+        s.sprite.texture = s.idle[s.dir] ?? s.idle.south;
+      }
       s.frame = 0; s.acc = 0;
       s.sprite.y = 0;
       s.sprite.rotation = 0;
@@ -566,6 +582,22 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
         if (!Object.keys(walk).length) walk = null;
       }
 
+      // Optional idle-loop animation: plays while the character is STATIONARY so a
+      // "standing" sprite can still churn/breathe. Loaded like walk; null when absent
+      // (then the static idle still frame is used, as before).
+      const idleDef = ch.animations?.idle;
+      let idleAnim: Record<string, Texture[]> | null = null;
+      let idleFps = 8;
+      if (idleDef) {
+        idleFps = idleDef.fps || 8;
+        idleAnim = {};
+        await Promise.all(Object.entries(idleDef.frames).map(async ([d, files]) => {
+          const texes = (await Promise.all(files.map((f) => loadTexture(f)))).filter((t): t is Texture => !!t);
+          if (texes.length) idleAnim![d] = texes;
+        }));
+        if (!Object.keys(idleAnim).length) idleAnim = null;
+      }
+
       // Per-facing feet anchor so each idle still sits on the tile (no hover);
       // detected once from each PNG's alpha, defaulting to the manifest anchor.
       const anchorY: Record<string, number> = {};
@@ -598,7 +630,8 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const topAnchor = Math.max(...Object.values(anchorY), ch.anchor.y);
       token.label.y = -Math.round(topAnchor * texH) - 4;
       token.skin = {
-        sprite, fps, idle, walk, anchorY, dir: startDir, frame: 0, acc: 0,
+        sprite, fps, idle, walk, idleAnim, idleFps, anchorY, dir: startDir,
+        frame: 0, idleFrame: 0, idleAcc: 0, acc: 0,
         last: performance.now(), prevX: token.rx, prevY: token.ry,
       };
     },
