@@ -14,11 +14,13 @@ Add under **Settings → Secrets and variables → Actions**:
   `AGENTS_QUOTA_FREEZE` Actions variable (`GITHUB_TOKEN` cannot manage
   variables). See [`agents-quota-recovery.md`](agents-quota-recovery.md).
 
-- `PIXELLAB_API_KEY` — PixelLab API token (from account settings at
-  [pixellab.ai](https://pixellab.ai)). Set as a repo Actions secret. Used only
-  by the Dev agent during `dev-implement` to generate committed pixel art via
-  `web/tools/gen-asset.mjs`. Absent ⇒ asset issues fail the gen step (no
-  silent skip); non-asset issues are unaffected.
+- `OPENROUTER_API_KEY` — OpenRouter API token (from
+  [openrouter.ai/keys](https://openrouter.ai/keys)). Set as a repo Actions secret.
+  Used by the Dev agent during `dev-implement` (and `regen-character`) to generate
+  committed art via `web/tools/gen-asset.mjs` → nano-banana (Gemini Flash Image).
+  Absent ⇒ asset issues fail the gen step (no silent skip); non-asset issues are
+  unaffected. The runner must also (a) allow egress to `openrouter.ai` and (b) have
+  **Pillow** installed — see §2c.
 
 The agents authenticate to Codex via a ChatGPT subscription stored **on the
 runner** (step 2), so no model API key is kept as a repo secret and there is no
@@ -76,6 +78,20 @@ sudo ln -sf /usr/local/go/bin/go /usr/local/bin/go
 sudo ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
 # verify under the runner's PATH (no service restart needed — resolved per-command):
 env -i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin sh -c 'go version'
+```
+
+### 2c. Pillow (required for asset generation)
+
+`web/tools/gen-asset.mjs` generates art via **nano-banana** (Gemini Flash Image
+through the OpenRouter Image API — `OPENROUTER_API_KEY` secret). That model
+ignores `output_format` and returns **JPEG ~60% of the time**, which the repo's
+pure-stdlib PNG codecs cannot decode, so `nanobanana.mjs` shells out to **Pillow**
+to transcode+resize. Without it, every asset-generation spec fails with a clear
+`needs Pillow to transcode…` error. Install it for the runner service's `python3`:
+
+```bash
+python3 -m pip install --upgrade Pillow    # add --break-system-packages on PEP-668 distros
+python3 -c 'import PIL; print(PIL.__version__)'   # verify importable
 ```
 
 ## 3. Allowlist

@@ -1,11 +1,11 @@
 name: Regenerate Character Asset
 
 # Deterministic, manual-only regeneration of a single character asset (no agent,
-# no untrusted input). Runs `gen-asset.mjs` with the PixelLab key on the
-# self-hosted runner (egress-allowlisted to api.pixellab.ai), VALIDATES the
+# no untrusted input). Runs `gen-asset.mjs` with the OpenRouter key (nano-banana)
+# on the self-hosted runner (egress-allowlisted to openrouter.ai), VALIDATES the
 # output before committing, and pushes the regenerated PNGs + manifest to the
-# branch it was dispatched on. Used to produce the ISO diagonal (ordinal) horse
-# for issue #92. Re-run on failure — nothing is committed unless validation passes.
+# branch it was dispatched on. Re-run on failure — nothing is committed unless
+# validation passes.
 
 on:
   workflow_dispatch:
@@ -37,12 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Fail fast if the PixelLab key is missing
+      - name: Fail fast if the OpenRouter key is missing
         env:
-          PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          if [ -z "${PIXELLAB_API_KEY}" ]; then
-            echo "PIXELLAB_API_KEY is not available to this workflow; aborting." >&2
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "OPENROUTER_API_KEY is not available to this workflow; aborting." >&2
             exit 1
           fi
 
@@ -69,7 +69,6 @@ jobs:
 
       - name: Generate ISO ordinal character (static, 8-direction)
         env:
-          PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           NAME: ${{ github.event.inputs.name }}
           PROMPT: ${{ github.event.inputs.prompt }}

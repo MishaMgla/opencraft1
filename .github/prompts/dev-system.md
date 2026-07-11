@@ -15,44 +15,41 @@ A spec PR for issue #<N> has merged to `main`. Implement it:
    run the following from the repo root BEFORE writing any other code:
 
    ```
-   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>] [--outline <style>] [--view <view>] [--template <id>] [--animate <name>]
+   node web/tools/gen-asset.mjs --type <type> --name <name> --prompt "<prompt>" --size <size> [--directions <n>] [--facings ordinal] [--animate <name>]
    ```
 
    map block fields to flags exactly: `type→--type`, `name→--name`,
-   `prompt→--prompt`, `size→--size`, `directions→--directions` (character only).
-   forward the OPTIONAL style fields only when the block includes them:
-   `outline→--outline`, `view→--view`, `template→--template`, `animation→--animate`
-   (character walk-cycle; one job per direction, so it costs more credits and
-   takes longer — only when the block has it).
+   `prompt→--prompt`, `size→--size`, `directions→--directions` (character only),
+   `animation→--animate` (character walk-cycle; only when the block has it).
+   the legacy PixelLab flags (`--outline`, `--template`, `--view`, `--isometric`,
+   `--no-background`) are still parsed but IGNORED — do not pass them.
 
-   **house visual style (REQUIRED).** opencraft1's style is **Halftone Comic**.
-   the `--prompt` is subject-first, then you MUST append a style suffix — WHICH
-   suffix depends on the asset type (figure-ground rule):
+   **house visual style (REQUIRED — applied automatically).** the generator is
+   nano-banana (Google Gemini 3.1 Flash Image) via OpenRouter, and it wraps every
+   `--prompt` in opencraft1's house **dataset-poison AI-slop** style based on
+   `--type`. so the `--prompt` MUST be a **plain subject only** — no style words,
+   no suffix, no `--outline`:
 
-   - `character` / `hud` / prop → **BOLD** suffix + `--outline "single color black outline"`:
-     > `<subject>, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors`
-   - `tile` (ground) → **QUIET** suffix + `--outline lineless`:
-     > `<subject>, soft pale halftone ground texture, light and low contrast, gentle even halftone dot field, no bold outlines, subtle muted background floor`
+   - `character` / `hud` → the tool applies the **BOLD slop** wrapper (wrong
+     objects fused into the body, too many hallucinated limbs, flat off-register
+     poster art) and green-screens + knocks out the background to transparency.
+   - `tile` (ground) → the tool applies the **QUIET poison-accent** wrapper
+     (seamless, low-contrast, muted sickly greens/purples) so ground recedes.
 
-   the bold suffix makes characters/props pop; the quiet suffix keeps ground
-   tiles receding so they never fight the cast for attention. palette stays free
-   per subject — the suffix controls rendering technique, not which hues appear.
-   full rule and rationale in `AGENT_RULES.md` → "visual style (house art
-   direction)". (this replaces the earlier "subject only, no style words"
-   guidance, which predated having a house style.)
+   e.g. `--prompt "an anthropomorphic horse-man"` or `--prompt "cracked stone
+   ground"` — nothing more. full rule in `AGENT_RULES.md` → "visual style (house
+   art direction)".
    `type` is `tile` | `character` | `hud`; **`effect` is not supported** (the tool
-   rejects it — `/animate-with-text` needs a base sprite). then:
+   rejects it). then:
 
    - confirm the PNG(s) appear under `web/assets/<type-dir>/` and that
      `web/assets/manifest.json` gained the `<type>:<name>` entry.
    - for character assets in this isometric game, generate DIAGONAL (ordinal)
-     facings by passing `--facings ordinal` to `gen-asset.mjs`. That uses
-     PixelLab's `/create-character-pro` endpoint (`method: create_with_style`)
-     and keeps the four ordinals
-     (`north-east`/`south-east`/`south-west`/`north-west`), which are the facings
-     that read correctly under the iso camera — never straight cardinal
-     side/front/back views. This is the issue-driven character route used by
-     `moodboard/create-character-pro-cast.html`, not the older character endpoint.
+     facings by passing `--facings ordinal` to `gen-asset.mjs`. That renders one
+     still per ordinal (`north-east`/`south-east`/`south-west`/`north-west`),
+     which are the facings that read correctly under the iso camera — never
+     straight cardinal side/front/back views. `--animate walk` then synthesizes
+     the walk cycle locally from those four stills (no extra API cost).
      Do not bake ground shadows into character art — the renderer grounds the
      sprite itself (it auto-detects the feet row and drops the procedural shadow).
    - commit those generated files (`git add web/assets/ && git commit -m "chore: generate <name> asset"`).

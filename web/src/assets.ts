@@ -21,7 +21,7 @@ export interface AssetEntry {
   file?: string;
   // Character frames are keyed by facing. ISO characters use the four diagonal
   // (ordinal) facings — north-east/south-east/south-west/north-west — generated
-  // by the PixelLab 8-direction endpoint (see web/tools/contract.mjs). Older art
+  // one still per facing by nano-banana (see web/tools/nanobanana.mjs). Older art
   // may still use the cardinal south/north/east/west keys; render.ts falls back
   // from an ordinal to the nearest cardinal when only cardinal art is present.
   frames?: string[] | Record<string, string>;

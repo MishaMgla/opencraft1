@@ -2,14 +2,14 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { deflateSync, inflateSync } from 'node:zlib';
-import { generate, getBalance } from './pixellab.mjs';
-import { DIRECTIONS } from './contract.mjs';
+import { generate, getBalance } from './nanobanana.mjs';
 import {
   assetsDir, assetKey, validateSlug, enforceCaps, readManifest, upsertManifest, defaultPlacement,
 } from './manifest.mjs';
 
 const TYPE_DIR = { tile: 'tiles', character: 'characters', hud: 'hud', effect: 'effects' };
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const DIRECTIONS = ['south', 'north', 'east', 'west']; // cardinal fallback facings
 const ORDINALS = ['north-east', 'south-east', 'south-west', 'north-west'];
 
 function parseArgs(argv) {
@@ -282,7 +282,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
       ordinal: a.facings === 'ordinal',
       animation: a.animate, frameCount: a.frameCount,
     },
-    { apiKey: env.PIXELLAB_API_KEY },
+    { apiKey: env.OPENROUTER_API_KEY },
   );
 
   const dir = TYPE_DIR[a.type];
@@ -346,7 +346,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
 // as an opaque generation failure. Best-effort — never blocks the run.
 async function preflightBalance(env) {
   try {
-    const b = await getBalance({ apiKey: env.PIXELLAB_API_KEY });
+    const b = await getBalance({ apiKey: env.OPENROUTER_API_KEY });
     const usd = b?.credits?.usd;
     const gens = b?.subscription?.generations;
     console.log(`gen-asset: balance — ${usd != null ? `$${usd}` : '?'} credits`

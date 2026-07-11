@@ -52,51 +52,46 @@ the security classifier (which handles spam / abuse / injection / malicious code
 
 ## visual style (house art direction)
 
-opencraft1's chosen visual identity is **Halftone Comic** (picked from the
-round-5→11 style exploration in `moodboard/`). Every generated asset — tile,
-character, or hud — must be rendered in this style so the world stays cohesive.
+opencraft1's chosen visual identity is **dataset-poison AI-slop** (the
+`dataset-poison-extra-limbs` style picked from the nano-banana style exploration
+in `moodboard/`). Every generated asset — tile, character, or hud — is rendered
+in this style so the world stays cohesive. The generator is **nano-banana**
+(Google Gemini 3.1 Flash Image, "Nano Banana 2") via the **OpenRouter Image
+API** (`web/tools/nanobanana.mjs`).
+
+**the tool applies the style — pass a plain subject.** `gen-asset.mjs` wraps
+`--prompt` in the house style automatically based on `--type`, so the prompt is a
+**bare subject only** — no style words, no suffix. (this overrides the older
+"append a halftone suffix" and the even older "no style words" guidance.)
 
 **figure-ground rule (important).** characters and props must POP; ground tiles
-must RECEDE. So the style uses two suffixes, by asset type — never the loud one
-on a tile:
+must RECEDE. The wrapper differs by type:
 
-- **characters / hud / props — BOLD suffix.** append, after the subject:
+- **characters / hud — BOLD slop.** wrong objects fused into the body (car
+  parts, branches, ghost label text) and too many hallucinated limbs at wrong
+  angles; flat off-register poster art, not photoreal. these are the foreground,
+  they grab the eye. rendered on a green screen and knocked out to transparency.
+- **ground tiles — QUIET poison-accent.** seamless, flat, low-contrast, muted
+  sickly greens/purples with subtle AI-slop grain, no bold outlines — so tiles
+  sit BEHIND the cast. a tile that competes for attention is a bug; regenerate.
 
-  > `vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors`
-
-  use `--outline "single color black outline"`. high contrast, heavy ink — these
-  are the foreground, they should grab the eye.
-
-- **ground tiles — QUIET suffix.** append, after the subject:
-
-  > `soft pale halftone ground texture, light and low contrast, gentle even halftone dot field, no bold outlines, subtle muted background floor`
-
-  use `--outline lineless`. keep tiles pale, low-contrast, and sparse so they
-  sit BEHIND the characters. a tile that competes with the cast for attention is
-  a bug — regenerate it quieter. verify weight, not just seams: prefer low
-  luminance variance.
-
-- **palette is free per subject.** halftone is a *technique*, not a fixed
-  palette — grass is green, lava is red, a robe is white. the suffix governs how
-  it is rendered (bold ink + dot shading for foreground, pale dot field for
-  ground), not which hues appear. this **overrides** the older "no style words in
-  --prompt" guidance — that rule predates having a house style.
+- **palette is free per subject.** the slop is a *technique*, not a fixed
+  palette — grass is green, lava is red. the wrapper governs how it renders
+  (chaotic bold slop for foreground, muted seamless grain for ground).
 - **seamless tiles.** ground tiles must tile without a visible seam. generate,
   then verify with `python3 web/tools/seamcheck.py <tile.png>` (edge mismatch
   < 25 reads seamless); if it won't roll seamless after a few tries, run
   `python3 web/tools/wrapblend.py <tile.png>` (a deterministic 4px edge
   cross-fade) to close the seam.
-- **characters.** always `--facings ordinal` (four ISO diagonals). Issue-driven
-  character generation uses PixelLab `/create-character-pro` (`method:
-  create_with_style`) so the cast matches `moodboard/create-character-pro-cast.html`,
-  not the older character endpoint. small-scale readability rules from the
-  exploration apply: strong silhouette, no baked ground shadow.
-- **reference.** the chosen-style sheet and the full 40-style comparison are in
-  `moodboard/` (see `moodboard/README.md` for the index). the character
-  generation pipeline and the PixelLab API quirks (endpoint choice, the
-  `generate-8-rotations-v3` frame-order gotcha, seamless-tile tooling) are
-  documented in `docs/character-generation-pipeline.md` — read it before
-  generating multi-directional characters.
+- **characters.** always `--facings ordinal` (four ISO diagonals:
+  `north-east`/`south-east`/`south-west`/`north-west`) — the facings that read
+  under the iso camera. `--animate walk` synthesizes the walk cycle locally from
+  those four stills. strong silhouette, no baked ground shadow.
+- **reference.** the chosen-style sheet and the full style comparison are in
+  `moodboard/` (see `moodboard/README.md` for the index); the winning prompts
+  are in `moodboard/style-exploration-nb2-gpt/round8/prompts.json`. the character
+  generation pipeline and seamless-tile tooling are documented in
+  `docs/character-generation-pipeline.md`.
 
 ## testing layout
 

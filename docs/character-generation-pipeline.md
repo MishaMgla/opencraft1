@@ -1,108 +1,72 @@
-# Character generation pipeline (PixelLab)
+# Character generation pipeline (nano-banana)
 
-How opencraft1 generates multi-directional isometric character sprites, and the
-non-obvious PixelLab API quirks that make or break the result. Derived from the
-July 2026 visual-style exploration (see `moodboard/*.html`).
+How opencraft1 generates multi-directional isometric character sprites and
+seamless ground tiles. The generator is **nano-banana** (Google Gemini 3.1 Flash
+Image, "Nano Banana 2") via the **OpenRouter Image API**
+(`web/tools/nanobanana.mjs`), wrapping every subject in the house
+**dataset-poison AI-slop** style (see `AGENT_RULES.md`). Derived from the
+nano-banana style exploration (`moodboard/style-exploration-nb2-gpt/`).
 
 ## The problem
 
 The renderer needs each character in **four ISO diagonal facings**
 (`north-east`, `south-east`, `south-west`, `north-west`) — the facings that read
-correctly under the iso camera (`web/src/render.ts`). PixelLab offers several
-ways to make directional characters, and they are **not** equivalent:
+correctly under the iso camera (`web/src/render.ts`). Cardinal side/front/back
+views look wrong here.
 
-| Endpoint | Style fidelity | Rotation | Proportions | Bipedal animals |
-|---|---|---|---|---|
-| `create-character-with-8-directions` (older path) | flattens to a clean sprite; ignores render-technique words | built-in | **locked stocky template** (every character ~aspect 2.9) | reliable |
-| `create-character-pro` (`method: create_with_style`, `template_id: mannequin`) | style reference honored | built-in | **varies by subject** (aspect 1.6–2.4) | reliable via `mannequin` |
-| `generate-image-pixflux` (flat) | **best** — honors style fully | none (single pose) | prompt-driven | prompt-driven (unreliable) |
-| `generate-8-rotations-v3` | preserves the input frame's style | rotates an existing frame | inherits the source | inherits the source |
-| `rotate` | preserves style | one target facing per call | inherits source | inherits source |
+## The pipeline (issue-driven characters)
 
-Key finding: **the older dedicated character endpoints impose their own look and
-proportions**, so the styled samples in the flat (`pixflux`) galleries do NOT
-match what those endpoints produce. New issue-driven opencraft1 character
-requests use PixelLab `/create-character-pro` (`method: create_with_style`) via
-`web/tools/gen-asset.mjs --facings ordinal`, matching
-`moodboard/create-character-pro-cast.html`.
+1. Run `web/tools/gen-asset.mjs --type character --facings ordinal`. The
+   `--prompt` is a **plain subject only** — the tool applies the house style.
+2. `nanobanana.mjs` makes ONE OpenRouter image call per ordinal facing (four
+   total), each prompted with the bold-slop wrapper plus a facing phrase, and
+   returns the four stills keyed `north-east`/`south-east`/`south-west`/`north-west`.
+3. If the spec asks for `animation: walk`, `gen-asset.mjs` **synthesizes** the
+   walk cycle locally from the four stills (`synthesizeOrdinalWalkFromImages`) —
+   no extra API cost, no cardinal fallback frames.
 
-## The recommended pipeline (issue-driven characters)
+## Transparency (green-screen chroma-key)
 
-1. Run `web/tools/gen-asset.mjs` with `--type character --facings ordinal`.
-   For issue specs, append the Halftone Comic character suffix and pass
-   `--outline "single color black outline"` as required by `AGENT_RULES.md`.
-2. The tool posts ordinal character requests to `/create-character-pro` with
-   `method: create_with_style`, then keeps the four ISO diagonal facings:
-   `north-east`, `south-east`, `south-west`, `north-west`.
-3. If the spec asks for `animation: walk`, the tool writes per-facing walk frames
-   under the same ordinal keys. For Pro ordinal characters this is synthesized
-   from the generated stills so the renderer never falls back to cardinal
-   side/front/back animation frames.
+nano-banana ignores `background: transparent` (it returns an opaque image) and,
+for complex prompts, usually emits **JPEG** despite `output_format: png`. So the
+character/hud pipeline:
 
-## Rotation fallback pipeline
+1. prompts the subject **on a flat `#00FF00` chroma-key green background**;
+2. normalizes the returned bytes to an RGBA PNG at the requested `--size` via
+   **Pillow** (`python3 -m pip install Pillow` — a REAL added runner dep, unlike
+   `seamcheck.py`/`wrapblend.py` which are pure-stdlib; it decodes the frequent
+   JPEG output and fixes the ignored-size problem, since raw output is ~1024px);
+3. knocks near-green pixels to alpha 0 (`chromaKnockout` in `nanobanana.mjs`).
 
-The older style-preserving fallback is still useful when Pro generation is not
-available or a pre-existing still frame must be rotated:
-
-1. Generate a styled, true-south front sprite with `pixflux`.
-2. Rotate the chosen frame with `generate-8-rotations-v3` (`first_frame` must be
-   a `Base64Image` object `{type, base64, format}`, max 256×256).
-3. Slice the four ISO facings from `last_response.images` by index — see the
-   frame-order section below.
-
-## generate-8-rotations frame order (the big gotcha)
-
-`last_response.images` is a list of 8 frames in this order — **counter-clockwise,
-starting at south** (documented on the `generate-8-rotations-v2` endpoint,
-verified frame-by-frame; the v3 doc omits it):
-
-```
-index: 0      1           2      3           4      5           6      7
-dir:   south, south-west, west,  north-west, north, north-east, east,  south-east
-```
-
-So the four ISO ordinal facings are:
-
-```
-south-east = images[7]
-south-west = images[1]
-north-east = images[5]
-north-west = images[3]
-```
-
-**This mapping is only valid if the source frame is a true straight-south front
-pose.** If the source is already turned to a diagonal, the whole 8-frame wheel is
-rotated by that offset and every sliced facing is wrong. This is why a true-front
-Jesus "rotated to cardinals" while an already-diagonal horse *looked* fine with a
-wrong index map — always verify the source is front-facing first.
-
-## Downloading result images
-
-Character/rotation result URLs are Backblaze CDN links
-(`https://backblaze.pixellab.ai/...`). They **403 without a browser `User-Agent`
-header** — send `User-Agent: Mozilla/5.0` when downloading them. (Inline base64
-results in `last_response.images` need no download.)
+Tiles skip the chroma step (opaque ground) and never send `background: opaque`
+(that flag is what triggers JPEG output).
 
 ## Seamless ground tiles
 
-Tiles are generated with `pixflux` + the house style suffix. Verify seams with
-`web/tools/seamcheck.py <tile.png>` (mean edge mismatch < 25 reads seamless).
-Organic/painterly styles often will not roll seamless; run
-`web/tools/wrapblend.py <tile.png>` — a deterministic 4px edge cross-fade — to
-close the seam without disturbing the interior.
+Tiles use the quiet poison-accent wrapper (seamless, low-contrast). Verify seams
+with `web/tools/seamcheck.py <tile.png>` (mean edge mismatch < 25 reads
+seamless). If a tile will not roll seamless, run `web/tools/wrapblend.py
+<tile.png>` — a deterministic 4px edge cross-fade — to close the seam without
+disturbing the interior.
 
 ## Figure-ground
 
-Characters must pop; ground must recede. The house style (`AGENT_RULES.md`) uses
-a **bold** style suffix for characters/hud/props and a **quiet, low-contrast**
-suffix for ground tiles. Measured example: a busy grass tile put background
-contrast (luminance stddev) at ~59 behind the cast; a neutral tile dropped it to
-~9, making characters read clearly.
+Characters must pop; ground must recede. The house style renders characters/hud
+with the **bold slop** wrapper (chaotic wrong-object grafts, extra limbs) and
+ground tiles with the **quiet poison-accent** wrapper (muted, seamless, no bold
+outlines) so tiles sit behind the cast. A tile that competes for attention is a
+bug — regenerate it.
+
+## Cost
+
+Each nano-banana image call costs ~$0.07 (OpenRouter `usage.cost`, rolled up and
+printed by `gen-asset.mjs`). A four-facing character is ~$0.27; walk frames are
+free (synthesized locally). `gen-asset.mjs` runs a `GET /credits` balance
+preflight before spending.
 
 ## Where the exploration lives
 
-- `moodboard/*.html` — the full 40-style comparison galleries and cast tests
-  (rounds 5–11), the character-endpoint/pro/rotation experiments, and the
-  south-facing style picker.
-- `moodboard/style-picker/`, `moodboard/sources/` — raw sprite PNGs.
+- `moodboard/style-exploration-nb2-gpt/round8/prompts.json` — the winning
+  `dataset-poison-extra-limbs` style and the runner-up variants.
+- `moodboard/*.html` — the full style-comparison galleries and cast tests.
 - Prompts for every generated asset are stored in `web/assets/manifest.json`.

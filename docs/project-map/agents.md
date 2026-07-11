@@ -27,8 +27,8 @@ Graphics specs can include `## Asset Generation` blocks consumed by the Dev
 agent. For character sprites in the isometric game, specs should set
 `facings: ordinal` so the Dev agent runs `gen-asset.mjs --facings ordinal`,
 which generates the four DIAGONAL facings (`north-east`, `south-east`,
-`south-west`, `north-west`) through PixelLab `/create-character-pro`
-(`method: create_with_style`) and stores them under those ordinal keys — the
+`south-west`, `north-west`) via nano-banana (OpenRouter) — one still per facing —
+and stores them under those ordinal keys — the
 facings that read correctly under the iso camera. This is the issue-driven
 character path after issue #134 and matches `moodboard/create-character-pro-cast.html`;
 do not send new character requests to the older character endpoint. When a

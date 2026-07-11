@@ -27,7 +27,7 @@ const fakeGen = async ({ type }) => ({
       ? [Buffer.from('0'), Buffer.from('1'), Buffer.from('2')]
       : [Buffer.from('IMG')],
 });
-const env = { PIXELLAB_API_KEY: 'k' };
+const env = { OPENROUTER_API_KEY: 'k' };
 
 test('run writes a tile PNG and manifest entry', async () => {
   const res = await run(['--type', 'tile', '--name', 'testrock', '--prompt', 'rock', '--size', '128'],

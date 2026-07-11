@@ -51,31 +51,27 @@ rules you must follow when writing this block:
   all assets in the spec.
 - sizes: `tile` 32–128, `hud` 32–128, `character` 32–64 per direction. these are
   the renderer's product caps; the tool enforces them.
-- **`prompt` describes the SUBJECT ONLY.** PixelLab is a pixel-art generator, so
-  do NOT append `pixel art`. Do NOT append outline, shading, background, or
-  camera-view words either — those are real API parameters the tool sets, not
-  prose. Stuffing them into the prompt is the bug this format exists to avoid.
-  Just name the thing and its distinctive features (`sturdy brown riding horse
-  with a readable saddle`), and stay faithful to what the issue author asked —
-  do not invent style the author didn't request. The Dev agent automatically
-  appends opencraft1's house **Halftone Comic** style suffix at generation time
-  — a bold high-contrast suffix for characters/hud/props and a quiet low-contrast
-  one for ground tiles (see `AGENT_RULES.md` → "visual style") — so the block
-  stays subject-only and the world renders in one consistent, readable style with
-  characters popping over calm ground. you do not write the suffix.
-- **style is set by parameters, with cohesive defaults** the tool applies so
-  assets read as one set: no outline (`outline: lineless`), transparent
-  background where it matters (HUD transparent, floor tiles opaque), pixel-art
-  by default. To override, add optional lines — only when the author asks:
-  - `outline: <single color black outline | single color outline | selective outline | lineless>`
-  - `view: <side | low top-down | high top-down>`
+- **`prompt` describes the SUBJECT ONLY.** Do NOT append style, outline, shading,
+  background, or camera-view words — the generator (nano-banana) applies the house
+  style itself based on `--type`. Stuffing style into the prompt is the bug this
+  format exists to avoid. Just name the thing and its distinctive features
+  (`sturdy brown riding horse with a readable saddle`), and stay faithful to what
+  the issue author asked — do not invent style the author didn't request. The tool
+  automatically wraps the subject in opencraft1's house **dataset-poison AI-slop**
+  style at generation time — a bold chaotic-slop wrapper for characters/hud and a
+  quiet seamless poison-accent wrapper for ground tiles (see `AGENT_RULES.md` →
+  "visual style") — so the block stays subject-only and the world renders in one
+  consistent style with characters popping over calm ground.
+- **style is fixed by the tool; the only optional field is facings.** the tool
+  handles background (HUD/characters transparent, floor tiles opaque) and the slop
+  wrapper automatically. To override facings, add an optional line — only when the
+  author asks:
   - `facings: <cardinal | ordinal>`  # character only — `ordinal` (the default
     choice for this ISO game) generates the four DIAGONAL facings
-    (`north-east`/`south-east`/`south-west`/`north-west`) via PixelLab's
-    `/create-character-pro` endpoint (`method: create_with_style`), which read
+    (`north-east`/`south-east`/`south-west`/`north-west`), which read
     correctly under the iso camera.
-  - `template: <horse | cat | dog | bear | lion | mannequin>`  # character base.
-    Pro ordinal generation supports templates, but only include this when the
+  - `template: <horse | cat | dog | bear | lion | mannequin>`  # LEGACY — parsed
+    but ignored by nano-banana; do not emit. only include this when the
     issue author asks for a specific body base; otherwise describe the subject
     in the prompt.
   - `animation: <walk>`  # character only — generates a looping walk-cycle the
@@ -83,9 +79,8 @@ rules you must follow when writing this block:
     frames must keep the same `north-east`/`south-east`/`south-west`/`north-west`
     keys as the idle art. Omit for a static sprite.
 - character sprite requests for this isometric game must use `facings: ordinal`
-  so the horse/character faces the four iso diagonals, and must use the
-  `create-character-pro` path rather than the older character endpoint. Do not
-  ask for straight cardinal side/front/back views.
+  so the horse/character faces the four iso diagonals. Do not ask for straight
+  cardinal side/front/back views.
 - character sprites must not include baked ground shadows; the renderer grounds
   the sprite itself (auto-detects the feet row), so a baked shadow only doubles up
   and reads as hovering.
