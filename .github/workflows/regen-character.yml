@@ -70,6 +70,7 @@ jobs:
       - name: Generate ISO ordinal character (static, 8-direction)
         env:
           PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           NAME: ${{ github.event.inputs.name }}
           PROMPT: ${{ github.event.inputs.prompt }}
           VIEW: ${{ github.event.inputs.view }}

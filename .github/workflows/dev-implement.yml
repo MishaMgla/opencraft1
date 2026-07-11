@@ -180,11 +180,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PROMPT: ${{ steps.load.outputs.prompt }}
           PIXELLAB_API_KEY: ${{ secrets.PIXELLAB_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
           gh auth setup-git
           .github/scripts/run-codex.sh \
             --cd "$GITHUB_WORKSPACE" \
-            --model gpt-5.5 \
+            --model gpt-5.6-sol \
             -c model_reasoning_effort="high" \
             --sandbox danger-full-access \
             --skip-git-repo-check \
