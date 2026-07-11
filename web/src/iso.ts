@@ -2,8 +2,12 @@
 // this is the only place that knows the camera is isometric.
 
 // Pixels per world unit along each screen axis. Classic 2:1 iso => KX = 2*KY.
-export const KX = 0.5;
-export const KY = 0.25;
+// These are the sole viewport-magnification lever (there is no runtime zoom):
+// doubling them from the original 0.5/0.25 renders the whole scene 2x on screen
+// while world coordinates, paint-cell snapping, and the server's bounds are
+// untouched. A 2x-native tile texture then maps ~1 texel per screen pixel.
+export const KX = 1.0;
+export const KY = 0.5;
 
 export interface ScreenPoint {
   x: number;

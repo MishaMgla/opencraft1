@@ -252,7 +252,6 @@ export interface Renderer {
   jumpLocal(): void;
   jumpToken(token: Token): void;
   setLocalName(name: string): void;
-  setZoom(scale: number): void;
   centerCamera(x: number, y: number): void;
   screenToWorld(clientX: number, clientY: number): { x: number; y: number };
   setSkin(token: Token, name: string): Promise<void>;
@@ -314,9 +313,14 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   const tileSprites = new Map<string, Sprite>();
   const paintTileTextures = new Map<string, Texture>();
   // Active fire overlays, keyed by tile. Procedural (no asset) — the generator
-  // rejects animated effects, so flame is drawn Graphics flickered by one shared
-  // ticker below. Cleared when the tile's paint changes (ash lands / repaint).
-  const fireTiles = new Map<string, { container: Container; phase: number }>();
+  // ticker below. When the fire effect asset is present each flame is an
+  // animated Sprite (frame-swapped by that ticker); otherwise it falls back to
+  // the procedural drawFlame triangles. Cleared when the tile's paint changes
+  // (ash lands / repaint). `sprite` is null for the procedural fallback.
+  const fireTiles = new Map<string, {
+    container: Container; phase: number;
+    sprite: Sprite | null; frame: number; acc: number; last: number;
+  }>();
 
   // Static isometric floor.
   const ground = new Graphics();
@@ -345,6 +349,19 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     const tex = await loadTexture(tile.file);
     if (tex) paintTileTextures.set(name, tex);
   }));
+
+  // Preload the fire flicker frames once (like paint tiles); the per-flame tick
+  // is then a pure texture swap. Empty/missing → fireTextures stays [] and
+  // fireTile falls back to the procedural drawFlame triangles.
+  const fireEffect = resolveEffect(manifest, 'fire');
+  const fireTextures: Texture[] = [];
+  if (fireEffect) {
+    for (const file of fireEffect.frames) {
+      const tex = await loadTexture(file);
+      if (tex) fireTextures.push(tex);
+    }
+  }
+  const fireFps = fireEffect?.fps ?? 8;
 
   // Local player token.
   const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
@@ -451,10 +468,25 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     container.x = c.x;
     container.y = c.y;
     container.zIndex = depth(x, y) - 100_000; // above tiles, below player tokens
-    container.addChild(drawFlame());
+    let sprite: Sprite | null = null;
+    if (fireTextures.length) {
+      // Animated flame sprite: rooted at the tile center, rising upward. Sized
+      // so its width spans the tile; anchor bottom-center so it sits on ground.
+      sprite = new Sprite(fireTextures[0]);
+      sprite.anchor.set(0.5, 1);
+      sprite.width = hw * 1.6;
+      sprite.height = hw * 1.6; // square source; scale by width for aspect
+      sprite.y = hh * 0.5;      // base slightly below tile center, on the ground
+      container.addChild(sprite);
+    } else {
+      container.addChild(drawFlame());
+    }
     world.addChild(container);
     // Phase from coords so neighbouring flames flicker out of sync (no RNG).
-    fireTiles.set(key, { container, phase: (x + y) % 628 / 100 });
+    fireTiles.set(key, {
+      container, phase: (x + y) % 628 / 100,
+      sprite, frame: 0, acc: 0, last: performance.now(),
+    });
   }
 
   function clearFire(key: string): void {
@@ -465,13 +497,25 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     fireTiles.delete(key);
   }
 
-  // One shared ticker flickers every active flame (alpha + vertical pulse).
+  // One shared ticker animates every active flame. Sprite flames swap through
+  // the flicker frames (phase-offset per tile) with a subtle alpha shimmer;
+  // procedural fallback flames keep the old alpha + vertical-pulse wobble.
+  const fireStepMs = 1000 / fireFps;
   app.ticker.add(() => {
     if (!fireTiles.size) return;
-    const t = performance.now() / 1000;
+    const now = performance.now();
+    const t = now / 1000;
     for (const f of fireTiles.values()) {
-      f.container.alpha = 0.75 + 0.25 * Math.sin(t * 12 + f.phase);
-      f.container.scale.set(1, 0.85 + 0.2 * (0.5 + 0.5 * Math.sin(t * 9 + f.phase)));
+      if (f.sprite && fireTextures.length) {
+        f.acc += now - f.last;
+        f.last = now;
+        while (f.acc >= fireStepMs) { f.acc -= fireStepMs; f.frame++; }
+        f.sprite.texture = fireTextures[f.frame % fireTextures.length];
+        f.container.alpha = 0.85 + 0.15 * Math.sin(t * 12 + f.phase);
+      } else {
+        f.container.alpha = 0.75 + 0.25 * Math.sin(t * 12 + f.phase);
+        f.container.scale.set(1, 0.85 + 0.2 * (0.5 + 0.5 * Math.sin(t * 9 + f.phase)));
+      }
     }
   });
 
@@ -541,9 +585,6 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     },
     setLocalName(name) {
       localLabel.text = name;
-    },
-    setZoom(scale) {
-      world.scale.set(scale);
     },
     centerCamera(x, y) {
       const p = worldToScreen(x, y);

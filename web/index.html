@@ -257,8 +257,7 @@
       position: relative;
       display: inline-flex;
     }
-    #hud .hud-help,
-    #hud .hud-zoom {
+    #hud .hud-help {
       width: 30px;
       height: 30px;
       min-height: 30px;
@@ -268,13 +267,10 @@
       color: var(--ink);
       font: 700 18px/1 var(--font-pixel);
       box-shadow: 3px 3px 0 var(--shadow);
-    }
-    #hud .hud-help {
       color: var(--gold);
     }
     #hud .hud-help:hover,
-    #hud .hud-help[aria-expanded="true"],
-    #hud .hud-zoom:hover:not(:disabled) {
+    #hud .hud-help[aria-expanded="true"] {
       background: var(--gold);
       color: var(--shadow);
     }
@@ -314,15 +310,6 @@
     #hud .help-panel dd {
       margin: 0;
       color: var(--ink);
-    }
-    #hud .zoom-controls {
-      display: inline-flex;
-      gap: 5px;
-    }
-    #hud .hud-zoom:disabled {
-      opacity: 0.42;
-      cursor: default;
-      box-shadow: none;
     }
     #roster {
       position: fixed;
@@ -517,22 +504,22 @@
       </fieldset>
       <fieldset id="character-picker" aria-label="Character">
         <label>
-          <input type="radio" name="character" value="horse-pro" required />
+          <input type="radio" name="character" value="horse-poison" required />
           <span class="character-name">Horse</span>
           <span class="character-note">saddled runner</span>
         </label>
         <label>
-          <input type="radio" name="character" value="pigeon-man-pro" required />
+          <input type="radio" name="character" value="pigeon-poison" required />
           <span class="character-name">Pigeon Man</span>
           <span class="character-note">street traveler</span>
         </label>
         <label>
-          <input type="radio" name="character" value="pinniped-man-pro" required />
+          <input type="radio" name="character" value="pinniped-poison" required />
           <span class="character-name">Pinniped Man</span>
           <span class="character-note">flipper stride</span>
         </label>
         <label>
-          <input type="radio" name="character" value="jesus-pro" required />
+          <input type="radio" name="character" value="jesus-poison" required />
           <span class="character-name">Jesus</span>
           <span class="character-note">robed walker</span>
         </label>
@@ -555,10 +542,6 @@
         </dl>
       </span>
     </span>
-    <span class="zoom-controls" aria-label="Viewport zoom">
-      <button id="zoom-out" class="hud-zoom" type="button" aria-label="Zoom out">-</button>
-      <button id="zoom-in" class="hud-zoom" type="button" aria-label="Zoom in">+</button>
-    </span>
     <img id="hud-asset" alt="" style="display:none; image-rendering:pixelated; max-width:160px;" />
   </div>
   <div id="roster" aria-label="Player roster">
@@ -579,22 +562,22 @@
       </label>
       <fieldset id="profile-character-picker" aria-label="Character">
         <label>
-          <input type="radio" name="profile-character" value="horse-pro" required />
+          <input type="radio" name="profile-character" value="horse-poison" required />
           <span class="character-name">Horse</span>
           <span class="character-note">saddled runner</span>
         </label>
         <label>
-          <input type="radio" name="profile-character" value="pigeon-man-pro" required />
+          <input type="radio" name="profile-character" value="pigeon-poison" required />
           <span class="character-name">Pigeon Man</span>
           <span class="character-note">street traveler</span>
         </label>
         <label>
-          <input type="radio" name="profile-character" value="pinniped-man-pro" required />
+          <input type="radio" name="profile-character" value="pinniped-poison" required />
           <span class="character-name">Pinniped Man</span>
           <span class="character-note">flipper stride</span>
         </label>
         <label>
-          <input type="radio" name="profile-character" value="jesus-pro" required />
+          <input type="radio" name="profile-character" value="jesus-poison" required />
           <span class="character-name">Jesus</span>
           <span class="character-note">robed walker</span>
         </label>

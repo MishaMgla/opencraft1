@@ -4109,8 +4109,8 @@
       "type": "tile",
       "name": "copper-tile",
       "file": "tiles/copper-tile.png",
-      "size": 64,
-      "prompt": "copper metal ground with warm orange oxidation and plate seams",
+      "size": 256,
+      "prompt": "nano-banana seamless copper tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4127,8 +4127,8 @@
       "type": "tile",
       "name": "crystal-tile",
       "file": "tiles/crystal-tile.png",
-      "size": 64,
-      "prompt": "purple crystal ground with clustered angular shards",
+      "size": 256,
+      "prompt": "nano-banana seamless crystal tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4199,8 +4199,8 @@
       "type": "tile",
       "name": "flowers-tile",
       "file": "tiles/flowers-tile.png",
-      "size": 64,
-      "prompt": "pink flower-covered ground with dense blossoms",
+      "size": 256,
+      "prompt": "nano-banana seamless flowers tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4271,8 +4271,8 @@
       "type": "tile",
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
-      "size": 64,
-      "prompt": "grassy ground with short green blades",
+      "size": 256,
+      "prompt": "nano-banana seamless grass tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4379,8 +4379,8 @@
       "type": "tile",
       "name": "ice-tile",
       "file": "tiles/ice-tile.png",
-      "size": 64,
-      "prompt": "pale cyan ice ground with frosty cracks",
+      "size": 256,
+      "prompt": "nano-banana seamless ice tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4397,8 +4397,8 @@
       "type": "tile",
       "name": "lava-tile",
       "file": "tiles/lava-tile.png",
-      "size": 64,
-      "prompt": "molten lava ground with bright red cracks",
+      "size": 256,
+      "prompt": "nano-banana seamless lava tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4775,8 +4775,8 @@
       "type": "tile",
       "name": "sand-tile",
       "file": "tiles/sand-tile.png",
-      "size": 64,
-      "prompt": "sandy ground with soft yellow ripples",
+      "size": 256,
+      "prompt": "nano-banana seamless sand tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5045,8 +5045,8 @@
       "type": "tile",
       "name": "water-tile",
       "file": "tiles/water-tile.png",
-      "size": 64,
-      "prompt": "shallow blue water surface with gentle wave shapes",
+      "size": 256,
+      "prompt": "nano-banana seamless water tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5105,6 +5105,369 @@
         "anchor": {
           "x": 0.5,
           "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "character:horse-poison": {
+      "type": "character",
+      "name": "horse-poison",
+      "directions": 4,
+      "size": 256,
+      "frames": {
+        "north-east": "characters/horse-poison-north-east.png",
+        "south-east": "characters/horse-poison-south-east.png",
+        "south-west": "characters/horse-poison-south-west.png",
+        "north-west": "characters/horse-poison-north-west.png"
+      },
+      "prompt": "horse-man [poison-extra-limbs, nano-banana + GPT-Image]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal",
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/horse-poison-north-east-walk-0.png",
+              "characters/horse-poison-north-east-walk-1.png",
+              "characters/horse-poison-north-east-walk-2.png",
+              "characters/horse-poison-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/horse-poison-south-east-walk-0.png",
+              "characters/horse-poison-south-east-walk-1.png",
+              "characters/horse-poison-south-east-walk-2.png",
+              "characters/horse-poison-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/horse-poison-south-west-walk-0.png",
+              "characters/horse-poison-south-west-walk-1.png",
+              "characters/horse-poison-south-west-walk-2.png",
+              "characters/horse-poison-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/horse-poison-north-west-walk-0.png",
+              "characters/horse-poison-north-west-walk-1.png",
+              "characters/horse-poison-north-west-walk-2.png",
+              "characters/horse-poison-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/horse-poison-north-east-idle-0.png",
+              "characters/horse-poison-north-east-idle-1.png",
+              "characters/horse-poison-north-east-idle-2.png",
+              "characters/horse-poison-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/horse-poison-south-east-idle-0.png",
+              "characters/horse-poison-south-east-idle-1.png",
+              "characters/horse-poison-south-east-idle-2.png",
+              "characters/horse-poison-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/horse-poison-south-west-idle-0.png",
+              "characters/horse-poison-south-west-idle-1.png",
+              "characters/horse-poison-south-west-idle-2.png",
+              "characters/horse-poison-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/horse-poison-north-west-idle-0.png",
+              "characters/horse-poison-north-west-idle-1.png",
+              "characters/horse-poison-north-west-idle-2.png",
+              "characters/horse-poison-north-west-idle-3.png"
+            ]
+          }
+        }
+      }
+    },
+    "character:jesus-poison": {
+      "type": "character",
+      "name": "jesus-poison",
+      "directions": 4,
+      "size": 256,
+      "frames": {
+        "north-east": "characters/jesus-poison-north-east.png",
+        "south-east": "characters/jesus-poison-south-east.png",
+        "south-west": "characters/jesus-poison-south-west.png",
+        "north-west": "characters/jesus-poison-north-west.png"
+      },
+      "prompt": "jesus [poison-extra-limbs, nano-banana + GPT-Image]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal",
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/jesus-poison-north-east-walk-0.png",
+              "characters/jesus-poison-north-east-walk-1.png",
+              "characters/jesus-poison-north-east-walk-2.png",
+              "characters/jesus-poison-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/jesus-poison-south-east-walk-0.png",
+              "characters/jesus-poison-south-east-walk-1.png",
+              "characters/jesus-poison-south-east-walk-2.png",
+              "characters/jesus-poison-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/jesus-poison-south-west-walk-0.png",
+              "characters/jesus-poison-south-west-walk-1.png",
+              "characters/jesus-poison-south-west-walk-2.png",
+              "characters/jesus-poison-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/jesus-poison-north-west-walk-0.png",
+              "characters/jesus-poison-north-west-walk-1.png",
+              "characters/jesus-poison-north-west-walk-2.png",
+              "characters/jesus-poison-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/jesus-poison-north-east-idle-0.png",
+              "characters/jesus-poison-north-east-idle-1.png",
+              "characters/jesus-poison-north-east-idle-2.png",
+              "characters/jesus-poison-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/jesus-poison-south-east-idle-0.png",
+              "characters/jesus-poison-south-east-idle-1.png",
+              "characters/jesus-poison-south-east-idle-2.png",
+              "characters/jesus-poison-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/jesus-poison-south-west-idle-0.png",
+              "characters/jesus-poison-south-west-idle-1.png",
+              "characters/jesus-poison-south-west-idle-2.png",
+              "characters/jesus-poison-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/jesus-poison-north-west-idle-0.png",
+              "characters/jesus-poison-north-west-idle-1.png",
+              "characters/jesus-poison-north-west-idle-2.png",
+              "characters/jesus-poison-north-west-idle-3.png"
+            ]
+          }
+        }
+      }
+    },
+    "character:pigeon-poison": {
+      "type": "character",
+      "name": "pigeon-poison",
+      "directions": 4,
+      "size": 256,
+      "frames": {
+        "north-east": "characters/pigeon-poison-north-east.png",
+        "south-east": "characters/pigeon-poison-south-east.png",
+        "south-west": "characters/pigeon-poison-south-west.png",
+        "north-west": "characters/pigeon-poison-north-west.png"
+      },
+      "prompt": "pigeon-man [poison-extra-limbs, nano-banana + GPT-Image]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal",
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/pigeon-poison-north-east-walk-0.png",
+              "characters/pigeon-poison-north-east-walk-1.png",
+              "characters/pigeon-poison-north-east-walk-2.png",
+              "characters/pigeon-poison-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/pigeon-poison-south-east-walk-0.png",
+              "characters/pigeon-poison-south-east-walk-1.png",
+              "characters/pigeon-poison-south-east-walk-2.png",
+              "characters/pigeon-poison-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/pigeon-poison-south-west-walk-0.png",
+              "characters/pigeon-poison-south-west-walk-1.png",
+              "characters/pigeon-poison-south-west-walk-2.png",
+              "characters/pigeon-poison-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/pigeon-poison-north-west-walk-0.png",
+              "characters/pigeon-poison-north-west-walk-1.png",
+              "characters/pigeon-poison-north-west-walk-2.png",
+              "characters/pigeon-poison-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/pigeon-poison-north-east-idle-0.png",
+              "characters/pigeon-poison-north-east-idle-1.png",
+              "characters/pigeon-poison-north-east-idle-2.png",
+              "characters/pigeon-poison-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/pigeon-poison-south-east-idle-0.png",
+              "characters/pigeon-poison-south-east-idle-1.png",
+              "characters/pigeon-poison-south-east-idle-2.png",
+              "characters/pigeon-poison-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/pigeon-poison-south-west-idle-0.png",
+              "characters/pigeon-poison-south-west-idle-1.png",
+              "characters/pigeon-poison-south-west-idle-2.png",
+              "characters/pigeon-poison-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/pigeon-poison-north-west-idle-0.png",
+              "characters/pigeon-poison-north-west-idle-1.png",
+              "characters/pigeon-poison-north-west-idle-2.png",
+              "characters/pigeon-poison-north-west-idle-3.png"
+            ]
+          }
+        }
+      }
+    },
+    "character:pinniped-poison": {
+      "type": "character",
+      "name": "pinniped-poison",
+      "directions": 4,
+      "size": 256,
+      "frames": {
+        "north-east": "characters/pinniped-poison-north-east.png",
+        "south-east": "characters/pinniped-poison-south-east.png",
+        "south-west": "characters/pinniped-poison-south-west.png",
+        "north-west": "characters/pinniped-poison-north-west.png"
+      },
+      "prompt": "pinniped-man [poison-extra-limbs, nano-banana + GPT-Image]",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal",
+      "animations": {
+        "walk": {
+          "fps": 12,
+          "frames": {
+            "north-east": [
+              "characters/pinniped-poison-north-east-walk-0.png",
+              "characters/pinniped-poison-north-east-walk-1.png",
+              "characters/pinniped-poison-north-east-walk-2.png",
+              "characters/pinniped-poison-north-east-walk-3.png"
+            ],
+            "south-east": [
+              "characters/pinniped-poison-south-east-walk-0.png",
+              "characters/pinniped-poison-south-east-walk-1.png",
+              "characters/pinniped-poison-south-east-walk-2.png",
+              "characters/pinniped-poison-south-east-walk-3.png"
+            ],
+            "south-west": [
+              "characters/pinniped-poison-south-west-walk-0.png",
+              "characters/pinniped-poison-south-west-walk-1.png",
+              "characters/pinniped-poison-south-west-walk-2.png",
+              "characters/pinniped-poison-south-west-walk-3.png"
+            ],
+            "north-west": [
+              "characters/pinniped-poison-north-west-walk-0.png",
+              "characters/pinniped-poison-north-west-walk-1.png",
+              "characters/pinniped-poison-north-west-walk-2.png",
+              "characters/pinniped-poison-north-west-walk-3.png"
+            ]
+          }
+        },
+        "idle": {
+          "fps": 8,
+          "frames": {
+            "north-east": [
+              "characters/pinniped-poison-north-east-idle-0.png",
+              "characters/pinniped-poison-north-east-idle-1.png",
+              "characters/pinniped-poison-north-east-idle-2.png",
+              "characters/pinniped-poison-north-east-idle-3.png"
+            ],
+            "south-east": [
+              "characters/pinniped-poison-south-east-idle-0.png",
+              "characters/pinniped-poison-south-east-idle-1.png",
+              "characters/pinniped-poison-south-east-idle-2.png",
+              "characters/pinniped-poison-south-east-idle-3.png"
+            ],
+            "south-west": [
+              "characters/pinniped-poison-south-west-idle-0.png",
+              "characters/pinniped-poison-south-west-idle-1.png",
+              "characters/pinniped-poison-south-west-idle-2.png",
+              "characters/pinniped-poison-south-west-idle-3.png"
+            ],
+            "north-west": [
+              "characters/pinniped-poison-north-west-idle-0.png",
+              "characters/pinniped-poison-north-west-idle-1.png",
+              "characters/pinniped-poison-north-west-idle-2.png",
+              "characters/pinniped-poison-north-west-idle-3.png"
+            ]
+          }
+        }
+      }
+    },
+    "effect:fire": {
+      "type": "effect",
+      "name": "fire",
+      "fps": 8,
+      "frames": [
+        "effects/fire-0.png",
+        "effects/fire-1.png",
+        "effects/fire-2.png",
+        "effects/fire-3.png"
+      ],
+      "prompt": "nano-banana 4-frame flame flicker, transparent bg, poison-accent style",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.85
         },
         "footprint": {
           "w": 1,

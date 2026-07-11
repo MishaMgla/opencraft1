@@ -10,22 +10,19 @@ import type { PlayerState } from './wire.js';
 
 const MOVE_SPEED = 600; // world units / second
 const INPUT_HZ = 15;
-const ZOOM_STEP = 0.1;
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 1.5;
 const PAINT_TILE_SIZE = 128;
 const ULT_CHARGE_NEEDED = 12;
 const USERNAME_STORAGE_KEY = 'opencraft1.username';
 const CHARACTER_STORAGE_KEY = 'opencraft1.character';
 const MOBILE_MAX_WIDTH_PX = 760;
 const TAP_MOVE_MAX_DRIFT_PX = 12;
-const DEFAULT_CHARACTER = 'horse-pro';
+const DEFAULT_CHARACTER = 'horse-poison';
 
 const CHARACTER_NAMES = new Map<string, string>([
-  ['horse-pro', 'Horse'],
-  ['pigeon-man-pro', 'Pigeon Man'],
-  ['pinniped-man-pro', 'Pinniped Man'],
-  ['jesus-pro', 'Jesus'],
+  ['horse-poison', 'Horse'],
+  ['pigeon-poison', 'Pigeon Man'],
+  ['pinniped-poison', 'Pinniped Man'],
+  ['jesus-poison', 'Jesus'],
 ]);
 
 const ROLE_NAMES = new Map<number, string>([
@@ -198,15 +195,12 @@ async function start(name: string, role: number, character: string): Promise<voi
   const roster = document.getElementById('roster-list')!;
   const controlsHelpButton = document.getElementById('controls-help-toggle') as HTMLButtonElement;
   const controlsHelpPanel = document.getElementById('controls-help-panel')!;
-  const zoomOutButton = document.getElementById('zoom-out') as HTMLButtonElement;
-  const zoomInButton = document.getElementById('zoom-in') as HTMLButtonElement;
   const mobileControls = document.getElementById('mobile-controls') as HTMLDivElement;
   const mobilePaint = document.getElementById('mobile-paint') as HTMLButtonElement;
   const mobileJump = document.getElementById('mobile-jump') as HTMLButtonElement;
   const mobileUlt = document.getElementById('mobile-ult') as HTMLButtonElement;
   let currentName = name;
   let currentCharacter = character;
-  let zoom = 1;
   let ready = false;
   let startupTimer = 0;
   let net: ReturnType<typeof connect> | null = null;
@@ -252,17 +246,6 @@ async function start(name: string, role: number, character: string): Promise<voi
       renderRoster();
     }
   }
-
-  function setZoom(nextZoom: number): void {
-    zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(nextZoom.toFixed(2))));
-    r.setZoom(zoom);
-    zoomOutButton.disabled = zoom <= MIN_ZOOM;
-    zoomInButton.disabled = zoom >= MAX_ZOOM;
-  }
-
-  zoomOutButton.addEventListener('click', () => setZoom(zoom - ZOOM_STEP));
-  zoomInButton.addEventListener('click', () => setZoom(zoom + ZOOM_STEP));
-  setZoom(zoom);
 
   function syncMobileControls(): void {
     const enabled = shouldUseMobileControls();
