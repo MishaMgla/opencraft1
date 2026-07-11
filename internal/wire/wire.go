@@ -118,6 +118,8 @@ func EncodePong(t uint32) []byte {
 	return b
 }
 
+// EncodePaint paints or clears one tile. Color 0 is the clear sentinel: clients
+// remove the tile and reveal the base world cell.
 func EncodePaint(x, y int16, color, ownerID uint32) []byte {
 	b := make([]byte, 1+2+2+4+4)
 	b[0] = SPaint

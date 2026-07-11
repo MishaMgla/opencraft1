@@ -67,9 +67,16 @@ func (p *Postgres) Save(ctx context.Context, sp world.SavedPlayer) error {
 }
 
 // SavePaint upserts one painted tile, keyed on its rendered center (x, y). A
-// later paint of the same tile overwrites the previous color and owner. color is
-// stored as int4, matching player_state's color column.
+// later paint of the same tile overwrites the previous color and owner. Color 0
+// clears the tile from persistence. color is stored as int4, matching
+// player_state's color column.
 func (p *Postgres) SavePaint(ctx context.Context, t world.SavedTile) error {
+	if t.Color == 0 {
+		_, err := p.pool.Exec(ctx,
+			`delete from public.painted_tile where x = $1 and y = $2`,
+			t.X, t.Y)
+		return err
+	}
 	_, err := p.pool.Exec(ctx,
 		`insert into public.painted_tile (x, y, color, owner_name, painted_at)
 		 values ($1, $2, $3, $4, now())

@@ -15,11 +15,13 @@ const TrailUltTiles = 8
 const SpawnCoord int16 = 2048
 
 // Fire — a forest-fire cellular automaton over the painted map. Lava ignites
-// flammable neighbours; fire crawls one ring per fireTickEvery ticks and each
-// burning tile turns to ash after burnTicks fire-steps. See
+// flammable neighbours; fire crawls one ring per fireTickEvery ticks, each
+// burning tile turns to temporary ash after burnTicks fire-steps, and ash clears
+// back to the base world cell after ashTicks sim ticks. See
 // docs/superpowers/specs/2026-07-09-fire-living-materials-design.md.
 const fireTickEvery uint32 = 8 // run a fire step every N sim ticks (~2/sec at 15Hz)
 const burnTicks = 3            // fire steps a tile stays alight before becoming ash
+const ashTicks = TickHz        // sim ticks ash remains visible (~1s)
 
 const (
 	colorLava    uint32 = 0xE6194B // ignition source (never burns itself)
@@ -86,12 +88,13 @@ type paintedTile struct {
 
 // Sim owns all world state. It is the only goroutine that touches that state;
 // all interaction happens through the cmds channel (no locks). store is read
-// off the sim goroutine (in Join) and written from spawned goroutines, so DB
-// I/O never blocks the tick loop. A nil store disables persistence.
+// off the sim goroutine (in Join); paint writes run through an ordered async
+// queue. A nil store disables persistence.
 type Sim struct {
-	cmds  chan any
-	store Store
-	done  chan struct{} // closed when Run returns (after the shutdown flush)
+	cmds     chan any
+	store    Store
+	done     chan struct{} // closed when Run returns (after the shutdown flush)
+	paintOps chan SavedTile
 }
 
 type cmdJoin struct {
@@ -128,12 +131,12 @@ type cmdJump struct{ id uint32 }
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
 func NewSim(store Store) *Sim {
-	return &Sim{cmds: make(chan any, 1024), store: store, done: make(chan struct{})}
+	return &Sim{cmds: make(chan any, 1024), store: store, done: make(chan struct{}), paintOps: make(chan SavedTile, 8192)}
 }
 
 // Done is closed once Run has returned, i.e. after the synchronous shutdown
-// flush completes. Callers wait on it before closing the Store / exiting so the
-// final persist isn't cut short.
+// player flush and queued paint writes complete. Callers wait on it before
+// closing the Store / exiting so the final persist isn't cut short.
 func (s *Sim) Done() <-chan struct{} { return s.done }
 
 // Join registers a player and returns its assigned id plus the ordered frames
@@ -290,20 +293,37 @@ func (s *Sim) save(p *player) {
 	}()
 }
 
-// savePaint persists one painted tile asynchronously, mirroring save(): the
-// values are already a detached SavedTile, so the spawned goroutine never
-// touches sim state — no lock, no race.
+// startPaintStoreWorker serializes paint upserts/deletes in the same order the
+// sim accepted them. That keeps a burn clear followed by a repaint from deleting
+// the newer paint if the database is slow.
+func (s *Sim) startPaintStoreWorker() chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		if s.store == nil {
+			for range s.paintOps {
+			}
+			return
+		}
+		for t := range s.paintOps {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			if err := s.store.SavePaint(ctx, t); err != nil {
+				log.Printf("store save paint (%d,%d): %v", t.X, t.Y, err)
+			}
+			cancel()
+		}
+	}()
+	return done
+}
+
+// savePaint persists one painted-tile upsert/delete asynchronously. Values are
+// detached before entering the ordered persistence queue, so the worker never
+// touches sim-owned maps.
 func (s *Sim) savePaint(t SavedTile) {
 	if s.store == nil {
 		return
 	}
-	go func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-		if err := s.store.SavePaint(ctx, t); err != nil {
-			log.Printf("store save paint (%d,%d): %v", t.X, t.Y, err)
-		}
-	}()
+	s.paintOps <- t
 }
 
 // loadPaints seeds painted from the store so the painted world survives
@@ -372,7 +392,7 @@ func (s *Sim) flushAll(players map[uint32]*player) {
 	}
 }
 
-func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player, key tileKey, charge bool) bool {
+func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player, key tileKey, charge bool) bool {
 	if !validPaintTile(key) {
 		return false
 	}
@@ -380,6 +400,8 @@ func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile,
 	if !tileChanged(existing, exists, p) {
 		return false
 	}
+	delete(burning, key)
+	delete(ashTimers, key)
 	tile := paintedTile{x: key.x, y: key.y, color: p.color, ownerID: p.id}
 	painted[key] = tile
 	for _, o := range players {
@@ -438,7 +460,7 @@ func (s *Sim) ignite(players map[uint32]*player, painted map[tileKey]paintedTile
 // consumes a connected flammable region and self-terminates.
 // ponytail: O(burning frontier) per fire step; index burning by grid cell only
 // if the painted world ever gets huge.
-func (s *Sim) fireStep(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int) {
+func (s *Sim) fireStep(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int) {
 	if len(burning) == 0 {
 		return
 	}
@@ -459,12 +481,17 @@ func (s *Sim) fireStep(players map[uint32]*player, painted map[tileKey]paintedTi
 		burning[k]--
 		if burning[k] <= 0 {
 			delete(burning, k)
+			current, ok := painted[k]
+			if !ok || !isFlammable(current.color) {
+				continue
+			}
 			ash := paintedTile{x: k.x, y: k.y, color: ashColor, ownerID: 0}
 			painted[k] = ash
+			ashTimers[k] = ashTicks
 			for _, o := range players {
 				send(o, wire.EncodePaint(ash.x, ash.y, ash.color, ash.ownerID))
 			}
-			s.savePaint(SavedTile{X: ash.x, Y: ash.y, Color: ash.color, Owner: ""})
+			s.savePaint(SavedTile{X: ash.x, Y: ash.y, Color: 0, Owner: ""})
 		}
 	}
 	for _, n := range newly {
@@ -472,7 +499,26 @@ func (s *Sim) fireStep(players map[uint32]*player, painted map[tileKey]paintedTi
 	}
 }
 
-func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
+func (s *Sim) ashStep(players map[uint32]*player, painted map[tileKey]paintedTile, ashTimers map[tileKey]int) {
+	if len(ashTimers) == 0 {
+		return
+	}
+	for k := range ashTimers {
+		ashTimers[k]--
+		if ashTimers[k] > 0 {
+			continue
+		}
+		delete(ashTimers, k)
+		if t, ok := painted[k]; ok && t.color == ashColor {
+			delete(painted, k)
+			for _, o := range players {
+				send(o, wire.EncodePaint(k.x, k.y, 0, 0))
+			}
+		}
+	}
+}
+
+func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player) {
 	center := paintTileFor(p.x, p.y)
 	for dx := -1; dx <= 1; dx++ {
 		for dy := -1; dy <= 1; dy++ {
@@ -480,14 +526,14 @@ func (s *Sim) paintPulse(players map[uint32]*player, painted map[tileKey]painted
 				x: center.x + int16(dx)*PaintTileSize,
 				y: center.y + int16(dy)*PaintTileSize,
 			}
-			s.paint(players, painted, burning, p, key, false)
+			s.paint(players, painted, burning, ashTimers, p, key, false)
 		}
 	}
 }
 
-func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
+func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player) {
 	center := paintTileFor(p.x, p.y)
-	s.paint(players, painted, burning, p, center, false)
+	s.paint(players, painted, burning, ashTimers, p, center, false)
 	directions := []tileKey{{x: 1}, {x: -1}, {y: 1}, {y: -1}}
 	for _, d := range directions {
 		for step := int16(1); step <= 2; step++ {
@@ -495,12 +541,12 @@ func (s *Sim) paintCross(players map[uint32]*player, painted map[tileKey]painted
 				x: center.x + d.x*PaintTileSize*step,
 				y: center.y + d.y*PaintTileSize*step,
 			}
-			s.paint(players, painted, burning, p, key, false)
+			s.paint(players, painted, burning, ashTimers, p, key, false)
 		}
 	}
 }
 
-func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player) {
+func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player) {
 	if !p.ultReady {
 		return
 	}
@@ -511,9 +557,9 @@ func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]painte
 
 	switch p.role {
 	case wire.RolePulse:
-		s.paintPulse(players, painted, burning, p)
+		s.paintPulse(players, painted, burning, ashTimers, p)
 	case wire.RoleCross:
-		s.paintCross(players, painted, burning, p)
+		s.paintCross(players, painted, burning, ashTimers, p)
 	case wire.RoleTrail:
 		p.trailLeft = TrailUltTiles
 		p.trailTiles = map[tileKey]struct{}{}
@@ -521,7 +567,7 @@ func (s *Sim) activateUlt(players map[uint32]*player, painted map[tileKey]painte
 	broadcastPlayerState(players, p)
 }
 
-func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, p *player, key tileKey) {
+func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, ashTimers map[tileKey]int, p *player, key tileKey) {
 	if p.trailLeft <= 0 {
 		return
 	}
@@ -530,7 +576,7 @@ func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]painted
 	}
 	p.trailTiles[key] = struct{}{}
 	p.trailLeft--
-	s.paint(players, painted, burning, p, key, false)
+	s.paint(players, painted, burning, ashTimers, p, key, false)
 	if p.trailLeft == 0 {
 		p.trailTiles = nil
 	}
@@ -539,10 +585,16 @@ func (s *Sim) applyTrail(players map[uint32]*player, painted map[tileKey]painted
 // Run is the simulation loop. Call in its own goroutine.
 func (s *Sim) Run(ctx context.Context) {
 	defer close(s.done)
+	paintStoreDone := s.startPaintStoreWorker()
+	defer func() {
+		close(s.paintOps)
+		<-paintStoreDone
+	}()
 
 	players := map[uint32]*player{}
 	painted := map[tileKey]paintedTile{}
 	burning := map[tileKey]int{} // tile -> fire-steps remaining (transient, never persisted)
+	ashTimers := map[tileKey]int{}
 	s.loadPaints(painted)
 	grid := NewGrid()
 	var nextID uint32 = 1
@@ -620,7 +672,7 @@ func (s *Sim) Run(ctx context.Context) {
 							send(o, wire.EncodeShake(p.id))
 						}
 					}
-					s.applyTrail(players, painted, burning, p, tile)
+					s.applyTrail(players, painted, burning, ashTimers, p, tile)
 				}
 
 			case cmdPaint:
@@ -628,14 +680,14 @@ func (s *Sim) Run(ctx context.Context) {
 				if p == nil {
 					continue
 				}
-				s.paint(players, painted, burning, p, paintTileFor(p.x, p.y), true)
+				s.paint(players, painted, burning, ashTimers, p, paintTileFor(p.x, p.y), true)
 
 			case cmdUlt:
 				p := players[m.id]
 				if p == nil {
 					continue
 				}
-				s.activateUlt(players, painted, burning, p)
+				s.activateUlt(players, painted, burning, ashTimers, p)
 
 			case cmdJump:
 				p := players[m.id]
@@ -666,8 +718,9 @@ func (s *Sim) Run(ctx context.Context) {
 
 		case <-ticker.C:
 			tick++
+			s.ashStep(players, painted, ashTimers)
 			if tick%fireTickEvery == 0 {
-				s.fireStep(players, painted, burning)
+				s.fireStep(players, painted, burning, ashTimers)
 			}
 			for _, p := range players {
 				ents := make([]wire.Ent, 0, len(players))
