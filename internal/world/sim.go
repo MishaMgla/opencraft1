@@ -241,10 +241,12 @@ func validRole(role byte) byte {
 
 func validCharacter(character string) string {
 	switch character {
+	case "horse-poison", "pigeon-poison", "pinniped-poison", "jesus-poison":
+		return character
 	case "horse-pro", "pigeon-man-pro", "pinniped-man-pro", "jesus-pro":
 		return character
 	default:
-		return "horse-pro"
+		return "horse-poison"
 	}
 }
 
