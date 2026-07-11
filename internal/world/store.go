@@ -15,7 +15,8 @@ type SavedPlayer struct {
 // painted world after an engine restart. X/Y are tile-aligned world coords (the
 // rendered tile center). Owner is the painter's name: the runtime ownerID isn't
 // persisted because ids are reassigned every restart, so it carries no meaning
-// across one.
+// across one. Color 0 is a clear sentinel: remove the persisted tile instead of
+// replaying it on the next startup.
 type SavedTile struct {
 	X, Y  int16
 	Color uint32
@@ -33,7 +34,8 @@ type Store interface {
 	Load(ctx context.Context, name string) (sp SavedPlayer, ok bool, err error)
 	// Save upserts the player's current state, keyed on name.
 	Save(ctx context.Context, sp SavedPlayer) error
-	// SavePaint upserts one painted tile, keyed on its rendered center (x, y).
+	// SavePaint upserts one painted tile, keyed on its rendered center (x, y),
+	// or removes it when Color is 0.
 	SavePaint(ctx context.Context, t SavedTile) error
 	// LoadPaints returns every persisted painted tile, for replay at startup.
 	LoadPaints(ctx context.Context) ([]SavedTile, error)

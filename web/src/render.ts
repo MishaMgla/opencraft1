@@ -546,6 +546,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const key = tileKey(x, y);
       clearFire(key); // tile's material changed (ash / repaint) → flame is done
       removePaintedTile(key);
+      if (color === 0) return;
       const tileName = PAINT_TILE_BY_COLOR.get(color);
       const texture = tileName ? paintTileTextures.get(tileName) : undefined;
       const tile = texture ? drawTexturedPaintTile(x, y, color, texture) : drawFallbackPaintTile(x, y, color);
