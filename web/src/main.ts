@@ -2,7 +2,7 @@ import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
-import { loadManifest, resolveHud, assetUrl } from './assets.js';
+import { loadManifest, resolveCharacter, resolveHud, assetUrl } from './assets.js';
 import { ROLE_CROSS, ROLE_PULSE, ROLE_TRAIL } from './wire.js';
 import type { Bounds } from './input.js';
 import type { Token } from './render.js';
@@ -45,6 +45,20 @@ const overlay = document.getElementById('overlay')!;
 const nameForm = document.getElementById('name-form') as HTMLFormElement;
 const nameInput = document.getElementById('name') as HTMLInputElement;
 let startPromise: Promise<void> | null = null;
+const manifestPromise = loadManifest();
+
+async function loadCharacterPreviews(): Promise<void> {
+  const manifest = await manifestPromise;
+  for (const preview of document.querySelectorAll<HTMLImageElement>('[data-character-preview]')) {
+    const character = preview.dataset.characterPreview;
+    if (!character) continue;
+    const asset = resolveCharacter(manifest, character);
+    const file = asset?.frames['south-east'] ?? Object.values(asset?.frames ?? {})[0];
+    if (file) preview.src = assetUrl(file);
+  }
+}
+
+void loadCharacterPreviews();
 
 function showStartupLoading(): void {
   overlay.hidden = false;
@@ -180,7 +194,7 @@ function shouldUseMobileControls(): boolean {
 }
 
 async function start(name: string, role: number, character: string): Promise<void> {
-  const manifest = await loadManifest();
+  const manifest = await manifestPromise;
   const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
   const bar = resolveHud(manifest, 'healthbar');
   if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
