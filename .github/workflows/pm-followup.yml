@@ -221,7 +221,7 @@ jobs:
           gh auth setup-git
           .github/scripts/run-codex.sh \
             --cd "$GITHUB_WORKSPACE" \
-            --model gpt-5.6-terra \
+            --model gpt-5.4 \
             -c model_reasoning_effort="medium" \
             --sandbox danger-full-access \
             --skip-git-repo-check \
