@@ -474,6 +474,7 @@
       opacity: 1;
     }
   </style>
+  <link rel="stylesheet" href="./ui.css" />
 </head>
 <body>
   <div id="overlay" data-state="loading" aria-busy="true">
@@ -510,21 +511,25 @@
       <fieldset id="character-picker" aria-label="Character">
         <label>
           <input type="radio" name="character" value="horse-poison" required />
+          <img class="character-preview" data-character-preview="horse-poison" src="./assets/characters/horse-poison-south-east.png" alt="" />
           <span class="character-name">Horse</span>
           <span class="character-note">saddled runner</span>
         </label>
         <label>
           <input type="radio" name="character" value="pigeon-poison" required />
+          <img class="character-preview" data-character-preview="pigeon-poison" src="./assets/characters/pigeon-poison-south-east.png" alt="" />
           <span class="character-name">Pigeon Man</span>
           <span class="character-note">street traveler</span>
         </label>
         <label>
           <input type="radio" name="character" value="pinniped-poison" required />
+          <img class="character-preview" data-character-preview="pinniped-poison" src="./assets/characters/pinniped-poison-south-east.png" alt="" />
           <span class="character-name">Pinniped Man</span>
           <span class="character-note">flipper stride</span>
         </label>
         <label>
           <input type="radio" name="character" value="jesus-poison" required />
+          <img class="character-preview" data-character-preview="jesus-poison" src="./assets/characters/jesus-poison-south-east.png" alt="" />
           <span class="character-name">Jesus</span>
           <span class="character-note">robed walker</span>
         </label>
@@ -548,7 +553,7 @@
         </dl>
       </span>
     </span>
-    <img id="hud-asset" alt="" style="display:none; image-rendering:pixelated; max-width:160px;" />
+    <img id="hud-asset" alt="" />
   </div>
   <div id="roster" aria-label="Player roster">
     <div id="roster-title">players</div>
@@ -569,21 +574,25 @@
       <fieldset id="profile-character-picker" aria-label="Character">
         <label>
           <input type="radio" name="profile-character" value="horse-poison" required />
+          <img class="character-preview" data-character-preview="horse-poison" src="./assets/characters/horse-poison-south-east.png" alt="" />
           <span class="character-name">Horse</span>
           <span class="character-note">saddled runner</span>
         </label>
         <label>
           <input type="radio" name="profile-character" value="pigeon-poison" required />
+          <img class="character-preview" data-character-preview="pigeon-poison" src="./assets/characters/pigeon-poison-south-east.png" alt="" />
           <span class="character-name">Pigeon Man</span>
           <span class="character-note">street traveler</span>
         </label>
         <label>
           <input type="radio" name="profile-character" value="pinniped-poison" required />
+          <img class="character-preview" data-character-preview="pinniped-poison" src="./assets/characters/pinniped-poison-south-east.png" alt="" />
           <span class="character-name">Pinniped Man</span>
           <span class="character-note">flipper stride</span>
         </label>
         <label>
           <input type="radio" name="profile-character" value="jesus-poison" required />
+          <img class="character-preview" data-character-preview="jesus-poison" src="./assets/characters/jesus-poison-south-east.png" alt="" />
           <span class="character-name">Jesus</span>
           <span class="character-note">robed walker</span>
         </label>
