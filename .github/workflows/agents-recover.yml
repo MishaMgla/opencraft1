@@ -48,7 +48,7 @@ jobs:
         continue-on-error: true
         run: |
           .github/scripts/run-codex.sh --sandbox read-only --skip-git-repo-check \
-            --model gpt-5.4 "Reply with the single word: OK"
+            --model gpt-5.6-terra "Reply with the single word: OK"
 
       - name: Decide recovery
         id: decide

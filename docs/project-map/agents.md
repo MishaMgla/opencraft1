@@ -2,8 +2,8 @@
 
 GitHub-Actions PM + Dev agents that turn issues into merged PRs. Source of truth
 for behaviour is the workflow + prompt files under `.github/`. The agents run on
-the **Codex CLI** (`codex exec`; PM stages on `gpt-5.4`, Dev stages on
-`gpt-5.5`) on a self-hosted runner that
+the **Codex CLI** (`codex exec`; PM stages on `gpt-5.6-terra`, Dev stages on
+`gpt-5.6-sol`) on a self-hosted runner that
 is pre-authenticated with a ChatGPT subscription — see `docs/agents-setup.md`.
 
 ## flow
