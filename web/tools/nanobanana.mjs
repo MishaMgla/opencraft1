@@ -32,6 +32,16 @@ function housePrompt(type, subject, facing) {
       + 'soft muted poison-accent palette (sickly greens and purples), subtle AI-slop dataset-bleed grain, '
       + 'no characters, no bold outlines, edge-to-edge seamless with no visible seams, fills the entire frame';
   }
+  if (type === 'object') {
+    // Transparent foreground prop/overlay (bomb, flame) in the quiet poison
+    // house style. Unlike the character/hud wrap, NO limb/face hallucination —
+    // a flame must stay a flame — but same green-screen for the alpha knockout.
+    return `${subject}, single centered object, `
+      + 'flat graphic poster art in quiet DATASET-POISON AI-SLOP style, '
+      + 'soft muted poison-accent palette (sickly greens and purples), subtle AI-slop dataset-bleed grain, '
+      + 'slightly off-register color, bold simple readable silhouette, NOT photoreal, NOT clean, '
+      + 'no characters, no limbs, no hands, no text, on a solid flat #00FF00 chroma-key green background';
+  }
   const facingPhrase = facing ? FACING_PHRASE[facing] ?? '' : '';
   return `${subject}, single subject, 3/4 isometric ${facingPhrase} view, `
     + 'flat graphic poster art in DATASET-POISON AI-SLOP style: random wrong objects fused into the body '
@@ -251,6 +261,24 @@ export async function generate(input, { apiKey, fetchImpl = fetch, model } = {})
       usd += r.usd;
     }
     return { images, dirs, animation: null, usage: [{ usd, generations: dirs.length }] };
+  }
+
+  // sprite: transparent foreground object (bomb prop, flame effect frames) in the
+  // poison-slop object style, green-screened then knocked out to alpha. The opaque
+  // tile ground-wrap would be wrong for a prop that overlays the world. Effects
+  // emit `frames` slightly-varied images so the overlay flickers instead of freezing.
+  if (input.sprite) {
+    const n = type === 'effect' ? Math.max(1, input.frames ?? 4) : 1;
+    const images = [];
+    let usd = 0;
+    for (let i = 0; i < n; i++) {
+      const variant = n > 1 ? `, variation ${i + 1} of ${n}` : '';
+      const r = await genImage(fetchImpl, apiKey, model,
+        { prompt: housePrompt('object', prompt + variant), background: 'transparent', size });
+      images.push(chromaKnockout(r.image));
+      usd += r.usd;
+    }
+    return { images, dirs: null, animation: null, usage: [{ usd, generations: n }] };
   }
 
   // tile: opaque ground, no background field (opaque triggers JPEG). hud:

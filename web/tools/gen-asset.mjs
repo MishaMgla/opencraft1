@@ -17,6 +17,7 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--force') { a.force = true; continue; }
+    if (k === '--sprite') { a.sprite = true; continue; }        // tile/effect: transparent poison-slop object (bomb, flame) instead of opaque ground
     const v = argv[++i];
     if (k === '--type') a.type = v;
     else if (k === '--name') a.name = v;
@@ -35,6 +36,7 @@ function parseArgs(argv) {
     else throw new Error(`unknown flag: ${k}`);
   }
   if (a.animate && a.type !== 'character') throw new Error('--animate is character-only');
+  if (a.sprite && a.type !== 'tile' && a.type !== 'effect') throw new Error('--sprite is for tile props and effect overlays only');
   if (a.facings !== 'cardinal' && a.facings !== 'ordinal') throw new Error(`--facings must be 'cardinal' or 'ordinal' (got ${a.facings})`);
   if (a.facings === 'ordinal' && a.type !== 'character') throw new Error('--facings is character-only');
   if (!a.type || !a.name || !a.prompt) throw new Error('required: --type --name --prompt');
@@ -242,7 +244,7 @@ function synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) {
 export async function run(argv, { generateImpl = generate, env = process.env } = {}) {
   const a = parseArgs(argv);
   validateSlug(a.name);
-  if (a.type === 'effect') {
+  if (a.type === 'effect' && !a.sprite) {
     // /animate-with-text animates an EXISTING sprite (requires a base
     // reference_image + action); it cannot synthesize an effect from text
     // alone. Reject scratch effect generation until the two-step pipeline
@@ -281,6 +283,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
       isometric: a.isometric,
       ordinal: a.facings === 'ordinal',
       animation: a.animate, frameCount: a.frameCount,
+      sprite: a.sprite,
     },
     { apiKey: env.OPENROUTER_API_KEY },
   );
@@ -323,11 +326,21 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     }
     const synthesizedAnimation = !entry.animations ? synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) : null;
     if (synthesizedAnimation) entry.animations = synthesizedAnimation;
+  } else if (a.type === 'effect') {
+    // Transparent overlay frames (sprite mode only). Preserve the existing
+    // placement so a re-gen keeps the tuned anchor (e.g. flame sits on the ground).
+    const frames = images.map((buf, i) => {
+      const rel = `${dir}/${a.name}-${i}.png`;
+      writeFileSync(join(assetsDir(), rel), buf);
+      files.push(rel);
+      return rel;
+    });
+    entry = { type: 'effect', name: a.name, fps: a.fps, frames, prompt: a.prompt, placement: existing?.placement ?? placement };
   } else {
     const rel = `${dir}/${a.name}.png`;
     writeFileSync(join(assetsDir(), rel), images[0]);
     files.push(rel);
-    entry = { type: a.type, name: a.name, file: rel, size: a.size, prompt: a.prompt, placement };
+    entry = { type: a.type, name: a.name, file: rel, size: a.size, prompt: a.prompt, placement: existing?.placement ?? placement };
   }
 
   upsertManifest(entry);
