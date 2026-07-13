@@ -13,8 +13,8 @@ export interface Bounds {
 }
 export interface Input {
   // pos: {x,y} world units (mutated). speed: units/sec. dt: seconds.
-  step(pos: Vec2, speed: number, dt: number, bounds: Bounds): boolean;
-  setMoveDestination(destination: Vec2, bounds: Bounds): boolean;
+  step(pos: Vec2, speed: number, dt: number, bounds: Bounds, blocked?: (x: number, y: number) => boolean): boolean;
+  setMoveDestination(destination: Vec2, bounds: Bounds, blocked?: (x: number, y: number) => boolean): boolean;
   clearMoveDestination(): void;
   requestPaint(held?: boolean): void;
   releasePaint(): void;
@@ -52,6 +52,22 @@ function clamp(v: number, lo: number, hi: number): number {
 
 function inBounds(pos: Vec2, bounds: Bounds): boolean {
   return pos.x >= bounds.minX && pos.x <= bounds.maxX && pos.y >= bounds.minY && pos.y <= bounds.maxY;
+}
+
+function moveBy(
+  pos: Vec2,
+  deltaX: number,
+  deltaY: number,
+  bounds: Bounds,
+  blocked?: (x: number, y: number) => boolean,
+): boolean {
+  const beforeX = pos.x;
+  const beforeY = pos.y;
+  const nextX = clamp(pos.x + deltaX, bounds.minX, bounds.maxX);
+  if (!blocked?.(nextX, pos.y)) pos.x = nextX;
+  const nextY = clamp(pos.y + deltaY, bounds.minY, bounds.maxY);
+  if (!blocked?.(pos.x, nextY)) pos.y = nextY;
+  return pos.x !== beforeX || pos.y !== beforeY;
 }
 
 export function createInput(target: KeyboardTarget = window): Input {
@@ -138,7 +154,7 @@ export function createInput(target: KeyboardTarget = window): Input {
   );
 
   return {
-    step(pos, speed, dt, bounds) {
+    step(pos, speed, dt, bounds, blocked) {
       let dx = 0;
       let dy = 0;
       if (keys['w'] || keys['arrowup']) dy -= 1;
@@ -150,9 +166,7 @@ export function createInput(target: KeyboardTarget = window): Input {
         const len = Math.hypot(dx, dy);
         dx /= len;
         dy /= len;
-        pos.x = clamp(pos.x + dx * speed * dt, bounds.minX, bounds.maxX);
-        pos.y = clamp(pos.y + dy * speed * dt, bounds.minY, bounds.maxY);
-        return true;
+        return moveBy(pos, dx * speed * dt, dy * speed * dt, bounds, blocked);
       }
       if (moveDestination) {
         if (!inBounds(moveDestination, bounds)) {
@@ -165,19 +179,18 @@ export function createInput(target: KeyboardTarget = window): Input {
         const stepDist = speed * dt;
         if (dist <= Math.max(stepDist, 1)) {
           const moved = Math.hypot(pos.x - moveDestination.x, pos.y - moveDestination.y) > 0;
-          pos.x = moveDestination.x;
-          pos.y = moveDestination.y;
-          moveDestination = null;
-          return moved;
+          const advanced = moveBy(pos, tx, ty, bounds, blocked);
+          if (!advanced || (pos.x === moveDestination.x && pos.y === moveDestination.y)) moveDestination = null;
+          return moved && advanced;
         }
-        pos.x = clamp(pos.x + (tx / dist) * stepDist, bounds.minX, bounds.maxX);
-        pos.y = clamp(pos.y + (ty / dist) * stepDist, bounds.minY, bounds.maxY);
-        return true;
+        const advanced = moveBy(pos, (tx / dist) * stepDist, (ty / dist) * stepDist, bounds, blocked);
+        if (!advanced) moveDestination = null;
+        return advanced;
       }
       return false;
     },
-    setMoveDestination(destination, bounds) {
-      if (!inBounds(destination, bounds)) {
+    setMoveDestination(destination, bounds, blocked) {
+      if (!inBounds(destination, bounds) || blocked?.(destination.x, destination.y)) {
         moveDestination = null;
         return false;
       }

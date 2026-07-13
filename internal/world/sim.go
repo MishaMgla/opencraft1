@@ -14,6 +14,14 @@ const UltChargeNeeded byte = 12
 const TrailUltTiles = 8
 const SpawnCoord int16 = 2048
 
+// Temple — one fixed 3x3 solid landmark northeast of spawn. The southwest
+// corner is two tile steps northeast (-Y in the isometric view), leaving the
+// intervening tile clear. Its remaining tiles extend east (+X) and northeast
+// (-Y) from that corner.
+const templeSize int16 = 3
+const templeSouthwestX = SpawnCoord
+const templeSouthwestY = SpawnCoord - 2*PaintTileSize
+
 // Fire — a forest-fire cellular automaton over the painted map. Lava ignites
 // flammable neighbours; fire crawls one ring per fireTickEvery ticks, each
 // burning tile turns to temporary ash after burnTicks fire-steps, and ash clears
@@ -246,6 +254,43 @@ func paintTileFor(x, y int16) tileKey {
 	}
 }
 
+func isTempleTile(key tileKey) bool {
+	return key.x >= templeSouthwestX && key.x < templeSouthwestX+templeSize*PaintTileSize &&
+		key.y <= templeSouthwestY && key.y > templeSouthwestY-templeSize*PaintTileSize
+}
+
+// templeBlocksMovement rejects both ordinary entry and a malicious position
+// jump across the landmark. Tile snapping makes the blocked point rectangle
+// inclusive at its northwest edges and one unit short of the next tile center
+// at its southeast edges.
+func templeBlocksMovement(fromX, fromY, toX, toY int16) bool {
+	minX := float64(templeSouthwestX - PaintTileSize/2)
+	maxX := float64(templeSouthwestX + templeSize*PaintTileSize - PaintTileSize/2 - 1)
+	minY := float64(templeSouthwestY - templeSize*PaintTileSize + PaintTileSize/2)
+	maxY := float64(templeSouthwestY + PaintTileSize/2 - 1)
+	tMin, tMax := 0.0, 1.0
+	clip := func(position, delta, low, high float64) bool {
+		if delta == 0 {
+			return position >= low && position <= high
+		}
+		t1 := (low - position) / delta
+		t2 := (high - position) / delta
+		if t1 > t2 {
+			t1, t2 = t2, t1
+		}
+		if t1 > tMin {
+			tMin = t1
+		}
+		if t2 < tMax {
+			tMax = t2
+		}
+		return tMin <= tMax
+	}
+	dx := float64(toX) - float64(fromX)
+	dy := float64(toY) - float64(fromY)
+	return clip(float64(fromX), dx, minX, maxX) && clip(float64(fromY), dy, minY, maxY)
+}
+
 func paintTileCoord(v int16) int16 {
 	pos := int(clamp(v))
 	size := int(PaintTileSize)
@@ -288,7 +333,7 @@ func broadcastPlayerState(players map[uint32]*player, p *player) {
 }
 
 func validPaintTile(key tileKey) bool {
-	return key.x >= 0 && key.y >= 0 && int(key.x) <= WorldSize && int(key.y) <= WorldSize
+	return key.x >= 0 && key.y >= 0 && int(key.x) <= WorldSize && int(key.y) <= WorldSize && !isTempleTile(key)
 }
 
 func tileChanged(existing paintedTile, exists bool, p *player) bool {
@@ -366,6 +411,9 @@ func (s *Sim) loadPaints(painted map[tileKey]paintedTile) {
 	}
 	for _, t := range tiles {
 		key := tileKey{t.X, t.Y}
+		if isTempleTile(key) {
+			continue
+		}
 		painted[key] = paintedTile{x: t.X, y: t.Y, color: t.Color, ownerID: 0}
 	}
 }
@@ -460,6 +508,9 @@ func (s *Sim) paint(players map[uint32]*player, painted map[tileKey]paintedTile,
 // every client to show a flame there. Non-flammable/unpainted/already-burning
 // tiles are ignored, so callers can fire it at any neighbour blindly.
 func (s *Sim) ignite(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, key tileKey) {
+	if isTempleTile(key) {
+		return
+	}
 	if _, on := burning[key]; on {
 		return
 	}
@@ -541,6 +592,9 @@ func (s *Sim) ashStep(players map[uint32]*player, painted map[tileKey]paintedTil
 // tile and per-player-count caps, and tells everyone to render it.
 func (s *Sim) placeBomb(players map[uint32]*player, bombs map[tileKey]*bomb, p *player) {
 	key := paintTileFor(p.x, p.y)
+	if isTempleTile(key) {
+		return
+	}
 	if _, taken := bombs[key]; taken {
 		return
 	}
@@ -585,6 +639,9 @@ func (s *Sim) koPlayer(players map[uint32]*player, victim *player, killerID uint
 // painted terrain to ash. Empty ground is left to the client flash. (Increment 3
 // adds indestructible walls here.)
 func (s *Sim) blastTile(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, bombs map[tileKey]*bomb, t tileKey, ownerID uint32, queue *[]tileKey) {
+	if isTempleTile(t) {
+		return
+	}
 	for _, p := range players {
 		if p.alive && paintTileFor(p.x, p.y) == t {
 			s.koPlayer(players, p, ownerID)
@@ -753,6 +810,9 @@ func (s *Sim) Run(ctx context.Context) {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
+				if isTempleTile(paintTileFor(px, py)) {
+					px, py = SpawnCoord, SpawnCoord
+				}
 				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py), alive: true}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
@@ -787,6 +847,9 @@ func (s *Sim) Run(ctx context.Context) {
 					continue // dead players are frozen at their death spot until respawn
 				}
 				nx, ny := clamp(m.x), clamp(m.y)
+				if templeBlocksMovement(p.x, p.y, nx, ny) {
+					continue
+				}
 				grid.Move(p.id, p.x, p.y, nx, ny)
 				p.x, p.y = nx, ny
 				tile := paintTileFor(nx, ny)
