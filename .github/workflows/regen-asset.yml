@@ -29,6 +29,11 @@ on:
         type: boolean
         required: false
         default: false
+      native:
+        description: "Keep Gemini's native resolution — no downscale, no product-cap clamp"
+        type: boolean
+        required: false
+        default: true
       frames:
         description: "Effect frame count (sprite effects only)"
         required: false
@@ -80,6 +85,7 @@ jobs:
           NAME: ${{ github.event.inputs.name }}
           PROMPT: ${{ github.event.inputs.prompt }}
           SPRITE: ${{ github.event.inputs.sprite }}
+          NATIVE: ${{ github.event.inputs.native }}
           FRAMES: ${{ github.event.inputs.frames }}
           FPS: ${{ github.event.inputs.fps }}
         run: |
@@ -87,6 +93,9 @@ jobs:
           args=(--type "$TYPE" --name "$NAME" --prompt "$PROMPT" --force)
           if [ "$SPRITE" = "true" ]; then
             args+=(--sprite --frames "$FRAMES" --fps "$FPS")
+          fi
+          if [ "$NATIVE" = "true" ]; then
+            args+=(--native)
           fi
           node tools/gen-asset.mjs "${args[@]}"
 
