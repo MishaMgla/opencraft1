@@ -168,12 +168,16 @@ function checkPil() {
   pilChecked = true;
 }
 
+// size falsy → keep Gemini's native resolution (~1024px), only JPEG→PNG transcode.
+// A pixel size squares the output to (size,size). Native output is still square
+// (Gemini returns square), just larger — the renderer scales it at draw time.
 function toPng(buf, size) {
   checkPil();
+  const resize = size ? `im=im.resize((${size},${size}), Image.LANCZOS)\n` : '';
   return execFileSync('python3', ['-c',
     "import sys,io\nfrom PIL import Image\n"
     + `im=Image.open(io.BytesIO(sys.stdin.buffer.read())).convert('RGBA')\n`
-    + `im=im.resize((${size},${size}), Image.LANCZOS)\n`
+    + resize
     + "im.save(sys.stdout.buffer,'PNG')"],
   { input: buf, maxBuffer: 64 * 1024 * 1024 });
 }

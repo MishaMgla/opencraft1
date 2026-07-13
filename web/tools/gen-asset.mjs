@@ -18,6 +18,7 @@ function parseArgs(argv) {
     const k = argv[i];
     if (k === '--force') { a.force = true; continue; }
     if (k === '--sprite') { a.sprite = true; continue; }        // tile/effect: transparent poison-slop object (bomb, flame) instead of opaque ground
+    if (k === '--native') { a.native = true; continue; }         // keep Gemini's native resolution — no downscale, no product-cap clamp
     const v = argv[++i];
     if (k === '--type') a.type = v;
     else if (k === '--name') a.name = v;
@@ -255,7 +256,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
       + 'sprite first, then animate (two-step pipeline not yet built).');
   }
   if (a.type === 'character' && a.directions !== 4) throw new Error('v1 supports 4-direction characters only (got ' + a.directions + ')');
-  enforceCaps(a.type, a.size, a.frames);
+  if (!a.native) enforceCaps(a.type, a.size, a.frames);
   const key = assetKey(a.type, a.name);
 
   // Skip if it already exists — UNLESS a walk-style animation was requested that
@@ -278,7 +279,9 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
 
   const { images, dirs: genDirs, animation, usage } = await generateImpl(
     {
-      type: a.type, prompt: a.prompt, size: a.size, frames: a.frames, directions: a.directions,
+      type: a.type, prompt: a.prompt,
+      size: a.native ? null : a.size,   // null → nanobanana skips the resize, keeps native px
+      frames: a.frames, directions: a.directions,
       view: a.view, outline: a.outline, noBackground: a.noBackground, templateId: a.template,
       isometric: a.isometric,
       ordinal: a.facings === 'ordinal',
@@ -292,6 +295,9 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
   const placement = defaultPlacement(a.type);
   const files = [];
   let entry;
+  // Native mode keeps Gemini's real output size; record the actual pixel width
+  // (square) instead of the requested cap so the manifest stays truthful.
+  const outSize = a.native && images[0] ? decodePngRgba(images[0]).width : a.size;
 
   if (a.type === 'character') {
     // Direction labels come from the generator: cardinal (south/north/east/west)
@@ -340,7 +346,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     const rel = `${dir}/${a.name}.png`;
     writeFileSync(join(assetsDir(), rel), images[0]);
     files.push(rel);
-    entry = { type: a.type, name: a.name, file: rel, size: a.size, prompt: a.prompt, placement: existing?.placement ?? placement };
+    entry = { type: a.type, name: a.name, file: rel, size: outSize, prompt: a.prompt, placement: existing?.placement ?? placement };
   }
 
   upsertManifest(entry);

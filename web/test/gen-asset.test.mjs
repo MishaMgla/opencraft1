@@ -91,6 +91,20 @@ test('run --sprite allows effect frames and preserves existing placement', async
   assert.equal(m.assets['effect:testfx'].placement.anchor.y, 0.85, 'tuned anchor preserved on re-gen');
 });
 
+test('run --native skips the size cap and records the real png width', async () => {
+  // A real 3x3 RGBA PNG so the native path can decode its actual dimensions.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAEUlEQVR4nGP4z8DwH4YZcHIAXdcR79xPMRAAAAAASUVORK5CYII=',
+    'base64');
+  const nativeGen = async () => ({ images: [png] });
+  // --size 999 would blow the tile cap (128); --native must skip enforceCaps.
+  const res = await run(['--type', 'tile', '--name', 'testnative', '--prompt', 'x', '--size', '999', '--native'],
+    { generateImpl: nativeGen, env });
+  assert.equal(res.skipped, false);
+  const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.equal(m.assets['tile:testnative'].size, 3, 'records the real 3px width, not the requested 999');
+});
+
 test('run writes character walk-animation frames + manifest animations', async () => {
   const fakeGenAnim = async () => ({
     images: [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')],
