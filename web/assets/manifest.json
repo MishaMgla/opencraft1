@@ -5005,6 +5005,78 @@
         "sortOffset": 0
       }
     },
+    "tile:temple-idle-0": {
+      "type": "tile",
+      "name": "temple-idle-0",
+      "file": "tiles/temple-idle-0.png",
+      "size": 128,
+      "prompt": "ancient temple with a heavy arched doorway and a warped roof",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:temple-idle-1": {
+      "type": "tile",
+      "name": "temple-idle-1",
+      "file": "tiles/temple-idle-1.png",
+      "size": 128,
+      "prompt": "ancient temple with a heavy arched doorway and a roof swelling upward",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:temple-idle-2": {
+      "type": "tile",
+      "name": "temple-idle-2",
+      "file": "tiles/temple-idle-2.png",
+      "size": 128,
+      "prompt": "ancient temple with a heavy arched doorway and walls bending outward",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
+    "tile:temple-idle-3": {
+      "type": "tile",
+      "name": "temple-idle-3",
+      "file": "tiles/temple-idle-3.png",
+      "size": 128,
+      "prompt": "ancient temple with a heavy arched doorway and a roof settling into place",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      }
+    },
     "tile:toy-render-grass-tile": {
       "type": "tile",
       "name": "toy-render-grass-tile",
