@@ -17,6 +17,8 @@ function parseArgs(argv) {
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     if (k === '--force') { a.force = true; continue; }
+    if (k === '--sprite') { a.sprite = true; continue; }        // tile/effect: transparent poison-slop object (bomb, flame) instead of opaque ground
+    if (k === '--native') { a.native = true; continue; }         // keep Gemini's native resolution — no downscale, no product-cap clamp
     const v = argv[++i];
     if (k === '--type') a.type = v;
     else if (k === '--name') a.name = v;
@@ -35,6 +37,7 @@ function parseArgs(argv) {
     else throw new Error(`unknown flag: ${k}`);
   }
   if (a.animate && a.type !== 'character') throw new Error('--animate is character-only');
+  if (a.sprite && a.type !== 'tile' && a.type !== 'effect') throw new Error('--sprite is for tile props and effect overlays only');
   if (a.facings !== 'cardinal' && a.facings !== 'ordinal') throw new Error(`--facings must be 'cardinal' or 'ordinal' (got ${a.facings})`);
   if (a.facings === 'ordinal' && a.type !== 'character') throw new Error('--facings is character-only');
   if (!a.type || !a.name || !a.prompt) throw new Error('required: --type --name --prompt');
@@ -242,7 +245,7 @@ function synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) {
 export async function run(argv, { generateImpl = generate, env = process.env } = {}) {
   const a = parseArgs(argv);
   validateSlug(a.name);
-  if (a.type === 'effect') {
+  if (a.type === 'effect' && !a.sprite) {
     // /animate-with-text animates an EXISTING sprite (requires a base
     // reference_image + action); it cannot synthesize an effect from text
     // alone. Reject scratch effect generation until the two-step pipeline
@@ -253,7 +256,7 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
       + 'sprite first, then animate (two-step pipeline not yet built).');
   }
   if (a.type === 'character' && a.directions !== 4) throw new Error('v1 supports 4-direction characters only (got ' + a.directions + ')');
-  enforceCaps(a.type, a.size, a.frames);
+  if (!a.native) enforceCaps(a.type, a.size, a.frames);
   const key = assetKey(a.type, a.name);
 
   // Skip if it already exists — UNLESS a walk-style animation was requested that
@@ -276,11 +279,14 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
 
   const { images, dirs: genDirs, animation, usage } = await generateImpl(
     {
-      type: a.type, prompt: a.prompt, size: a.size, frames: a.frames, directions: a.directions,
+      type: a.type, prompt: a.prompt,
+      size: a.native ? null : a.size,   // null → nanobanana skips the resize, keeps native px
+      frames: a.frames, directions: a.directions,
       view: a.view, outline: a.outline, noBackground: a.noBackground, templateId: a.template,
       isometric: a.isometric,
       ordinal: a.facings === 'ordinal',
       animation: a.animate, frameCount: a.frameCount,
+      sprite: a.sprite,
     },
     { apiKey: env.OPENROUTER_API_KEY },
   );
@@ -289,6 +295,9 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
   const placement = defaultPlacement(a.type);
   const files = [];
   let entry;
+  // Native mode keeps Gemini's real output size; record the actual pixel width
+  // (square) instead of the requested cap so the manifest stays truthful.
+  const outSize = a.native && images[0] ? decodePngRgba(images[0]).width : a.size;
 
   if (a.type === 'character') {
     // Direction labels come from the generator: cardinal (south/north/east/west)
@@ -323,11 +332,21 @@ export async function run(argv, { generateImpl = generate, env = process.env } =
     }
     const synthesizedAnimation = !entry.animations ? synthesizeOrdinalWalkFromImages(a, dirsOut, images, dir, files) : null;
     if (synthesizedAnimation) entry.animations = synthesizedAnimation;
+  } else if (a.type === 'effect') {
+    // Transparent overlay frames (sprite mode only). Preserve the existing
+    // placement so a re-gen keeps the tuned anchor (e.g. flame sits on the ground).
+    const frames = images.map((buf, i) => {
+      const rel = `${dir}/${a.name}-${i}.png`;
+      writeFileSync(join(assetsDir(), rel), buf);
+      files.push(rel);
+      return rel;
+    });
+    entry = { type: 'effect', name: a.name, fps: a.fps, frames, prompt: a.prompt, placement: existing?.placement ?? placement };
   } else {
     const rel = `${dir}/${a.name}.png`;
     writeFileSync(join(assetsDir(), rel), images[0]);
     files.push(rel);
-    entry = { type: a.type, name: a.name, file: rel, size: a.size, prompt: a.prompt, placement };
+    entry = { type: a.type, name: a.name, file: rel, size: outSize, prompt: a.prompt, placement: existing?.placement ?? placement };
   }
 
   upsertManifest(entry);

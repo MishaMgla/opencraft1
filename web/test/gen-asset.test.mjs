@@ -66,6 +66,45 @@ test('run rejects scratch effect generation', async () => {
   assert.ok(!existsSync(join(dir, 'effects/testspark-0.png')), 'no effect files should be written');
 });
 
+test('run --sprite writes a transparent tile prop, manifest type stays tile', async () => {
+  const res = await run(['--type', 'tile', '--name', 'testbomb', '--prompt', 'bomb', '--size', '128', '--sprite'],
+    { generateImpl: fakeGen, env });
+  assert.equal(res.skipped, false);
+  assert.ok(existsSync(join(dir, 'tiles/testbomb.png')), 'tile prop png written');
+  const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.equal(m.assets['tile:testbomb'].type, 'tile', 'stays tile so resolveTile still finds it');
+});
+
+test('run --sprite allows effect frames and preserves existing placement', async () => {
+  // Seed an effect entry with a tuned anchor; a --sprite re-gen must keep it.
+  writeFileSync(join(dir, 'manifest.json'), JSON.stringify({
+    version: 1,
+    assets: { 'effect:testfx': { type: 'effect', name: 'testfx', fps: 8, frames: [],
+      prompt: 'old', placement: { anchor: { x: 0.5, y: 0.85 }, footprint: { w: 1, h: 1 }, sortOffset: 0 } } },
+  }));
+  const res = await run(['--type', 'effect', '--name', 'testfx', '--prompt', 'flame', '--frames', '3', '--fps', '8', '--sprite', '--force'],
+    { generateImpl: fakeGen, env });
+  assert.equal(res.skipped, false);
+  assert.ok(existsSync(join(dir, 'effects/testfx-0.png')) && existsSync(join(dir, 'effects/testfx-2.png')), 'effect frames written');
+  const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.equal(m.assets['effect:testfx'].frames.length, 3);
+  assert.equal(m.assets['effect:testfx'].placement.anchor.y, 0.85, 'tuned anchor preserved on re-gen');
+});
+
+test('run --native skips the size cap and records the real png width', async () => {
+  // A real 3x3 RGBA PNG so the native path can decode its actual dimensions.
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAMAAAADCAYAAABWKLW/AAAAEUlEQVR4nGP4z8DwH4YZcHIAXdcR79xPMRAAAAAASUVORK5CYII=',
+    'base64');
+  const nativeGen = async () => ({ images: [png] });
+  // --size 999 would blow the tile cap (128); --native must skip enforceCaps.
+  const res = await run(['--type', 'tile', '--name', 'testnative', '--prompt', 'x', '--size', '999', '--native'],
+    { generateImpl: nativeGen, env });
+  assert.equal(res.skipped, false);
+  const m = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8'));
+  assert.equal(m.assets['tile:testnative'].size, 3, 'records the real 3px width, not the requested 999');
+});
+
 test('run writes character walk-animation frames + manifest animations', async () => {
   const fakeGenAnim = async () => ({
     images: [Buffer.from('S'), Buffer.from('N'), Buffer.from('E'), Buffer.from('W')],
