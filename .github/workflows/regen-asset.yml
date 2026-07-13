@@ -1,0 +1,131 @@
+name: Regenerate Asset
+
+# Deterministic, manual-only regeneration of a single tile / effect asset (no
+# agent, no untrusted input). Runs `gen-asset.mjs` with the OpenRouter key
+# (nano-banana) on the self-hosted runner (egress-allowlisted to openrouter.ai),
+# VALIDATES the output before committing, and pushes the regenerated PNGs +
+# manifest to the branch it was dispatched on. Re-run on failure — nothing is
+# committed unless validation passes.
+#
+# Sibling of regen-character.yml, for the non-character asset kinds:
+#   - tile (opaque ground, e.g. ash-tile)
+#   - tile --sprite / effect --sprite (transparent poison-slop overlays: bomb, fire)
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: "Asset type: tile or effect"
+        required: true
+        default: "tile"
+      name:
+        description: "Asset name (manifest slug)"
+        required: true
+      prompt:
+        description: "Subject-only prompt (no style words — the house style is applied by the generator)"
+        required: true
+      sprite:
+        description: "Transparent poison-slop object overlay (bomb/flame) instead of opaque ground"
+        type: boolean
+        required: false
+        default: false
+      frames:
+        description: "Effect frame count (sprite effects only)"
+        required: false
+        default: "4"
+      fps:
+        description: "Effect playback fps (sprite effects only)"
+        required: false
+        default: "8"
+
+jobs:
+  regen:
+    if: github.repository == 'MishaMgla/opencraft1'
+    runs-on: [self-hosted]
+    timeout-minutes: 25
+    concurrency:
+      group: regen-asset-${{ github.event.inputs.name }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Fail fast if the OpenRouter key is missing
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: |
+          if [ -z "${OPENROUTER_API_KEY}" ]; then
+            echo "OPENROUTER_API_KEY is not available to this workflow; aborting." >&2
+            exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install web deps
+        run: cd web && npm ci
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate asset
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          TYPE: ${{ github.event.inputs.type }}
+          NAME: ${{ github.event.inputs.name }}
+          PROMPT: ${{ github.event.inputs.prompt }}
+          SPRITE: ${{ github.event.inputs.sprite }}
+          FRAMES: ${{ github.event.inputs.frames }}
+          FPS: ${{ github.event.inputs.fps }}
+        run: |
+          cd web
+          args=(--type "$TYPE" --name "$NAME" --prompt "$PROMPT" --force)
+          if [ "$SPRITE" = "true" ]; then
+            args+=(--sprite --frames "$FRAMES" --fps "$FPS")
+          fi
+          node tools/gen-asset.mjs "${args[@]}"
+
+      - name: Validate generated output before commit
+        env:
+          TYPE: ${{ github.event.inputs.type }}
+          NAME: ${{ github.event.inputs.name }}
+        run: |
+          cd web
+          node --input-type=module -e '
+            import { readFileSync, statSync } from "node:fs";
+            import { join } from "node:path";
+            const key = `${process.env.TYPE}:${process.env.NAME}`;
+            const m = JSON.parse(readFileSync("assets/manifest.json", "utf8"));
+            const e = m.assets[key];
+            if (!e) throw new Error(`manifest entry ${key} missing after generation`);
+            const files = e.frames ?? [e.file];
+            const SIG = Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]);
+            for (const f of files) {
+              const p = join("assets", f);
+              const buf = readFileSync(p);
+              if (!buf.subarray(0, 8).equals(SIG)) throw new Error(`${f} is not a PNG`);
+              // ponytail: size heuristic for "not blank" — a fully-transparent or
+              // flat-fill PNG compresses to a few hundred bytes; real art is KBs.
+              // Swap for a pixel-histogram check if a valid asset ever trips it.
+              if (statSync(p).size < 800) throw new Error(`${f} looks blank (${statSync(p).size} bytes)`);
+            }
+            console.log(`validate: ${key} OK (${files.length} file(s))`);
+          '
+
+      - name: Commit and push regenerated asset
+        env:
+          TYPE: ${{ github.event.inputs.type }}
+          NAME: ${{ github.event.inputs.name }}
+        run: |
+          git add web/assets/
+          if git diff --cached --quiet; then
+            echo "No asset changes to commit (generation produced identical bytes?)." >&2
+            exit 1
+          fi
+          git commit -m "chore: regenerate ${TYPE}:${NAME} in nano-banana house style"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
