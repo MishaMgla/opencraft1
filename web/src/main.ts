@@ -4,6 +4,7 @@ import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
 import { loadManifest, resolveCharacter, resolveHud, assetUrl } from './assets.js';
 import { ROLE_CROSS, ROLE_PULSE, ROLE_TRAIL } from './wire.js';
+import { isTemplePosition } from './temple.js';
 import type { Bounds } from './input.js';
 import type { Token } from './render.js';
 import type { PlayerState } from './wire.js';
@@ -322,7 +323,7 @@ async function start(name: string, role: number, character: string): Promise<voi
     tapStart = null;
     if (!document.body.classList.contains('mobile-controls-enabled') || drift > TAP_MOVE_MAX_DRIFT_PX) return;
     e.preventDefault();
-    input.setMoveDestination(r.screenToWorld(e.clientX, e.clientY), bounds);
+    input.setMoveDestination(r.screenToWorld(e.clientX, e.clientY), bounds, isTemplePosition);
   });
   r.app.canvas.addEventListener('pointercancel', (e) => {
     if (tapStart?.id === e.pointerId) tapStart = null;
@@ -501,7 +502,7 @@ async function start(name: string, role: number, character: string): Promise<voi
     last = now;
 
     const canAct = me.id !== 0 && me.alive; // dead players are frozen ghosts until respawn
-    if (me.alive) input.step(me, MOVE_SPEED, dt, bounds);
+    if (me.alive) input.step(me, MOVE_SPEED, dt, bounds, isTemplePosition);
     if (canAct && input.consumePaint()) {
       conn.sendInput(Math.round(me.x), Math.round(me.y));
       conn.sendPaint();
