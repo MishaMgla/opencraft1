@@ -137,4 +137,14 @@ jobs:
             exit 1
           fi
           git commit -m "chore: regenerate ${TYPE}:${NAME} in nano-banana house style"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Concurrent regens are pinned to the same dispatch SHA, so a sibling's
+          # push leaves us non-fast-forward. Each asset touches its own files, so
+          # rebase-onto-remote is conflict-free; retry to absorb the race.
+          for attempt in 1 2 3 4 5; do
+            git fetch -q origin "${GITHUB_REF_NAME}"
+            git rebase -q "origin/${GITHUB_REF_NAME}" || { git rebase --abort; echo "rebase conflict — aborting" >&2; exit 1; }
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then echo "pushed on attempt ${attempt}"; exit 0; fi
+            echo "push ${attempt} rejected (sibling won the race); retrying" >&2
+            sleep 3
+          done
+          echo "push failed after retries" >&2; exit 1
