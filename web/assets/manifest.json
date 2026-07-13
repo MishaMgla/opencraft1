@@ -4400,8 +4400,8 @@
       "type": "tile",
       "name": "bomb",
       "file": "tiles/bomb.png",
-      "size": 128,
-      "prompt": "a round black cartoon bomb with a short lit sparking fuse on transparent background, vintage comic book halftone print pixel art, bold black line art with visible halftone dot shading, slightly off-register colors",
+      "size": 1024,
+      "prompt": "a round black cartoon bomb with a short lit sparking fuse",
       "placement": {
         "anchor": {
           "x": 0.5,
