@@ -6,6 +6,7 @@ const C_PAINT = 0x04;
 const C_ULT = 0x05;
 const C_JUMP = 0x06;
 const C_BOMB = 0x07;
+const C_CHAT = 0x08;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
@@ -21,6 +22,7 @@ const S_BOMB = 0x8b;
 const S_BLAST = 0x8c;
 const S_KO = 0x8d;
 const S_RESPAWN = 0x8e;
+const S_CHAT = 0x8f;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -119,10 +121,15 @@ export interface Respawn {
   x: number;
   y: number;
 }
+export interface Chat {
+  type: 'chat';
+  name: string;
+  text: string;
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | KO | Respawn | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | KO | Respawn | Chat | Unknown;
 
 export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -172,6 +179,18 @@ export function encodeJump(): ArrayBuffer {
 export function encodeBomb(): ArrayBuffer {
   const b = new Uint8Array(1);
   b[0] = C_BOMB;
+  return b.buffer;
+}
+
+// encodeChat sends one chat line: uint16 length-prefixed UTF-8 text. The server
+// attaches the sender's name; the client never sends it.
+export function encodeChat(text: string): ArrayBuffer {
+  const t = enc.encode(text);
+  const b = new Uint8Array(3 + t.length);
+  const v = new DataView(b.buffer);
+  v.setUint8(0, C_CHAT);
+  v.setUint16(1, t.length, true);
+  b.set(t, 3);
   return b.buffer;
 }
 
@@ -271,6 +290,14 @@ export function decodeServer(view: DataView): ServerMsg {
       return { type: 'ko', victimId: view.getUint32(1, true), killerId: view.getUint32(5, true) };
     case S_RESPAWN:
       return { type: 'respawn', id: view.getUint32(1, true), x: view.getInt16(5, true), y: view.getInt16(7, true) };
+    case S_CHAT: {
+      const nlen = view.getUint8(1);
+      const name = dec.decode(new Uint8Array(view.buffer, view.byteOffset + 2, nlen));
+      const off = 2 + nlen;
+      const tlen = view.getUint16(off, true);
+      const text = dec.decode(new Uint8Array(view.buffer, view.byteOffset + off + 2, tlen));
+      return { type: 'chat', name, text };
+    }
   }
   return { type: 'unknown' };
 }

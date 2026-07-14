@@ -1,5 +1,5 @@
-import { encodeHello, encodeInput, encodePaint, encodeUlt, encodeJump, encodeBomb, decodeServer } from './wire.js';
-import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, Fire, Bomb, Blast, KO, Respawn, ServerMsg } from './wire.js';
+import { encodeHello, encodeInput, encodePaint, encodeUlt, encodeJump, encodeBomb, encodeChat, decodeServer } from './wire.js';
+import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, Fire, Bomb, Blast, KO, Respawn, Chat, ServerMsg } from './wire.js';
 
 export interface Handlers {
   welcome?: (m: Welcome) => void;
@@ -16,6 +16,7 @@ export interface Handlers {
   blast?: (m: Blast) => void;
   ko?: (m: KO) => void;
   respawn?: (m: Respawn) => void;
+  chat?: (m: Chat) => void;
   close?: () => void;
 }
 
@@ -25,6 +26,7 @@ export interface NetControl {
   sendUlt(): void;
   sendJump(): void;
   sendBomb(): void;
+  sendChat(text: string): void;
   close(): void;
 }
 
@@ -57,6 +59,9 @@ export function connect(url: string, name: string, role: number, character: stri
     },
     sendBomb() {
       if (ws.readyState === WebSocket.OPEN) ws.send(encodeBomb());
+    },
+    sendChat(text) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(encodeChat(text));
     },
     close() {
       ws.close();

@@ -1,193 +1,175 @@
+/* Minimalist thin-line / mono UI. Flattens the previous "house" chrome and
+   defers to the dark monospace base defined in index.html's inline <style>
+   (--ink, --edge, --panel, --font-pixel …). One accent (--edge), 1px hairline
+   borders, no fills, no rotation, no offset shadows — chrome that stays out of
+   the way of the sprites. */
+
 :root {
-  --slop-ink: #201b2b;
-  --slop-paper: #f1dfb8;
-  --slop-paper-light: #fff5d6;
-  --slop-purple: #7552a8;
-  --slop-purple-dark: #493268;
-  --slop-green: #9fbc65;
-  --slop-pink: #ee7f9e;
-  --slop-orange: #ef9849;
-  --slop-blue: #68a5ae;
-  --slop-shadow: rgba(32, 27, 43, 0.3);
-  --slop-font: "Trebuchet MS", "Arial Rounded MT Bold", Arial, sans-serif;
+  --ui-hair: rgba(61, 220, 132, 0.34);
+  --ui-hair-strong: rgba(61, 220, 132, 0.7);
+  --ui-panel: rgba(7, 17, 15, 0.86);
+  --ui-panel-2: rgba(16, 40, 33, 0.86);
+  --ui-muted: var(--ink-dim);
 }
 
 html,
 body {
-  color: var(--slop-ink);
-  font-family: var(--slop-font);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  color: var(--ink);
+  font-family: var(--font-pixel);
+  -webkit-font-smoothing: none;
 }
 
-body::before {
-  display: none;
-}
-
-#overlay {
-  padding: 20px;
-  background:
-    radial-gradient(circle at 15% 18%, rgba(238, 127, 158, 0.3) 0 8%, transparent 8.5%),
-    radial-gradient(circle at 82% 72%, rgba(159, 188, 101, 0.3) 0 11%, transparent 11.5%),
-    linear-gradient(133deg, #6f5193, #3d686a);
-}
-
+/* Shared flat panel treatment. */
 #startup-loader,
 #name-form,
-#profile-modal {
-  border: 3px solid var(--slop-ink);
-  border-radius: 24px 9px 20px 12px;
-  background: var(--slop-paper);
-  color: var(--slop-ink);
-  box-shadow: 9px 10px 0 var(--slop-shadow);
-  transform: rotate(-0.35deg);
+#profile-modal,
+#hud-name,
+#hud .help-panel,
+#roster,
+#mobile-controls button,
+#gh-link,
+#chat-log,
+#chat-input {
+  border: 1px solid var(--ui-hair);
+  border-radius: 2px;
+  background: var(--ui-panel);
+  color: var(--ink);
+  box-shadow: none;
+  backdrop-filter: blur(2px);
+  transform: none;
+  text-shadow: none;
 }
 
+/* --- entry overlay --- */
 #startup-loader {
   min-width: min(300px, 100%);
-  padding: 22px;
-  color: var(--slop-purple-dark);
-  font: 800 16px/1.2 var(--slop-font);
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
+  padding: 20px;
+  color: var(--ink);
+  font: 400 14px/1.4 var(--font-pixel);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 #startup-loader::before {
-  width: 44px;
-  height: 44px;
-  border: 8px solid var(--slop-pink);
-  border-top-color: var(--slop-green);
-  border-right-color: var(--slop-purple);
-  border-radius: 47% 53% 42% 58%;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--ui-hair);
+  border-top-color: var(--edge);
+  border-radius: 50%;
   animation: startup-spin 0.9s linear infinite;
 }
 
 #name-form {
-  gap: 13px;
+  gap: 12px;
   width: min(590px, 100%);
   padding: 18px;
 }
 
 #name,
-#profile-name,
-button {
-  min-height: 40px;
-  padding: 9px 13px;
-  border: 3px solid var(--slop-ink);
-  border-radius: 13px 7px 15px 9px;
-  font: 800 14px/1.2 var(--slop-font);
-}
-
-#name,
 #profile-name {
-  background: var(--slop-paper-light);
-  color: var(--slop-ink);
-  caret-color: var(--slop-purple);
-  box-shadow: inset 0 -4px 0 rgba(117, 82, 168, 0.13);
+  min-height: 38px;
+  padding: 8px 11px;
+  border: 1px solid var(--ui-hair);
+  border-radius: 2px;
+  background: var(--ui-panel-2);
+  color: var(--ink);
+  caret-color: var(--edge);
+  font: 400 14px/1.2 var(--font-pixel);
 }
 
-#name::placeholder {
-  color: #736b74;
+#name::placeholder,
+#profile-name::placeholder,
+#chat-input::placeholder {
+  color: var(--ui-muted);
 }
 
 #name:focus,
-#profile-name:focus {
-  border-color: var(--slop-purple);
-  outline: 3px solid rgba(238, 127, 158, 0.45);
-  outline-offset: 2px;
+#profile-name:focus,
+#chat-input:focus {
+  border-color: var(--edge);
+  outline: 1px solid var(--edge-soft);
+  outline-offset: 1px;
 }
 
 #issue59-guide {
   gap: 8px;
   padding: 13px 14px;
-  border: 3px solid var(--slop-ink);
-  border-radius: 11px 19px 8px 16px;
-  background: var(--slop-paper-light);
-  color: var(--slop-ink);
-  box-shadow: 4px 5px 0 rgba(73, 50, 104, 0.18);
-  transform: rotate(0.2deg);
+  border: 1px solid var(--ui-hair);
+  border-radius: 2px;
+  background: var(--ui-panel-2);
+  color: var(--ink);
 }
 
 #issue59-guide h1 {
-  color: var(--slop-purple-dark);
-  font: 900 19px/1.1 var(--slop-font);
-  letter-spacing: -0.02em;
-  text-transform: none;
+  color: var(--edge);
+  font: 700 16px/1.2 var(--font-pixel);
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 #issue59-guide p,
 #issue59-guide li {
-  color: var(--slop-ink);
-  font: 600 13px/1.4 var(--slop-font);
+  color: var(--ink);
+  font: 400 13px/1.45 var(--font-pixel);
 }
 
 #issue59-guide strong {
-  color: var(--slop-purple-dark);
+  color: var(--edge);
 }
 
+/* --- pickers (role / character / profile character) --- */
 #role-picker,
 #character-picker,
 #profile-character-picker {
-  gap: 10px;
+  gap: 8px;
 }
 
 #role-picker label,
 #character-picker label,
 #profile-character-picker label {
   position: relative;
-  border: 3px solid var(--slop-ink);
-  border-radius: 15px 7px 13px 9px;
-  background: #d8cf9d;
-  color: var(--slop-ink);
-  box-shadow: 4px 5px 0 rgba(32, 27, 43, 0.2);
-  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
-}
-
-#role-picker label:nth-child(2n),
-#character-picker label:nth-child(2n),
-#profile-character-picker label:nth-child(2n) {
-  transform: rotate(0.55deg);
-}
-
-#role-picker label:nth-child(2n + 1),
-#character-picker label:nth-child(2n + 1),
-#profile-character-picker label:nth-child(2n + 1) {
-  transform: rotate(-0.45deg);
+  border: 1px solid var(--ui-hair);
+  border-radius: 2px;
+  background: var(--ui-panel-2);
+  color: var(--ink);
+  box-shadow: none;
+  transform: none;
+  transition: border-color 120ms ease, background 120ms ease;
 }
 
 #role-picker label:hover,
 #character-picker label:hover,
 #profile-character-picker label:hover {
-  background: #e9d7a8;
+  background: rgba(61, 220, 132, 0.08);
 }
 
 #role-picker .role-name,
 #character-picker .character-name,
 #profile-character-picker .character-name {
-  color: var(--slop-purple-dark);
-  font: 900 14px/1.1 var(--slop-font);
+  color: var(--ink);
+  font: 700 14px/1.15 var(--font-pixel);
   text-transform: none;
 }
 
 #role-picker .role-effect,
 #character-picker .character-note,
 #profile-character-picker .character-note {
-  color: #62576c;
-  font: 600 12px/1.25 var(--slop-font);
+  color: var(--ui-muted);
+  font: 400 12px/1.3 var(--font-pixel);
 }
 
 #role-picker label:has(input:checked),
 #character-picker label:has(input:checked),
 #profile-character-picker label:has(input:checked) {
-  border-color: var(--slop-ink);
-  background: var(--slop-green);
-  box-shadow: 5px 6px 0 var(--slop-purple-dark);
+  border-color: var(--edge);
+  background: rgba(61, 220, 132, 0.14);
+  box-shadow: none;
 }
 
 #role-picker label:has(input:focus-visible),
 #character-picker label:has(input:focus-visible),
 #profile-character-picker label:has(input:focus-visible) {
-  outline: 4px solid var(--slop-pink);
+  outline: 1px solid var(--edge);
   outline-offset: 2px;
 }
 
@@ -195,196 +177,188 @@ button {
   grid-row: span 2;
   align-self: center;
   justify-self: center;
-  width: 72px;
-  height: 72px;
+  width: 68px;
+  height: 68px;
   object-fit: contain;
-  filter: drop-shadow(3px 4px 0 rgba(73, 50, 104, 0.3));
+  filter: none;
 }
 
 #character-picker label,
 #profile-character-picker label {
-  grid-template-columns: 82px minmax(0, 1fr);
+  grid-template-columns: 78px minmax(0, 1fr);
   grid-template-rows: auto auto;
   align-items: center;
-  padding: 7px 10px 8px 6px;
+  padding: 6px 10px 7px 6px;
   text-transform: none;
 }
 
+/* --- buttons --- */
 button {
-  background: var(--slop-pink);
-  color: var(--slop-ink);
-  text-transform: none;
-  box-shadow: 4px 5px 0 var(--slop-shadow);
+  min-height: 38px;
+  padding: 8px 13px;
+  border: 1px solid var(--ui-hair-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--edge);
+  font: 700 13px/1.2 var(--font-pixel);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: none;
 }
 
 button:hover:not(:disabled) {
-  background: var(--slop-orange);
+  background: rgba(61, 220, 132, 0.12);
+}
+
+button:active:not(:disabled) {
+  background: rgba(61, 220, 132, 0.2);
+  transform: none;
+  box-shadow: none;
 }
 
 button:focus-visible,
 a:focus-visible {
-  outline: 4px solid var(--slop-paper-light);
-  outline-offset: 3px;
+  outline: 1px solid var(--edge);
+  outline-offset: 2px;
 }
 
-button:active:not(:disabled) {
-  transform: translate(2px, 2px) rotate(0.4deg);
-  box-shadow: 2px 3px 0 var(--slop-shadow);
-}
-
+/* --- HUD --- */
 #hud {
   top: 10px;
   left: 10px;
-  gap: 7px;
-  color: var(--slop-ink);
-  font: 800 13px/1.2 var(--slop-font);
-}
-
-#hud-name,
-#hud .hint,
-#hud .hud-help,
-#hud .help-panel,
-#roster,
-#mobile-controls button,
-#gh-link {
-  border: 3px solid var(--slop-ink);
-  background: rgba(241, 223, 184, 0.93);
-  color: var(--slop-ink);
-  text-shadow: none;
-  box-shadow: 4px 5px 0 var(--slop-shadow);
-  backdrop-filter: blur(3px);
+  gap: 8px;
+  color: var(--ink);
+  font: 400 13px/1.3 var(--font-pixel);
+  align-items: center;
 }
 
 #hud-name {
   max-width: min(180px, 34vw);
-  min-height: 34px;
-  border-radius: 12px 7px 14px 8px;
-  color: var(--slop-purple-dark);
-  font: 900 13px/1.2 var(--slop-font);
+  min-height: 30px;
+  padding: 5px 9px;
+  color: var(--edge);
+  font: 700 13px/1.2 var(--font-pixel);
+  text-transform: none;
 }
 
 #hud-status {
-  padding: 3px 6px;
-  border-radius: 8px;
-  background: rgba(241, 223, 184, 0.78);
-  color: var(--slop-ink);
-  text-shadow: 1px 1px 0 var(--slop-paper-light);
-}
-
-#hud .hint {
-  padding: 6px 8px;
-  border-radius: 9px 14px 7px 11px;
+  padding: 4px 7px;
+  border: none;
+  background: none;
+  color: var(--ui-muted);
+  text-shadow: 0 1px 2px var(--shadow);
 }
 
 #hud .hud-help {
-  width: 34px;
-  height: 34px;
-  min-height: 34px;
-  border-radius: 50% 42% 48% 45%;
-  color: var(--slop-purple-dark);
-  font: 900 18px/1 var(--slop-font);
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid var(--ui-hair);
+  border-radius: 2px;
+  background: var(--ui-panel);
+  color: var(--edge);
+  font: 700 16px/1 var(--font-pixel);
+  box-shadow: none;
 }
 
 #hud .hud-help:hover,
 #hud .hud-help[aria-expanded="true"] {
-  background: var(--slop-pink);
-  color: var(--slop-ink);
+  background: rgba(61, 220, 132, 0.14);
 }
 
 #hud .help-panel {
-  top: 54px;
+  top: 50px;
   left: 10px;
   width: min(260px, calc(100vw - 20px));
   padding: 12px;
-  border-radius: 13px 22px 10px 16px;
 }
 
 #hud .help-title,
 #hud .help-panel dt {
-  color: var(--slop-purple-dark);
-  font-weight: 900;
-  text-transform: none;
+  color: var(--edge);
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 #hud .help-panel dd {
-  color: var(--slop-ink);
+  color: var(--ink);
 }
 
-#hud-asset {
-  display: none;
-  max-width: 160px;
-}
-
+/* --- roster --- */
 #roster {
   top: 10px;
   right: 10px;
-  min-width: 220px;
+  min-width: 210px;
   max-width: min(300px, calc(100vw - 20px));
-  border-radius: 17px 9px 20px 8px;
-  color: var(--slop-ink);
-  font: 800 12px/1.25 var(--slop-font);
+  color: var(--ink);
+  font: 400 12px/1.3 var(--font-pixel);
+  overflow: hidden;
 }
 
 #roster-title {
-  padding: 7px 10px;
-  border-bottom: 3px solid var(--slop-ink);
-  background: var(--slop-purple);
-  color: var(--slop-paper-light);
-  font: 900 13px/1.2 var(--slop-font);
-  text-transform: none;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ui-hair);
+  background: none;
+  color: var(--edge);
+  font: 700 12px/1.2 var(--font-pixel);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .roster-row {
-  gap: 7px;
-  padding: 7px 9px;
-  border-top: 2px solid rgba(73, 50, 104, 0.22);
+  gap: 8px;
+  padding: 6px 9px;
+  border-top: 1px solid rgba(61, 220, 132, 0.12);
 }
 
 .roster-row:nth-child(even) {
-  background: rgba(159, 188, 101, 0.2);
+  background: rgba(61, 220, 132, 0.05);
 }
 
 .roster-role,
 .roster-kills {
-  color: #62576c;
+  color: var(--ui-muted);
 }
 
 .roster-ult {
-  color: var(--slop-purple-dark);
+  color: var(--ui-muted);
 }
 
 .roster-ult.ready {
-  color: #426326;
+  color: var(--edge);
 }
 
+/* --- profile modal --- */
 #profile-modal::backdrop {
-  background: rgba(37, 29, 52, 0.72);
-  backdrop-filter: blur(4px);
+  background: rgba(2, 6, 5, 0.72);
+  backdrop-filter: blur(3px);
 }
 
 #profile-form {
-  gap: 13px;
+  gap: 12px;
   padding: 18px;
   background: transparent;
 }
 
 #profile-form h2 {
-  color: var(--slop-purple-dark);
-  font: 900 21px/1.1 var(--slop-font);
-  text-transform: none;
+  color: var(--edge);
+  font: 700 18px/1.15 var(--font-pixel);
+  text-transform: uppercase;
 }
 
 #profile-form > label {
-  color: var(--slop-ink);
-  font: 800 13px/1.2 var(--slop-font);
+  color: var(--ink);
+  font: 400 13px/1.2 var(--font-pixel);
   text-transform: none;
 }
 
 #profile-cancel {
-  background: var(--slop-blue);
-  color: var(--slop-ink);
+  color: var(--ui-muted);
+  border-color: var(--ui-hair);
 }
 
+/* --- mobile controls --- */
 #mobile-controls {
   bottom: 14px;
   gap: 8px;
@@ -392,39 +366,96 @@ button:active:not(:disabled) {
 }
 
 #mobile-controls button {
-  min-height: 48px;
-  border-radius: 15px 8px 17px 10px;
-  color: var(--slop-purple-dark);
+  min-height: 46px;
+  color: var(--edge);
   touch-action: none;
 }
 
 #mobile-controls button:nth-child(2) {
-  background: rgba(159, 188, 101, 0.94);
-  transform: translateY(-4px) rotate(-1deg);
+  transform: none;
 }
 
 #mobile-controls button:hover:not(:disabled),
 #mobile-controls button:active:not(:disabled) {
-  background: var(--slop-orange);
-  color: var(--slop-ink);
+  background: rgba(61, 220, 132, 0.18);
+  color: var(--edge);
 }
 
+/* --- repo link --- */
 #gh-link {
   bottom: 9px;
   left: 9px;
-  padding: 6px 9px;
-  border-radius: 8px 14px 7px 11px;
-  color: var(--slop-purple-dark);
-  font: 900 12px/1.2 var(--slop-font);
-  opacity: 0.9;
+  padding: 5px 9px;
+  color: var(--ui-muted);
+  font: 400 12px/1.2 var(--font-pixel);
+  opacity: 0.85;
   text-decoration: none;
-  transform: rotate(-1deg);
+  transform: none;
 }
 
 #gh-link:hover {
-  background: var(--slop-pink);
-  color: var(--slop-ink);
+  background: rgba(61, 220, 132, 0.12);
+  color: var(--edge);
   opacity: 1;
+}
+
+/* --- chat (bottom-left, above the repo link) --- */
+#chat {
+  position: fixed;
+  left: 10px;
+  bottom: 40px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(340px, calc(100vw - 20px));
+  pointer-events: none;
+}
+
+#chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 132px;
+  padding: 6px 8px;
+  overflow: hidden;
+  background: rgba(7, 17, 15, 0.55);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  backdrop-filter: none;
+}
+
+#chat-log:empty {
+  display: none;
+}
+
+.chat-line {
+  font: 400 12px/1.35 var(--font-pixel);
+  color: var(--ink);
+  word-break: break-word;
+  text-shadow: 0 1px 2px var(--shadow);
+}
+
+.chat-line:not(:last-child) {
+  opacity: 0.62;
+}
+
+.chat-name {
+  color: var(--edge);
+  margin-right: 6px;
+}
+
+#chat-form {
+  pointer-events: auto;
+}
+
+#chat-input {
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 9px;
+  font: 400 13px/1.2 var(--font-pixel);
+  color: var(--ink);
+  caret-color: var(--edge);
 }
 
 @media (max-width: 640px) {
@@ -433,16 +464,8 @@ button:active:not(:disabled) {
     padding: 12px;
   }
 
-  #name-form {
-    padding: 13px;
-  }
-
   #role-picker {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  #role-picker label {
-    padding: 8px 5px;
   }
 
   #character-picker,
@@ -458,7 +481,7 @@ button:active:not(:disabled) {
 
   .character-preview {
     width: 52px;
-    height: 58px;
+    height: 56px;
   }
 
   #hud {
@@ -467,34 +490,26 @@ button:active:not(:disabled) {
     flex-wrap: wrap;
   }
 
-  #hud-status {
-    width: auto;
-  }
-
-  #hud .help-panel {
-    top: 52px;
-  }
-
   #roster {
     top: auto;
     right: 8px;
     bottom: 76px;
-    min-width: 202px;
+    min-width: 190px;
     max-width: calc(100vw - 16px);
   }
 
-  #gh-link {
-    max-width: 72px;
-    overflow: hidden;
+  /* Keep chat clear of the mobile action buttons and repo link. */
+  #chat {
+    bottom: 70px;
+    width: min(60vw, 260px);
+  }
+
+  #chat-log {
+    max-height: 96px;
   }
 }
 
 @media (max-width: 420px) {
-  #issue59-guide p,
-  #issue59-guide li {
-    font-size: 12px;
-  }
-
   #character-picker .character-note,
   #profile-character-picker .character-note {
     display: none;
@@ -508,13 +523,5 @@ button:active:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   #startup-loader::before {
     animation-duration: 2.5s;
-  }
-
-  #name-form,
-  #profile-modal,
-  #role-picker label,
-  #character-picker label,
-  #profile-character-picker label {
-    transform: none;
   }
 }

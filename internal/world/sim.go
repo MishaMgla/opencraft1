@@ -3,6 +3,7 @@ package world
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"opencraft1/internal/wire"
@@ -49,6 +50,11 @@ const bombFuseTicks = 38 // ~2.5s at 15Hz
 const bombRange = 2      // tiles per arm
 const maxBombsPerPlayer = 2
 const respawnTicks = 60 // ~4s dead before respawn (Increment 2)
+
+// Chat — global, ephemeral live chat. Text is trimmed, capped, and rate-limited
+// per player before broadcast; nothing is persisted or replayed on join.
+const chatMaxRunes = 200        // hard cap on a broadcast chat line
+const chatMinTicks = TickHz / 2 // min ticks between a player's accepted lines (~0.5s)
 
 type bomb struct {
 	ownerID uint32
@@ -98,7 +104,9 @@ type player struct {
 	trailTiles    map[tileKey]struct{}
 	alive         bool
 	kills         byte
-	respawnLeft   int // ticks until respawn while dead (0 = alive)
+	respawnLeft   int    // ticks until respawn while dead (0 = alive)
+	chatted       bool   // has the player sent at least one accepted chat line
+	lastChatTick  uint32 // tick of the player's last accepted chat line (rate limit)
 }
 
 type tileKey struct {
@@ -153,6 +161,10 @@ type cmdPaint struct{ id uint32 }
 type cmdUlt struct{ id uint32 }
 type cmdJump struct{ id uint32 }
 type cmdBomb struct{ id uint32 }
+type cmdChat struct {
+	id   uint32
+	text string
+}
 
 // NewSim creates a sim. Pass a Store to persist player positions across
 // restarts, or nil to disable persistence (local dev, tests).
@@ -216,6 +228,7 @@ func (s *Sim) Paint(id uint32)             { s.cmds <- cmdPaint{id} }
 func (s *Sim) Ult(id uint32)               { s.cmds <- cmdUlt{id} }
 func (s *Sim) Jump(id uint32)              { s.cmds <- cmdJump{id} }
 func (s *Sim) Bomb(id uint32)              { s.cmds <- cmdBomb{id} }
+func (s *Sim) Chat(id uint32, text string) { s.cmds <- cmdChat{id, text} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -892,6 +905,30 @@ func (s *Sim) Run(ctx context.Context) {
 					continue
 				}
 				s.placeBomb(players, bombs, p)
+
+			case cmdChat:
+				// Ephemeral: validate, rate-limit, broadcast; never persisted.
+				// Dead players may still chat (ghosts stay present).
+				p := players[m.id]
+				if p == nil {
+					continue
+				}
+				text := strings.TrimSpace(m.text)
+				if text == "" {
+					continue
+				}
+				if r := []rune(text); len(r) > chatMaxRunes {
+					text = string(r[:chatMaxRunes])
+				}
+				if p.chatted && tick-p.lastChatTick < chatMinTicks {
+					continue // too soon since this player's last line
+				}
+				p.chatted = true
+				p.lastChatTick = tick
+				frame := wire.EncodeChat(p.name, text)
+				for _, o := range players {
+					send(o, frame)
+				}
 
 			case cmdPing:
 				if p := players[m.id]; p != nil {

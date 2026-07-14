@@ -82,6 +82,15 @@
         "id": 5
       },
       "hex": "8705000000"
+    },
+    {
+      "name": "chat",
+      "decoded": {
+        "type": "chat",
+        "name": "Bob",
+        "text": "hi all"
+      },
+      "hex": "8f03426f620600686920616c6c"
     }
   ],
   "client": [
@@ -108,6 +117,14 @@
         "type": 4
       },
       "hex": "04"
+    },
+    {
+      "name": "chat",
+      "decoded": {
+        "type": 8,
+        "text": "hi all"
+      },
+      "hex": "080600686920616c6c"
     }
   ]
 }

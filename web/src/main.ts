@@ -2,7 +2,7 @@ import { connect } from './net.js';
 import { createInput } from './input.js';
 import { createRenderer } from './render.js';
 import { resolveWsUrl } from './config.js';
-import { loadManifest, resolveCharacter, resolveHud, assetUrl } from './assets.js';
+import { loadManifest, resolveCharacter, assetUrl } from './assets.js';
 import { ROLE_CROSS, ROLE_PULSE, ROLE_TRAIL } from './wire.js';
 import { isTemplePosition } from './temple.js';
 import type { Bounds } from './input.js';
@@ -196,9 +196,6 @@ function shouldUseMobileControls(): boolean {
 
 async function start(name: string, role: number, character: string): Promise<void> {
   const manifest = await manifestPromise;
-  const hudAsset = document.getElementById('hud-asset') as HTMLImageElement | null;
-  const bar = resolveHud(manifest, 'healthbar');
-  if (hudAsset && bar) { hudAsset.src = assetUrl(bar.file); hudAsset.style.display = 'block'; }
   const r = await createRenderer(manifest);
   void r.skinLocal(character); // no-op without the asset; procedural token remains playable
   const input = createInput();
@@ -215,6 +212,27 @@ async function start(name: string, role: number, character: string): Promise<voi
   const mobilePaint = document.getElementById('mobile-paint') as HTMLButtonElement;
   const mobileJump = document.getElementById('mobile-jump') as HTMLButtonElement;
   const mobileUlt = document.getElementById('mobile-ult') as HTMLButtonElement;
+  const chatLog = document.getElementById('chat-log')!;
+  const chatForm = document.getElementById('chat-form') as HTMLFormElement;
+  const chatInput = document.getElementById('chat-input') as HTMLInputElement;
+
+  const CHAT_MAX_LINES = 6;
+  // Ephemeral: append one line and drop the oldest past the cap. textContent
+  // (never innerHTML) keeps player-authored text inert against markup injection.
+  function appendChatLine(who: string, text: string): void {
+    const line = document.createElement('div');
+    line.className = 'chat-line';
+    const name = document.createElement('span');
+    name.className = 'chat-name';
+    name.textContent = who;
+    const body = document.createElement('span');
+    body.className = 'chat-text';
+    body.textContent = text;
+    line.append(name, body);
+    chatLog.append(line);
+    while (chatLog.children.length > CHAT_MAX_LINES) chatLog.firstElementChild!.remove();
+  }
+
   let currentName = name;
   let currentCharacter = character;
   let ready = false;
@@ -483,6 +501,9 @@ async function start(name: string, role: number, character: string): Promise<voi
       player(m) {
         upsertRosterPlayer(m);
       },
+      chat(m) {
+        appendChatLine(m.name, m.text);
+      },
       close() {
         failStartup('Connection closed before server welcome');
       },
@@ -493,6 +514,20 @@ async function start(name: string, role: number, character: string): Promise<voi
   }
   net = conn;
   startupTimer = window.setTimeout(() => failStartup('Timed out waiting for server welcome'), 10000);
+
+  // Chat send: Enter submits (the server echoes it back, so no local echo here);
+  // Esc returns focus to the game. The 200-char slice mirrors the server cap.
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim().slice(0, 200);
+    if (!text) return;
+    conn.sendChat(text);
+    chatInput.value = '';
+  });
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') chatInput.blur();
+    e.stopPropagation();
+  });
 
   let last = performance.now();
   let acc = 0;

@@ -51,6 +51,28 @@ test('loads, joins, and moves', async ({ page }) => {
   expect(x1).toBeGreaterThan(x0);
 });
 
+test('chat message round-trips through the server', async ({ page }) => {
+  await page.goto('/');
+  await page.fill('#name', 'e2e-chatter');
+  await page.locator('#character-picker label:has(input[value="horse-poison"])').click();
+  await page.click('button[type=submit]');
+  // Guard against the `?.` short-circuit: `window.__game?.me.id !== 0` is truthy
+  // while __game is still undefined, so require the hook to actually exist first.
+  await page.waitForFunction(() => !!(window.__game && window.__game.me && window.__game.me.id !== 0), null, {
+    timeout: 15000,
+  });
+
+  // Send a chat line; the server tags it with the sender's name and broadcasts
+  // it back (no optimistic local echo), so its appearance proves the full round
+  // trip: encodeChat -> server validate/broadcast -> decodeServer -> DOM.
+  await page.fill('#chat-input', 'hello e2e');
+  await page.press('#chat-input', 'Enter');
+
+  await expect(page.locator('#chat-log .chat-line')).toContainText('hello e2e', { timeout: 5000 });
+  await expect(page.locator('#chat-log .chat-name')).toContainText('e2e-chatter');
+  await expect(page.locator('#chat-input')).toHaveValue('');
+});
+
 test('manifest is reachable and well-shaped', async ({ page }) => {
   // This test asserts the asset path does not throw; it does not commit assets.
   await page.goto('/');
