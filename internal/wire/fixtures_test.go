@@ -50,6 +50,8 @@ func canonicalServer() []frameCase {
 		{"paint", json.RawMessage(`{"type":"paint","x":2048,"y":2176,"color":3978315,"ownerId":3}`),
 			enc(EncodePaint(2048, 2176, 0x3CB44B, 3))},
 		{"shake", json.RawMessage(`{"type":"shake","id":5}`), enc(EncodeShake(5))},
+		{"chat", json.RawMessage(`{"type":"chat","name":"Bob","text":"hi all"}`),
+			enc(EncodeChat("Bob", "hi all"))},
 	}
 }
 
@@ -60,10 +62,12 @@ func canonicalClient() []frameCase {
 	hello := append([]byte{CHello, 3}, []byte("Bob")...)
 	input := []byte{CInput, 0x2e, 0xfb, 0x09, 0x03} // x=-1234, y=777
 	paint := []byte{CPaint}
+	chat := append([]byte{CChat, 0x06, 0x00}, []byte("hi all")...)
 	return []frameCase{
 		{"hello", json.RawMessage(`{"type":1,"name":"Bob"}`), hex.EncodeToString(hello)},
 		{"input", json.RawMessage(`{"type":2,"x":-1234,"y":777}`), hex.EncodeToString(input)},
 		{"paint", json.RawMessage(`{"type":4}`), hex.EncodeToString(paint)},
+		{"chat", json.RawMessage(`{"type":8,"text":"hi all"}`), hex.EncodeToString(chat)},
 	}
 }
 
@@ -130,6 +134,10 @@ func TestWireFixtures(t *testing.T) {
 		case "paint":
 			if msg.Type != CPaint {
 				t.Fatalf("paint parsed to %+v", msg)
+			}
+		case "chat":
+			if msg.Type != CChat || msg.Text != "hi all" {
+				t.Fatalf("chat parsed to %+v", msg)
 			}
 		}
 	}

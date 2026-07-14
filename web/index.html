@@ -553,7 +553,6 @@
         </dl>
       </span>
     </span>
-    <img id="hud-asset" alt="" />
   </div>
   <div id="roster" aria-label="Player roster">
     <div id="roster-title">players</div>
@@ -563,6 +562,12 @@
     <button id="mobile-paint" type="button">paint</button>
     <button id="mobile-jump" type="button">jump</button>
     <button id="mobile-ult" type="button">ult</button>
+  </div>
+  <div id="chat" aria-label="Chat">
+    <div id="chat-log" role="log" aria-live="polite"></div>
+    <form id="chat-form" autocomplete="off">
+      <input id="chat-input" type="text" maxlength="200" placeholder="say something…" aria-label="Chat message" />
+    </form>
   </div>
   <dialog id="profile-modal" aria-labelledby="profile-title">
     <form id="profile-form">

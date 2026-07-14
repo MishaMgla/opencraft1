@@ -13,6 +13,7 @@ const (
 	CUlt   = 0x05
 	CJump  = 0x06
 	CBomb  = 0x07
+	CChat  = 0x08
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
@@ -28,6 +29,7 @@ const (
 	SBlast    = 0x8C
 	SKO       = 0x8D
 	SRespawn  = 0x8E
+	SChat     = 0x8F
 )
 
 const (
@@ -236,6 +238,25 @@ func EncodeRespawn(id uint32, x, y int16) []byte {
 	return b
 }
 
+// EncodeChat carries one chat line for broadcast: the sender's name (uint8
+// length-prefixed, like other names) followed by the message text (uint16
+// length-prefixed — a capped-length UTF-8 string can exceed 255 bytes).
+func EncodeChat(name, text string) []byte {
+	n := clippedText(name)
+	t := []byte(text)
+	if len(t) > 65535 {
+		t = t[:65535]
+	}
+	b := make([]byte, 1+1+len(n)+2+len(t))
+	b[0] = SChat
+	b[1] = byte(len(n))
+	copy(b[2:], n)
+	off := 2 + len(n)
+	binary.LittleEndian.PutUint16(b[off:], uint16(len(t)))
+	copy(b[off+2:], t)
+	return b
+}
+
 // ClientMsg is a decoded client->server frame. Only fields relevant to Type are set.
 type ClientMsg struct {
 	Type      byte
@@ -244,6 +265,7 @@ type ClientMsg struct {
 	Character string // CHello
 	X, Y      int16  // CInput
 	T         uint32 // CPing
+	Text      string // CChat
 }
 
 // ParseClient decodes one client frame. Returns ok=false on malformed input.
@@ -295,6 +317,15 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 		return ClientMsg{Type: CJump}, true
 	case CBomb:
 		return ClientMsg{Type: CBomb}, true
+	case CChat:
+		if len(b) < 3 {
+			return ClientMsg{}, false
+		}
+		tlen := int(binary.LittleEndian.Uint16(b[1:]))
+		if len(b) < 3+tlen {
+			return ClientMsg{}, false
+		}
+		return ClientMsg{Type: CChat, Text: string(b[3 : 3+tlen])}, true
 	}
 	return ClientMsg{}, false
 }

@@ -3,6 +3,7 @@ package world
 import (
 	"context"
 	"encoding/binary"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -419,5 +420,93 @@ func TestJoinDeliversWelcomeUnderTileFlood(t *testing.T) {
 	}
 	if !gotWelcome {
 		t.Fatal("Welcome missing from initial join delivery — client never learns its id, paint stays dead")
+	}
+}
+
+// chatFrame decodes an SChat frame into its name/text, or ok=false for anything
+// else (snapshots and other frames interleave on the same channel).
+func chatFrame(b []byte) (name, text string, ok bool) {
+	if len(b) < 4 || b[0] != wire.SChat {
+		return "", "", false
+	}
+	nlen := int(b[1])
+	if len(b) < 2+nlen+2 {
+		return "", "", false
+	}
+	name = string(b[2 : 2+nlen])
+	off := 2 + nlen
+	tlen := int(binary.LittleEndian.Uint16(b[off:]))
+	if len(b) < off+2+tlen {
+		return "", "", false
+	}
+	return name, string(b[off+2 : off+2+tlen]), true
+}
+
+// A chat line is trimmed, tagged with the sender's name, and broadcast to every
+// player including the sender (server echo — no optimistic local echo).
+func TestChatBroadcast(t *testing.T) {
+	s := startSim(t)
+	outA := make(chan []byte, 256)
+	outB := make(chan []byte, 256)
+	idA := clientJoin(s, "Alice", outA)
+	clientJoin(s, "Bob", outB)
+
+	s.Chat(idA, "  hello world  ")
+
+	want := func(b []byte) bool {
+		n, txt, ok := chatFrame(b)
+		return ok && n == "Alice" && txt == "hello world"
+	}
+	if !waitFor(t, outB, want) {
+		t.Fatal("Bob never received Alice's chat line")
+	}
+	if !waitFor(t, outA, want) {
+		t.Fatal("Alice did not receive her own echoed chat line")
+	}
+}
+
+// Two lines sent back-to-back: the second falls inside the per-player rate-limit
+// window and must be dropped.
+func TestChatRateLimited(t *testing.T) {
+	s := startSim(t)
+	out := make(chan []byte, 256)
+	id := clientJoin(s, "Alice", out)
+
+	s.Chat(id, "first")
+	s.Chat(id, "second")
+
+	if !waitFor(t, out, func(b []byte) bool {
+		_, txt, ok := chatFrame(b)
+		return ok && txt == "first"
+	}) {
+		t.Fatal("first chat line never arrived")
+	}
+	// Over a window shorter than chatMinTicks, "second" must not appear.
+	deadline := time.After(300 * time.Millisecond)
+	for {
+		select {
+		case b := <-out:
+			if _, txt, ok := chatFrame(b); ok && txt == "second" {
+				t.Fatal("rate-limited second line was broadcast")
+			}
+		case <-deadline:
+			return
+		}
+	}
+}
+
+// Over-length text is truncated to chatMaxRunes, not dropped.
+func TestChatTruncatesToMax(t *testing.T) {
+	s := startSim(t)
+	out := make(chan []byte, 256)
+	id := clientJoin(s, "Alice", out)
+
+	s.Chat(id, strings.Repeat("a", chatMaxRunes+50))
+
+	if !waitFor(t, out, func(b []byte) bool {
+		_, txt, ok := chatFrame(b)
+		return ok && len([]rune(txt)) == chatMaxRunes
+	}) {
+		t.Fatal("long chat line was not truncated to chatMaxRunes")
 	}
 }

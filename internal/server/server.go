@@ -160,6 +160,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			s.sim.Jump(id)
 		case wire.CBomb:
 			s.sim.Bomb(id)
+		case wire.CChat:
+			s.sim.Chat(id, m.Text)
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
 		}

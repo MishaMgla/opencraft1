@@ -30,6 +30,16 @@ export interface Input {
 
 type KeyboardTarget = Pick<Window, 'addEventListener'>;
 
+// While a text field (chat, name, profile) holds focus, keystrokes are for
+// typing, not for driving the game — so game-key handling bails out. Guarded on
+// `typeof document` so the node-based input tests (no DOM) still run.
+function isTypingInTextField(): boolean {
+  if (typeof document === 'undefined') return false;
+  const el = document.activeElement as HTMLElement | null;
+  if (!el) return false;
+  return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable;
+}
+
 function isPaintKey(e: KeyboardEvent): boolean {
   return e.code === 'KeyF' || e.key.toLowerCase() === 'f';
 }
@@ -103,6 +113,7 @@ export function createInput(target: KeyboardTarget = window): Input {
   target.addEventListener(
     'keydown',
     (e) => {
+      if (isTypingInTextField()) return;
       if (isPaintKey(e)) {
         e.preventDefault();
         if (!e.repeat) requestPaint(true);
@@ -131,6 +142,7 @@ export function createInput(target: KeyboardTarget = window): Input {
   target.addEventListener(
     'keyup',
     (e) => {
+      if (isTypingInTextField()) return;
       if (isPaintKey(e)) {
         e.preventDefault();
         releasePaint();
