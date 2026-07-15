@@ -374,14 +374,14 @@ async function start(name: string, role: number, character: string): Promise<voi
     if (!document.body.classList.contains('mobile-controls-enabled') || drift > TAP_MOVE_MAX_DRIFT_PX) return;
     e.preventDefault();
     const w = r.screenToWorld(e.clientX, e.clientY);
-    if (heldId) {
+    if (heldId && me.alive) {
       // second tap = drop at the tapped ground position; NOT a move destination
       conn.sendDrop(Math.round(w.x), Math.round(w.y));
       heldId = 0;
       return;
     }
     const critter = critterIdAt(w.x, w.y);
-    if (critter) {
+    if (critter && me.alive) {
       conn.sendGrab(critter);
       heldId = critter; // server derives the carry position (above the player)
       return;
