@@ -24,7 +24,34 @@
         },
         "sortOffset": 0
       },
-      "facings": "ordinal"
+      "facings": "ordinal",
+      "animations": {
+        "idle": {
+          "fps": 6,
+          "frames": {
+            "north-east": [
+              "characters/critter-imp-north-east-idle-0.png",
+              "characters/critter-imp-north-east-idle-1.png",
+              "characters/critter-imp-north-east-idle-2.png"
+            ],
+            "south-east": [
+              "characters/critter-imp-south-east-idle-0.png",
+              "characters/critter-imp-south-east-idle-1.png",
+              "characters/critter-imp-south-east-idle-2.png"
+            ],
+            "south-west": [
+              "characters/critter-imp-south-west-idle-0.png",
+              "characters/critter-imp-south-west-idle-1.png",
+              "characters/critter-imp-south-west-idle-2.png"
+            ],
+            "north-west": [
+              "characters/critter-imp-north-west-idle-0.png",
+              "characters/critter-imp-north-west-idle-1.png",
+              "characters/critter-imp-north-west-idle-2.png"
+            ]
+          }
+        }
+      }
     },
     "character:horse": {
       "type": "character",
