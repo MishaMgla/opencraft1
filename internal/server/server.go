@@ -109,7 +109,8 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	out := make(chan []byte, 64)
-	id, initial := s.sim.JoinWithProfile(msg.Name, msg.Role, msg.Character, out)
+	snap := make(chan []byte, 1)
+	id, initial := s.sim.JoinWithProfile(msg.Name, msg.Role, msg.Character, out, snap)
 	defer s.sim.Leave(id)
 
 	// Deliver the joining player's initial state (Welcome + painted world +
@@ -131,6 +132,11 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			case <-ctx.Done():
 				return
 			case b := <-out:
+				if err := c.Write(ctx, websocket.MessageBinary, b); err != nil {
+					cancel()
+					return
+				}
+			case b := <-snap:
 				if err := c.Write(ctx, websocket.MessageBinary, b); err != nil {
 					cancel()
 					return
@@ -164,6 +170,12 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			s.sim.Chat(id, m.Text)
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
+		case wire.CGrab:
+			s.sim.Grab(id, m.CritterID)
+		case wire.CHold:
+			s.sim.Hold(id, m.X, m.Y)
+		case wire.CDrop:
+			s.sim.Drop(id, m.X, m.Y)
 		}
 	}
 }

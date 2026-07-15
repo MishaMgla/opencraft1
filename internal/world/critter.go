@@ -64,6 +64,15 @@ func newCritterWorld(seed int64) *critterWorld {
 	return &critterWorld{critters: map[uint32]*critter{}, nextID: 1, rng: rand.New(rand.NewSource(seed))}
 }
 
+// critterSnapshot detaches current critter state into wire form.
+func critterSnapshot(cw *critterWorld) []wire.Critter {
+	out := make([]wire.Critter, 0, len(cw.critters))
+	for _, c := range cw.critters {
+		out = append(out, wire.Critter{ID: c.id, Kind: c.kind, X: c.x, Y: c.y, State: c.state, HolderID: c.holderID})
+	}
+	return out
+}
+
 // isLivingTile: grass or flowers sustain critters — the same set that burns.
 func isLivingTile(t paintedTile) bool { return isFlammable(t.color) }
 

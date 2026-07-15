@@ -382,3 +382,28 @@ func TestDropDeterministicFollowExcludesDropper(t *testing.T) {
 	}
 }
 
+// A snapshot must never occupy more than the single latest slot, and a full
+// out FIFO must not block or lose the newest critter state.
+func TestSnapshotSlotLatestOnly(t *testing.T) {
+	p := &player{id: 1, out: make(chan []byte, 64), snap: make(chan []byte, 1)}
+	// saturate the event FIFO completely
+	for i := 0; i < 64; i++ {
+		send(p, []byte{byte(i)})
+	}
+	sendSnap(p, []byte{0xA1})
+	sendSnap(p, []byte{0xA2})
+	sendSnap(p, []byte{0xA3}) // each newer snapshot replaces the queued one
+	got := <-p.snap
+	if got[0] != 0xA3 {
+		t.Fatalf("slot did not hold the LATEST snapshot: got %x", got)
+	}
+	select {
+	case extra := <-p.snap:
+		t.Fatalf("slot held more than one snapshot: %x", extra)
+	default:
+	}
+	if len(p.out) != 64 {
+		t.Fatalf("snapshots disturbed the event FIFO: len=%d", len(p.out))
+	}
+}
+

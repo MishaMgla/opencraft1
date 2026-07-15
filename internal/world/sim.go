@@ -108,6 +108,7 @@ type player struct {
 	chatted       bool   // has the player sent at least one accepted chat line
 	lastChatTick  uint32 // tick of the player's last accepted chat line (rate limit)
 	heldCritterID uint32
+	snap          chan []byte // latest-only slot for self-superseding snapshots (SCritters)
 }
 
 type tileKey struct {
@@ -136,6 +137,7 @@ type cmdJoin struct {
 	role      byte
 	character string
 	out       chan []byte
+	snap      chan []byte
 	saved     *SavedPlayer // nil = brand-new player: spawn at center, derive color
 	reply     chan joinResult
 }
@@ -212,10 +214,10 @@ func (s *Sim) Join(name string, out chan []byte) (uint32, [][]byte) {
 }
 
 func (s *Sim) JoinWithRole(name string, role byte, out chan []byte) (uint32, [][]byte) {
-	return s.JoinWithProfile(name, role, "", out)
+	return s.JoinWithProfile(name, role, "", out, make(chan []byte, 1))
 }
 
-func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan []byte) (uint32, [][]byte) {
+func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan []byte, snap chan []byte) (uint32, [][]byte) {
 	var saved *SavedPlayer
 	if s.store != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -229,7 +231,7 @@ func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan
 		}
 	}
 	reply := make(chan joinResult, 1)
-	s.cmds <- cmdJoin{name: name, role: validRole(role), character: validCharacter(character), out: out, saved: saved, reply: reply}
+	s.cmds <- cmdJoin{name: name, role: validRole(role), character: validCharacter(character), out: out, snap: snap, saved: saved, reply: reply}
 	r := <-reply
 	return r.id, r.initial
 }
@@ -245,6 +247,27 @@ func (s *Sim) Chat(id uint32, text string) { s.cmds <- cmdChat{id, text} }
 func (s *Sim) Grab(id, critterID uint32)   { s.cmds <- cmdGrab{id, critterID} }
 func (s *Sim) Hold(id uint32, x, y int16)  { s.cmds <- cmdHold{id, x, y} }
 func (s *Sim) Drop(id uint32, x, y int16)  { s.cmds <- cmdDrop{id, x, y} }
+
+// sendSnap delivers a self-superseding snapshot through a latest-only slot:
+// a newer frame replaces the queued one instead of stacking in the FIFO, so
+// snapshots can never evict non-superseding event frames from out.
+func sendSnap(p *player, b []byte) {
+	if p.snap == nil {
+		return // tests built without a snap channel just skip snapshots
+	}
+	select {
+	case p.snap <- b:
+	default:
+		select {
+		case <-p.snap:
+		default:
+		}
+		select {
+		case p.snap <- b:
+		default:
+		}
+	}
+}
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -806,6 +829,7 @@ func (s *Sim) Run(ctx context.Context) {
 	burning := map[tileKey]int{} // tile -> fire-steps remaining (transient, never persisted)
 	ashTimers := map[tileKey]int{}
 	bombs := map[tileKey]*bomb{} // tile -> live bomb (transient, never persisted)
+	cw := newCritterWorld(time.Now().UnixNano())
 	s.loadPaints(painted)
 	grid := NewGrid()
 	var nextID uint32 = 1
@@ -842,7 +866,7 @@ func (s *Sim) Run(ctx context.Context) {
 				if isTempleTile(paintTileFor(px, py)) {
 					px, py = SpawnCoord, SpawnCoord
 				}
-				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, lastPaintTile: paintTileFor(px, py), alive: true}
+				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, snap: m.snap, lastPaintTile: paintTileFor(px, py), alive: true}
 				players[id] = p
 				grid.Insert(id, p.x, p.y)
 
@@ -858,6 +882,7 @@ func (s *Sim) Run(ctx context.Context) {
 				for _, tile := range painted {
 					initial = append(initial, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
 				}
+				initial = append(initial, wire.EncodeCritters(critterSnapshot(cw)))
 				initial = append(initial, playerState(p))
 				for oid, o := range players {
 					if oid == id {
@@ -964,15 +989,13 @@ func (s *Sim) Run(ctx context.Context) {
 				s.save(p)
 
 			case cmdGrab:
-				// NOTE: critterWorld wiring is not in scope for this task.
-				// Handler added for interface completeness; critterWorld initialization
-				// will happen in the Run loop integration task.
+				s.grabCritter(players, cw, players[m.id], m.critterID)
 
 			case cmdHold:
-				// NOTE: critterWorld wiring is not in scope for this task.
+				s.holdCritter(players, players[m.id], cw, m.x, m.y)
 
 			case cmdDrop:
-				// NOTE: critterWorld wiring is not in scope for this task.
+				s.dropCritterCmd(players, painted, burning, cw, players[m.id], m.x, m.y)
 			}
 
 		case <-ticker.C:
@@ -1007,6 +1030,24 @@ func (s *Sim) Run(ctx context.Context) {
 					for _, o := range players {
 						send(o, wire.EncodeRespawn(p.id, p.x, p.y))
 					}
+				}
+			}
+			s.critterReleaseInvalidHolders(players, painted, burning, cw)
+			s.critterCarryTick(players, cw)
+			s.critterMove(painted, burning, cw)
+			if tick%critterStepEvery == 0 {
+				s.critterStep(players, painted, burning, cw)
+				s.critterHabitat(painted, cw)
+			}
+			if len(cw.critters) == 0 {
+				s.critterSpawn(players, painted, cw) // immediate first spawn when habitat appears
+			} else if tick%critterSpawnEvery == 0 {
+				s.critterSpawn(players, painted, cw)
+			}
+			if tick%2 == 0 {
+				frame := wire.EncodeCritters(critterSnapshot(cw))
+				for _, p := range players {
+					sendSnap(p, frame)
 				}
 			}
 			for _, p := range players {
