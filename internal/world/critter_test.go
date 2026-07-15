@@ -347,3 +347,38 @@ func TestDropReactions(t *testing.T) {
 		t.Fatalf("no follow switch on drop near player: state=%d follow=%d", c.state, c.followID)
 	}
 }
+
+func TestDropDeterministicFollowExcludesDropper(t *testing.T) {
+	// Prove that when both dropper and second player are within followRadius,
+	// the critter deterministically follows the second player (not the dropper).
+	// Run ~10 iterations with fresh maps to defeat map iteration order luck.
+	for iter := 0; iter < 10; iter++ {
+		s := NewSim(nil)
+		painted := map[tileKey]paintedTile{}
+		burning := map[tileKey]int{}
+		cw := newCritterWorld(int64(iter))
+
+		// dropper at (1000, 1000)
+		dropper := &player{id: 5, x: 1000, y: 1000, alive: true, out: make(chan []byte, 64)}
+		// second player at (1100, 1100), also within critterFollowRadius
+		other := &player{id: 6, x: 1100, y: 1100, alive: true, out: make(chan []byte, 64)}
+		players := map[uint32]*player{5: dropper, 6: other}
+
+		// critter held by dropper, will be dropped
+		c := &critter{id: 1, kind: 1, x: 1050, y: 1050, tx: 1050, ty: 1050, state: critterHeld, holderID: 5}
+		cw.critters[1] = c
+		dropper.heldCritterID = 1
+
+		// drop the critter at (1050, 1050) — both players are nearby
+		s.dropCritter(players, painted, burning, cw, c, 1050, 1050)
+
+		// must have switched to follow mode with the OTHER player, not the dropper
+		if c.state != critterFollow {
+			t.Fatalf("iter %d: state=%d, want critterFollow", iter, c.state)
+		}
+		if c.followID != 6 {
+			t.Fatalf("iter %d: followID=%d, want 6 (the other player, not dropper 5)", iter, c.followID)
+		}
+	}
+}
+

@@ -156,13 +156,15 @@ func hazardTile(painted map[tileKey]paintedTile, burning map[tileKey]int, k tile
 }
 
 // nearestLivePlayer returns the id of a live player within critterFollowRadius,
-// or 0. First match wins — critters aren't picky.
-func nearestLivePlayer(players map[uint32]*player, c *critter) uint32 {
+// or 0. First match wins — critters aren't picky. excludeID (0 = exclude nobody)
+// skips that player id during the scan for deterministic attachment logic.
+func nearestLivePlayer(players map[uint32]*player, c *critter, excludeID uint32) uint32 {
 	r2 := critterFollowRadius * critterFollowRadius
 	for id, p := range players {
-		if p.alive && dist2(c.x, c.y, p.x, p.y) <= r2 {
-			return id
+		if id == excludeID || !p.alive || dist2(c.x, c.y, p.x, p.y) > r2 {
+			continue
 		}
+		return id
 	}
 	return 0
 }
@@ -250,7 +252,7 @@ func (s *Sim) critterStep(players map[uint32]*player, painted map[tileKey]painte
 
 		case critterWander:
 			// follow attachment: a live player lingering nearby wins the critter
-			if pid := nearestLivePlayer(players, c); pid != 0 {
+			if pid := nearestLivePlayer(players, c, 0); pid != 0 {
 				if pid == c.candID {
 					c.candFor++
 				} else {
@@ -426,7 +428,7 @@ func (s *Sim) dropCritter(players map[uint32]*player, painted map[tileKey]painte
 		}
 	default:
 		// near another live player (not the dropper) -> allegiance switches
-		if pid := nearestLivePlayer(players, c); pid != 0 && pid != holderID {
+		if pid := nearestLivePlayer(players, c, holderID); pid != 0 {
 			c.state = critterFollow
 			c.followID = pid
 		} else {
