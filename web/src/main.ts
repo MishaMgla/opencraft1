@@ -327,6 +327,12 @@ async function start(name: string, role: number, character: string): Promise<voi
   const me = { id: 0, x: 2048, y: 2048, alive: true };
   const bounds: Bounds = { minX: 0, minY: 0, maxX: 8191, maxY: 8191 };
   const others = new Map<number, Token>();
+  interface CritterView {
+    token: Token;
+    state: number;
+    holderId: number;
+  }
+  const critters = new Map<number, CritterView>();
   const rosterPlayers = new Map<number, RosterPlayer>();
   let lastHeldPaintTile = '';
   let tapStart: { id: number; x: number; y: number } | null = null;
@@ -408,7 +414,7 @@ async function start(name: string, role: number, character: string): Promise<voi
   // E2E test hook (inert in prod). These objects are mutated in place by the
   // game loop, so exposing the references once is enough for a test to read
   // live state. Enabled by an init script that sets window.__E2E before load.
-  if (window.__E2E) window.__game = { me, others, bounds };
+  if (window.__E2E) window.__game = { me, others, bounds, critters };
   setDisplayName(currentName);
 
   let conn: ReturnType<typeof connect>;
@@ -498,6 +504,29 @@ async function start(name: string, role: number, character: string): Promise<voi
         const o = others.get(m.id);
         if (o) r.jumpToken(o);
       },
+      critters(m) {
+        const seen = new Set<number>();
+        for (const e of m.ents) {
+          seen.add(e.id);
+          let v = critters.get(e.id);
+          if (!v) {
+            v = { token: r.addCritter(e.id, e.x, e.y), state: e.state, holderId: e.holderId };
+            critters.set(e.id, v);
+          }
+          v.token.tx = e.x;
+          v.token.ty = e.y;
+          const held = e.state === 3;
+          if (held !== (v.state === 3)) r.setHeldLift(v.token, held);
+          v.state = e.state;
+          v.holderId = e.holderId;
+        }
+        for (const [id, v] of critters) {
+          if (!seen.has(id)) {
+            r.removeToken(v.token);
+            critters.delete(id);
+          }
+        }
+      },
       player(m) {
         upsertRosterPlayer(m);
       },
@@ -568,6 +597,12 @@ async function start(name: string, role: number, character: string): Promise<voi
       o.rx += (o.tx - o.rx) * 0.2; // smooth toward latest snapshot
       o.ry += (o.ty - o.ry) * 0.2;
       r.placeToken(o);
+    }
+
+    for (const v of critters.values()) {
+      v.token.rx += (v.token.tx - v.token.rx) * 0.2;
+      v.token.ry += (v.token.ty - v.token.ry) * 0.2;
+      r.placeToken(v.token);
     }
 
     r.centerCamera(me.x, me.y);

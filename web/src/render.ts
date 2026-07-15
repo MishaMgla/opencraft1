@@ -288,6 +288,8 @@ export interface Token {
 export interface Renderer {
   app: Application;
   addToken(id: number, name: string, color: number, x: number, y: number): Token;
+  addCritter(id: number, x: number, y: number): Token;
+  setHeldLift(token: Token, lifted: boolean): void;
   removeToken(token: Token): void;
   placeToken(token: Token): void;
   setLocal(x: number, y: number): void;
@@ -689,6 +691,18 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       const token = makeTokenState(container, avatar, label, x, y);
       this.placeToken(token);
       return token;
+    },
+    addCritter(this: Renderer, id: number, x: number, y: number) {
+      const token = this.addToken(id, '', 0x9acd32, x, y); // yellow-green procedural fallback
+      token.label.visible = false;      // critters have no name label
+      token.avatar.scale.set(0.5);      // ~half character height
+      void this.setSkin(token, 'critter-imp'); // no-op fallback if asset missing
+      return token;
+    },
+    // lift the avatar while held so the hand-carry reads visually; the ground
+    // shadow (procedural token) stays put via the container position.
+    setHeldLift(token, lifted) {
+      token.avatar.position.y = lifted ? -18 : 0;
     },
     removeToken(token) {
       world.removeChild(token.container);

@@ -8,6 +8,7 @@ declare global {
       me: { id: number; x: number; y: number };
       others: Map<number, Token>;
       bounds: Bounds;
+      critters: Map<number, { token: Token; state: number; holderId: number }>;
     };
   }
 }
