@@ -6,6 +6,7 @@ Browser multiplayer client: TypeScript, no bundler, PixiJS isometric renderer ta
 - `index.html` loads `src/main.js` as an ES module; name-form submit calls `start(name)`.
 - Runtime WS endpoint comes from `GET /config.json` (`{wsUrl}`); falls back to same-origin `ws(s)://<host>/ws`.
 - `web/api/config.ts` is a Vercel function returning `WS_URL` env var; reached via the `/config.json` rewrite in `vercel.json`.
+- `window.__game.critters` (Map of live critters, e2e-only, same `window.__E2E` gate) reconciled from `SCritters` snapshot frames.
 
 ## Layout
 - `src/main.ts` — orchestration: form submit → `start()`; builds `{me, others, bounds}`, wires net handlers, runs the PixiJS ticker loop.
@@ -29,6 +30,7 @@ Browser multiplayer client: TypeScript, no bundler, PixiJS isometric renderer ta
 - PixiJS is imported from a hardcoded CDN URL in `src/render.ts` (`pixi.js@8.19.0`); the `pixi.js` devDep is types-only and its version MUST match the CDN URL.
 - `window.__game` (the e2e read hook for live `{me, others, bounds}`) is only set when `window.__E2E` is truthy, injected by an init script before load.
 - `resolveWsUrl()` swallows any `/config.json` failure (404/network/bad JSON/missing field) and falls back to same-origin — local dev stays zero-config but a misconfigured `WS_URL` fails silently to the wrong endpoint.
+- God-hand carry is server-confirmed, not locally authoritative: `heldId` set on grab is only a request until a `SCritters` snapshot shows `holderId === me.id`; a rejected grab must snap back rather than staying held client-side.
 
 ## Dependencies
 - Runtime: none (PixiJS via CDN). Dev: typescript, @types/node, @playwright/test, @vercel/node, pixi.js (types only).

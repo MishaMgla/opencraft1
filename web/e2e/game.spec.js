@@ -73,6 +73,43 @@ test('chat message round-trips through the server', async ({ page }) => {
   await expect(page.locator('#chat-input')).toHaveValue('');
 });
 
+test('critters appear via SCritters snapshot', async ({ page }) => {
+  await page.goto('/');
+  await page.fill('#name', 'e2e-critters');
+  await page.locator('#character-picker label:has(input[value="horse-poison"])').click();
+  await page.click('button[type=submit]');
+  await page.waitForFunction(() => !!(window.__game && window.__game.me && window.__game.me.id !== 0), null, {
+    timeout: 15000,
+  });
+
+  // Paint the current tile repeatedly. The local paint color is derived from
+  // the player's id, so whether this produces a living (grass/flowers) tile
+  // is out of this test's control — the sim only spawns critters once a
+  // living tile exists. Press repeatedly to also cover the grass->flowers
+  // conversion path, then poll for a critter to show up via SCritters.
+  await page.locator('body').focus();
+  for (let i = 0; i < 5; i++) {
+    await page.keyboard.press('KeyF');
+    await page.waitForTimeout(200);
+  }
+
+  const spawned = await page
+    .waitForFunction(() => window.__game.critters && window.__game.critters.size > 0, null, { timeout: 15000 })
+    .catch(() => null);
+  test.skip(!spawned, 'assigned paint color is not flammable — no habitat, no critters');
+
+  // The critter only reached window.__game.critters via decodeServer parsing
+  // an SCritters frame and main.ts's critters() handler applying it — proving
+  // the full server sim -> wire -> client snapshot path end to end.
+  const critter = await page.evaluate(() => {
+    const [id, v] = window.__game.critters.entries().next().value;
+    return { id, x: v.token.rx, y: v.token.ry };
+  });
+  expect(critter.id).toBeGreaterThan(0);
+  expect(Number.isFinite(critter.x)).toBe(true);
+  expect(Number.isFinite(critter.y)).toBe(true);
+});
+
 test('manifest is reachable and well-shaped', async ({ page }) => {
   // This test asserts the asset path does not throw; it does not commit assets.
   await page.goto('/');

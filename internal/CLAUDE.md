@@ -4,10 +4,10 @@ Go authoritative game engine: a single-goroutine world sim behind a WebSocket se
 
 ## Public surface
 - `server.New(sim, BuildInfo) *Server` → `.Handler() http.Handler` (mux: `/healthz`, `/version`, `/ws`, `/`).
-- `world.NewSim(store) *Sim`; `.Run(ctx)` (blocks, run in a goroutine); `.Join/.Input/.Leave/.Ping`; `.Done()`.
+- `world.NewSim(store) *Sim`; `.Run(ctx)` (blocks, run in a goroutine); `.Join/.Input/.Leave/.Ping`; `.Grab/.Hold/.Drop` (god-hand: grab a critter by id, hold/drop at x,y); `.Done()`.
 - `world.Store` interface (`Load`, `Save`, `SavePaint`, `LoadPaints`); `world.SavedPlayer`, `world.SavedTile`.
 - `store.NewPostgres(ctx, dsn) (*Postgres, error)` implements `world.Store`.
-- `wire.Encode*` (server→client), `wire.ParseClient` (client→server), `wire.Ent`, type tags.
+- `wire.Encode*` (server→client, incl. `wire.EncodeCritters`), `wire.ParseClient` (client→server), `wire.Ent`, type tags.
 
 ## Layout
 - `world/sim.go` — the sim goroutine: tick loop, command dispatch, persistence orchestration.
@@ -32,6 +32,7 @@ Go authoritative game engine: a single-goroutine world sim behind a WebSocket se
 - `Join` blocks on the `cmds` channel then on a reply; a wedged sim goroutine stalls all new connections.
 - Color is stored as Postgres `int4` and round-tripped through `int32`/`uint32` in `store.Load`/`Save`.
 - Static client at `/` is only mounted when a `web/` dir exists at runtime (local dev); the engine image omits it and `/` 404s.
+- The per-connection `snap` channel/slot for `SCritters` is **latest-only**, not a queue: writing to it overwrites whatever snapshot was already waiting. Never send event frames (Enter/Leave/paint/etc.) through it — they'd get silently dropped by the next snapshot write.
 
 ## Dependencies
 - `github.com/coder/websocket` — WS accept/read/write.
