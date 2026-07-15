@@ -185,3 +185,165 @@ func TestSettledCritterConvertsGrassToFlowersWithoutUltCharge(t *testing.T) {
 		t.Fatalf("double-convert changed the tile")
 	}
 }
+
+func handWorld() (*Sim, map[uint32]*player, map[tileKey]paintedTile, map[tileKey]int, *critterWorld, *player, *critter) {
+	s := NewSim(nil)
+	painted := map[tileKey]paintedTile{}
+	burning := map[tileKey]int{}
+	cw := newCritterWorld(1)
+	p := &player{id: 5, x: 520, y: 520, alive: true, out: make(chan []byte, 64)}
+	players := map[uint32]*player{5: p}
+	paintGrassAt(painted, 512, 512)
+	c := &critter{id: 1, kind: 1, x: 512, y: 512, tx: 512, ty: 512, state: critterWander}
+	cw.critters[1] = c
+	return s, players, painted, burning, cw, p, c
+}
+
+func TestGrabHoldDropCycle(t *testing.T) {
+	s, players, painted, burning, cw, p, c := handWorld()
+	s.grabCritter(players, cw, p, 1)
+	if c.state != critterHeld || c.holderID != 5 || p.heldCritterID != 1 {
+		t.Fatalf("grab failed: %+v held=%d", c, p.heldCritterID)
+	}
+	s.holdCritter(players, p, cw, 600, 600)
+	if c.x != 600 || c.y != 600 {
+		t.Fatalf("hold did not move critter: %d,%d", c.x, c.y)
+	}
+	s.dropCritter(players, painted, burning, cw, c, 512, 512)
+	if c.state == critterHeld || c.holderID != 0 || p.heldCritterID != 0 {
+		t.Fatalf("drop did not release: %+v held=%d", c, p.heldCritterID)
+	}
+}
+
+func TestGrabValidation(t *testing.T) {
+	s, players, painted, burning, cw, p, c := handWorld()
+	_ = painted
+	_ = burning
+	// out of range
+	p.x, p.y = 5000, 5000
+	s.grabCritter(players, cw, p, 1)
+	if c.state == critterHeld {
+		t.Fatalf("grabbed beyond grabRange")
+	}
+	p.x, p.y = 520, 520
+	// double-grab by a second player
+	p2 := &player{id: 6, x: 520, y: 520, alive: true, out: make(chan []byte, 64)}
+	players[6] = p2
+	s.grabCritter(players, cw, p, 1)
+	s.grabCritter(players, cw, p2, 1)
+	if c.holderID != 5 || p2.heldCritterID != 0 {
+		t.Fatalf("second grab stole a held critter")
+	}
+	// one hand: p already holds 1, spawn another and try to grab it
+	c2 := &critter{id: 2, kind: 1, x: 512, y: 512, state: critterWander}
+	cw.critters[2] = c2
+	s.grabCritter(players, cw, p, 2)
+	if c2.state == critterHeld {
+		t.Fatalf("one player held two critters")
+	}
+	// dead players can't grab
+	p2.alive = false
+	s.grabCritter(players, cw, p2, 2)
+	if c2.state == critterHeld {
+		t.Fatalf("dead player grabbed")
+	}
+}
+
+func TestStaleHoldDropIgnored(t *testing.T) {
+	s, players, painted, burning, cw, p, c := handWorld()
+	// player holds nothing: hold/drop are no-ops, no panic
+	s.holdCritter(players, p, cw, 600, 600)
+	if c.x != 512 {
+		t.Fatalf("stale hold moved an unheld critter")
+	}
+	s.dropCritterCmd(players, painted, burning, cw, p, 600, 600)
+	if c.state == critterHeld || c.x != 512 {
+		t.Fatalf("stale drop did something")
+	}
+}
+
+func TestHoldClampsToHolderRadius(t *testing.T) {
+	s, players, _, _, cw, p, c := handWorld()
+	s.grabCritter(players, cw, p, 1)
+	s.holdCritter(players, p, cw, 8000, 8000) // way beyond grabRange from (520,520)
+	if dist2(c.x, c.y, p.x, p.y) > grabRange*grabRange*1.01 {
+		t.Fatalf("hold escaped the holder radius: critter at %d,%d", c.x, c.y)
+	}
+}
+
+func TestInvalidHolderReleases(t *testing.T) {
+	s, players, painted, burning, cw, p, c := handWorld()
+	s.grabCritter(players, cw, p, 1)
+	// KO the holder
+	p.alive = false
+	s.critterReleaseInvalidHolders(players, painted, burning, cw)
+	if c.state == critterHeld || p.heldCritterID != 0 {
+		t.Fatalf("KO'd holder kept the critter")
+	}
+	// disconnect: holder gone from players map entirely
+	s.grabCritter(players, cw, p, 1) // re-grab (alive check!) — first revive
+	p.alive = true
+	s.grabCritter(players, cw, p, 1)
+	delete(players, 5)
+	s.critterReleaseInvalidHolders(players, painted, burning, cw)
+	if c.state == critterHeld {
+		t.Fatalf("disconnected holder kept the critter")
+	}
+}
+
+func TestDropReactions(t *testing.T) {
+	s, players, painted, burning, cw, p, c := handWorld()
+	s.grabCritter(players, cw, p, 1)
+	// drop next to fire -> panic
+	fk := tileKey{768, 512}
+	painted[fk] = paintedTile{x: 768, y: 512, color: colorGrass, ownerID: 1}
+	burning[fk] = burnTicks
+	s.dropCritter(players, painted, burning, cw, c, 768, 512)
+	if c.state != critterPanic {
+		t.Fatalf("no panic on fire drop: state=%d", c.state)
+	}
+	// drop into water with a dry 3x3 neighbour -> relocates to a safe cell
+	c.state = critterHeld
+	c.holderID = 5
+	p.heldCritterID = 1
+	wk := tileKey{1536, 1536}
+	painted[wk] = paintedTile{x: 1536, y: 1536, color: colorWater, ownerID: 1}
+	paintGrassAt(painted, 1536+PaintTileSize, 1536)
+	s.dropCritter(players, painted, burning, cw, c, 1536, 1536)
+	if paintTileFor(c.x, c.y) == wk {
+		t.Fatalf("critter left in water")
+	}
+	// drop into water surrounded by water -> panic in place, no teleport
+	c.state = critterHeld
+	c.holderID = 5
+	p.heldCritterID = 1
+	deep := tileKey{4096, 4096}
+	for dx := int16(-1); dx <= 1; dx++ {
+		for dy := int16(-1); dy <= 1; dy++ {
+			k := tileKey{4096 + dx*PaintTileSize, 4096 + dy*PaintTileSize}
+			painted[k] = paintedTile{x: k.x, y: k.y, color: colorWater, ownerID: 1}
+		}
+	}
+	s.dropCritter(players, painted, burning, cw, c, 4096, 4096)
+	if c.state != critterPanic || paintTileFor(c.x, c.y) != deep {
+		t.Fatalf("all-water drop: want panic in place, got state=%d at %d,%d", c.state, c.x, c.y)
+	}
+	// drop onto the temple -> projected outside
+	c.state = critterHeld
+	c.holderID = 5
+	p.heldCritterID = 1
+	s.dropCritter(players, painted, burning, cw, c, templeSouthwestX+PaintTileSize, templeSouthwestY-PaintTileSize)
+	if isTempleTile(paintTileFor(c.x, c.y)) {
+		t.Fatalf("critter dropped inside temple")
+	}
+	// drop near another live player -> follow switches to them
+	c.state = critterHeld
+	c.holderID = 5
+	p.heldCritterID = 1
+	p2 := &player{id: 6, x: 3000, y: 3000, alive: true, out: make(chan []byte, 64)}
+	players[6] = p2
+	s.dropCritter(players, painted, burning, cw, c, 3010, 3010)
+	if c.state != critterFollow || c.followID != 6 {
+		t.Fatalf("no follow switch on drop near player: state=%d follow=%d", c.state, c.followID)
+	}
+}

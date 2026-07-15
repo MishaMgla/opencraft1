@@ -304,3 +304,176 @@ func (s *Sim) convertToFlowers(players map[uint32]*player, painted map[tileKey]p
 		}
 	}
 }
+
+// grabCritter validates and executes a grab: live player, empty hand, critter
+// exists and unheld, within grabRange. Command-channel ordering is the
+// arbiter — the first valid grab wins, no races.
+func (s *Sim) grabCritter(players map[uint32]*player, cw *critterWorld, p *player, critterID uint32) {
+	if p == nil || !p.alive || p.heldCritterID != 0 {
+		return
+	}
+	c := cw.critters[critterID]
+	if c == nil || c.state == critterHeld {
+		return
+	}
+	if dist2(c.x, c.y, p.x, p.y) > grabRange*grabRange {
+		return
+	}
+	c.state = critterHeld
+	c.holderID = p.id
+	c.followID, c.candID, c.candFor = 0, 0, 0
+	c.holdSeen = false
+	p.heldCritterID = c.id
+}
+
+// holdCritter moves the held critter to the holder's cursor, clamped to world
+// bounds and to grabRange around the holder. Stale holds (empty hand) are
+// ignored.
+func (s *Sim) holdCritter(players map[uint32]*player, p *player, cw *critterWorld, x, y int16) {
+	if p == nil || p.heldCritterID == 0 {
+		return
+	}
+	c := cw.critters[p.heldCritterID]
+	if c == nil {
+		p.heldCritterID = 0
+		return
+	}
+	x, y = clamp(x), clamp(y)
+	dx := float64(x) - float64(p.x)
+	dy := float64(y) - float64(p.y)
+	if d2 := dx*dx + dy*dy; d2 > grabRange*grabRange {
+		scale := grabRange / math.Sqrt(d2)
+		x = clamp(p.x + int16(dx*scale))
+		y = clamp(p.y + int16(dy*scale))
+	}
+	c.x, c.y = x, y
+	c.holdSeen = true
+}
+
+// safeCellNear returns the center of a non-hazard, non-temple cell in the
+// local 3x3 around key, or ok=false. Bounded — no world-wide teleports.
+func safeCellNear(painted map[tileKey]paintedTile, burning map[tileKey]int, key tileKey) (tileKey, bool) {
+	for dx := int16(-1); dx <= 1; dx++ {
+		for dy := int16(-1); dy <= 1; dy++ {
+			k := tileKey{key.x + dx*PaintTileSize, key.y + dy*PaintTileSize}
+			if k == key || !validPaintTile(k) || hazardTile(painted, burning, k) {
+				continue
+			}
+			return k, true
+		}
+	}
+	return tileKey{}, false
+}
+
+// adjacentHazard reports fire/lava on or next to a tile (water handled apart).
+func adjacentHazard(painted map[tileKey]paintedTile, burning map[tileKey]int, key tileKey) bool {
+	fireOrLava := func(k tileKey) bool {
+		if _, on := burning[k]; on {
+			return true
+		}
+		t, ok := painted[k]
+		return ok && isLava(t.color)
+	}
+	if fireOrLava(key) {
+		return true
+	}
+	for _, n := range neighbors4(key) {
+		if fireOrLava(n) {
+			return true
+		}
+	}
+	return false
+}
+
+// dropCritter places a held critter and applies the world's reaction. Critter-
+// centric so the tick-loop lifecycle release can call it when the holder is
+// already gone from the players map.
+func (s *Sim) dropCritter(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, cw *critterWorld, c *critter, x, y int16) {
+	if h := players[c.holderID]; h != nil && h.heldCritterID == c.id {
+		h.heldCritterID = 0
+	}
+	holderID := c.holderID
+	c.holderID = 0
+	x, y = clamp(x), clamp(y)
+	key := paintTileFor(x, y)
+	if isTempleTile(key) {
+		// project to the nearest safe cell around the temple footprint edge
+		if safe, ok := safeCellNear(painted, burning, key); ok && !isTempleTile(safe) {
+			key = safe
+		} else {
+			key = paintTileFor(SpawnCoord, SpawnCoord) // deterministic last resort
+		}
+		x, y = key.x, key.y
+	}
+	c.x, c.y = x, y
+	c.tx, c.ty = x, y
+
+	switch {
+	case adjacentHazard(painted, burning, key):
+		c.state = critterPanic
+		c.stepsIn = critterPanicSteps
+		// flee target: directly away from the tile center, one tile out
+		c.tx = clamp(x + (x - key.x + PaintTileSize))
+		c.ty = clamp(y + (y - key.y + PaintTileSize))
+	case func() bool { t, ok := painted[key]; return ok && t.color == colorWater }():
+		if safe, ok := safeCellNear(painted, burning, key); ok {
+			c.x, c.y = safe.x, safe.y
+			c.tx, c.ty = safe.x, safe.y
+			c.state = critterWander
+		} else {
+			c.state = critterPanic
+			c.stepsIn = critterPanicSteps
+		}
+	default:
+		// near another live player (not the dropper) -> allegiance switches
+		if pid := nearestLivePlayer(players, c); pid != 0 && pid != holderID {
+			c.state = critterFollow
+			c.followID = pid
+		} else {
+			c.state = critterWander
+		}
+	}
+}
+
+// dropCritterCmd is the CDrop entry point: resolves the player's held critter
+// and ignores stale drops.
+func (s *Sim) dropCritterCmd(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, cw *critterWorld, p *player, x, y int16) {
+	if p == nil || p.heldCritterID == 0 {
+		return
+	}
+	c := cw.critters[p.heldCritterID]
+	if c == nil {
+		p.heldCritterID = 0
+		return
+	}
+	s.dropCritter(players, painted, burning, cw, c, x, y)
+}
+
+// critterReleaseInvalidHolders runs every tick: any held critter whose holder
+// is gone (disconnect) or dead (KO) is dropped in place. One check covers all
+// invalid-holder transitions — no threading through koPlayer/cmdLeave.
+func (s *Sim) critterReleaseInvalidHolders(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, cw *critterWorld) {
+	for _, c := range cw.critters {
+		if c.state != critterHeld {
+			continue
+		}
+		h := players[c.holderID]
+		if h == nil || !h.alive {
+			s.dropCritter(players, painted, burning, cw, c, c.x, c.y)
+		}
+	}
+}
+
+// critterCarryTick keeps held critters glued to their holder when no cursor
+// stream drives them (mobile: server-derived attachment, recomputed every
+// tick from the authoritative holder position).
+func (s *Sim) critterCarryTick(players map[uint32]*player, cw *critterWorld) {
+	for _, c := range cw.critters {
+		if c.state != critterHeld || c.holdSeen {
+			continue
+		}
+		if h := players[c.holderID]; h != nil {
+			c.x, c.y = h.x, h.y
+		}
+	}
+}

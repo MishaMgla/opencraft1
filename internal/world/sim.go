@@ -107,6 +107,7 @@ type player struct {
 	respawnLeft   int    // ticks until respawn while dead (0 = alive)
 	chatted       bool   // has the player sent at least one accepted chat line
 	lastChatTick  uint32 // tick of the player's last accepted chat line (rate limit)
+	heldCritterID uint32
 }
 
 type tileKey struct {
@@ -164,6 +165,18 @@ type cmdBomb struct{ id uint32 }
 type cmdChat struct {
 	id   uint32
 	text string
+}
+type cmdGrab struct {
+	id        uint32
+	critterID uint32
+}
+type cmdHold struct {
+	id   uint32
+	x, y int16
+}
+type cmdDrop struct {
+	id   uint32
+	x, y int16
 }
 
 // NewSim creates a sim. Pass a Store to persist player positions across
@@ -229,6 +242,9 @@ func (s *Sim) Ult(id uint32)               { s.cmds <- cmdUlt{id} }
 func (s *Sim) Jump(id uint32)              { s.cmds <- cmdJump{id} }
 func (s *Sim) Bomb(id uint32)              { s.cmds <- cmdBomb{id} }
 func (s *Sim) Chat(id uint32, text string) { s.cmds <- cmdChat{id, text} }
+func (s *Sim) Grab(id, critterID uint32)   { s.cmds <- cmdGrab{id, critterID} }
+func (s *Sim) Hold(id uint32, x, y int16)  { s.cmds <- cmdHold{id, x, y} }
+func (s *Sim) Drop(id uint32, x, y int16)  { s.cmds <- cmdDrop{id, x, y} }
 
 // send never blocks the sim: on a full buffer it drops the oldest frame.
 func send(p *player, b []byte) {
@@ -946,6 +962,17 @@ func (s *Sim) Run(ctx context.Context) {
 					send(o, wire.EncodeLeave(m.id))
 				}
 				s.save(p)
+
+			case cmdGrab:
+				// NOTE: critterWorld wiring is not in scope for this task.
+				// Handler added for interface completeness; critterWorld initialization
+				// will happen in the Run loop integration task.
+
+			case cmdHold:
+				// NOTE: critterWorld wiring is not in scope for this task.
+
+			case cmdDrop:
+				// NOTE: critterWorld wiring is not in scope for this task.
 			}
 
 		case <-ticker.C:
