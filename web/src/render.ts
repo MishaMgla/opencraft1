@@ -414,6 +414,11 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       // preserve the source aspect: a tall building rises above its footprint
       // and overlaps tiles behind it (normal for iso), never squashes square
       sprite.height = wpx * (tex.height / tex.width);
+      // the sprite's lowest opaque row is the base diamond's SOUTH corner, so
+      // drop it from the footprint center to the footprint's south corner —
+      // else the whole building renders shifted half a footprint north of its
+      // collision rect
+      sprite.y = ((l.w + l.h) * hh) / 2;
       c.addChild(sprite);
     } else {
       c.addChild(drawTempleFallback(hw * ((l.w + l.h) / 3), hh * ((l.w + l.h) / 3)));
