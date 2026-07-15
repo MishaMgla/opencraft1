@@ -512,6 +512,7 @@ async function start(name: string, role: number, character: string): Promise<voi
           if (!v) {
             v = { token: r.addCritter(e.id, e.x, e.y), state: e.state, holderId: e.holderId };
             critters.set(e.id, v);
+            if (e.state === 3) r.setHeldLift(v.token, true);
           }
           v.token.tx = e.x;
           v.token.ty = e.y;
