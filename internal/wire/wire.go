@@ -14,6 +14,9 @@ const (
 	CJump  = 0x06
 	CBomb  = 0x07
 	CChat  = 0x08
+	CGrab  = 0x09 // grab a critter by id
+	CHold  = 0x0A // move the held critter to cursor world pos (no id — server knows)
+	CDrop  = 0x0B // drop the held critter at world pos
 
 	SWelcome  = 0x81 // server -> client
 	SSnapshot = 0x82
@@ -30,6 +33,7 @@ const (
 	SKO       = 0x8D
 	SRespawn  = 0x8E
 	SChat     = 0x8F
+	SCritters = 0x90 // full critter snapshot (self-superseding)
 )
 
 const (
@@ -257,6 +261,34 @@ func EncodeChat(name, text string) []byte {
 	return b
 }
 
+// Critter is one entry of the SCritters snapshot. HolderID is 0 when unheld.
+type Critter struct {
+	ID       uint32
+	Kind     byte
+	X, Y     int16
+	State    byte
+	HolderID uint32
+}
+
+// EncodeCritters is the full, self-superseding critter snapshot: a lost frame
+// is harmless because the next one carries complete state. 14 bytes per entry.
+func EncodeCritters(crs []Critter) []byte {
+	b := make([]byte, 1+2+len(crs)*14)
+	b[0] = SCritters
+	binary.LittleEndian.PutUint16(b[1:], uint16(len(crs)))
+	off := 3
+	for _, c := range crs {
+		binary.LittleEndian.PutUint32(b[off:], c.ID)
+		b[off+4] = c.Kind
+		binary.LittleEndian.PutUint16(b[off+5:], uint16(c.X))
+		binary.LittleEndian.PutUint16(b[off+7:], uint16(c.Y))
+		b[off+9] = c.State
+		binary.LittleEndian.PutUint32(b[off+10:], c.HolderID)
+		off += 14
+	}
+	return b
+}
+
 // ClientMsg is a decoded client->server frame. Only fields relevant to Type are set.
 type ClientMsg struct {
 	Type      byte
@@ -266,6 +298,7 @@ type ClientMsg struct {
 	X, Y      int16  // CInput
 	T         uint32 // CPing
 	Text      string // CChat
+	CritterID uint32 // CGrab
 }
 
 // ParseClient decodes one client frame. Returns ok=false on malformed input.
@@ -326,6 +359,25 @@ func ParseClient(b []byte) (ClientMsg, bool) {
 			return ClientMsg{}, false
 		}
 		return ClientMsg{Type: CChat, Text: string(b[3 : 3+tlen])}, true
+	case CGrab:
+		if len(b) < 5 {
+			return ClientMsg{}, false
+		}
+		return ClientMsg{Type: CGrab, CritterID: binary.LittleEndian.Uint32(b[1:])}, true
+	case CHold:
+		if len(b) < 5 {
+			return ClientMsg{}, false
+		}
+		x := int16(binary.LittleEndian.Uint16(b[1:]))
+		y := int16(binary.LittleEndian.Uint16(b[3:]))
+		return ClientMsg{Type: CHold, X: x, Y: y}, true
+	case CDrop:
+		if len(b) < 5 {
+			return ClientMsg{}, false
+		}
+		x := int16(binary.LittleEndian.Uint16(b[1:]))
+		y := int16(binary.LittleEndian.Uint16(b[3:]))
+		return ClientMsg{Type: CDrop, X: x, Y: y}, true
 	}
 	return ClientMsg{}, false
 }

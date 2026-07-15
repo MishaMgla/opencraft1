@@ -52,6 +52,8 @@ func canonicalServer() []frameCase {
 		{"shake", json.RawMessage(`{"type":"shake","id":5}`), enc(EncodeShake(5))},
 		{"chat", json.RawMessage(`{"type":"chat","name":"Bob","text":"hi all"}`),
 			enc(EncodeChat("Bob", "hi all"))},
+		{"critters", json.RawMessage(`{"type":"critters","ents":[{"id":1,"kind":1,"x":2048,"y":1920,"state":0,"holderId":0},{"id":2,"kind":1,"x":100,"y":-5,"state":3,"holderId":7}]}`),
+			enc(EncodeCritters([]Critter{{ID: 1, Kind: 1, X: 2048, Y: 1920, State: 0, HolderID: 0}, {ID: 2, Kind: 1, X: 100, Y: -5, State: 3, HolderID: 7}}))},
 	}
 }
 
@@ -63,11 +65,17 @@ func canonicalClient() []frameCase {
 	input := []byte{CInput, 0x2e, 0xfb, 0x09, 0x03} // x=-1234, y=777
 	paint := []byte{CPaint}
 	chat := append([]byte{CChat, 0x06, 0x00}, []byte("hi all")...)
+	grab := []byte{CGrab, 0x2a, 0x00, 0x00, 0x00}              // critterID=42
+	hold := []byte{CHold, 0x00, 0x08, 0x80, 0x07}              // x=2048, y=1920
+	drop := []byte{CDrop, 0x2e, 0xfb, 0x09, 0x03}              // x=-1234, y=777
 	return []frameCase{
 		{"hello", json.RawMessage(`{"type":1,"name":"Bob"}`), hex.EncodeToString(hello)},
 		{"input", json.RawMessage(`{"type":2,"x":-1234,"y":777}`), hex.EncodeToString(input)},
 		{"paint", json.RawMessage(`{"type":4}`), hex.EncodeToString(paint)},
 		{"chat", json.RawMessage(`{"type":8,"text":"hi all"}`), hex.EncodeToString(chat)},
+		{"grab", json.RawMessage(`{"type":9,"critterId":42}`), hex.EncodeToString(grab)},
+		{"hold", json.RawMessage(`{"type":10,"x":2048,"y":1920}`), hex.EncodeToString(hold)},
+		{"drop", json.RawMessage(`{"type":11,"x":-1234,"y":777}`), hex.EncodeToString(drop)},
 	}
 }
 
@@ -138,6 +146,18 @@ func TestWireFixtures(t *testing.T) {
 		case "chat":
 			if msg.Type != CChat || msg.Text != "hi all" {
 				t.Fatalf("chat parsed to %+v", msg)
+			}
+		case "grab":
+			if msg.Type != CGrab || msg.CritterID != 42 {
+				t.Fatalf("grab parsed to %+v", msg)
+			}
+		case "hold":
+			if msg.Type != CHold || msg.X != 2048 || msg.Y != 1920 {
+				t.Fatalf("hold parsed to %+v", msg)
+			}
+		case "drop":
+			if msg.Type != CDrop || msg.X != -1234 || msg.Y != 777 {
+				t.Fatalf("drop parsed to %+v", msg)
 			}
 		}
 	}

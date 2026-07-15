@@ -91,6 +91,31 @@
         "text": "hi all"
       },
       "hex": "8f03426f620600686920616c6c"
+    },
+    {
+      "name": "critters",
+      "decoded": {
+        "type": "critters",
+        "ents": [
+          {
+            "id": 1,
+            "kind": 1,
+            "x": 2048,
+            "y": 1920,
+            "state": 0,
+            "holderId": 0
+          },
+          {
+            "id": 2,
+            "kind": 1,
+            "x": 100,
+            "y": -5,
+            "state": 3,
+            "holderId": 7
+          }
+        ]
+      },
+      "hex": "900200010000000100088007000000000002000000016400fbff0307000000"
     }
   ],
   "client": [
@@ -125,6 +150,32 @@
         "text": "hi all"
       },
       "hex": "080600686920616c6c"
+    },
+    {
+      "name": "grab",
+      "decoded": {
+        "type": 9,
+        "critterId": 42
+      },
+      "hex": "092a000000"
+    },
+    {
+      "name": "hold",
+      "decoded": {
+        "type": 10,
+        "x": 2048,
+        "y": 1920
+      },
+      "hex": "0a00088007"
+    },
+    {
+      "name": "drop",
+      "decoded": {
+        "type": 11,
+        "x": -1234,
+        "y": 777
+      },
+      "hex": "0b2efb0903"
     }
   ]
 }
