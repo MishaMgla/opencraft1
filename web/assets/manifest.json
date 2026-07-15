@@ -30,22 +30,22 @@
           "fps": 6,
           "frames": {
             "north-east": [
-              "characters/critter-imp-north-east-idle-0.png",
+              "characters/critter-imp-north-east.png",
               "characters/critter-imp-north-east-idle-1.png",
               "characters/critter-imp-north-east-idle-2.png"
             ],
             "south-east": [
-              "characters/critter-imp-south-east-idle-0.png",
+              "characters/critter-imp-south-east.png",
               "characters/critter-imp-south-east-idle-1.png",
               "characters/critter-imp-south-east-idle-2.png"
             ],
             "south-west": [
-              "characters/critter-imp-south-west-idle-0.png",
+              "characters/critter-imp-south-west.png",
               "characters/critter-imp-south-west-idle-1.png",
               "characters/critter-imp-south-west-idle-2.png"
             ],
             "north-west": [
-              "characters/critter-imp-north-west-idle-0.png",
+              "characters/critter-imp-north-west.png",
               "characters/critter-imp-north-west-idle-1.png",
               "characters/critter-imp-north-west-idle-2.png"
             ]
@@ -4561,7 +4561,7 @@
       "name": "copper-tile",
       "file": "tiles/copper-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless copper tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless copper tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4579,7 +4579,7 @@
       "name": "crystal-tile",
       "file": "tiles/crystal-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless crystal tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless crystal tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4669,7 +4669,7 @@
       "name": "flowers-tile",
       "file": "tiles/flowers-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless flowers tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless flowers tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4741,7 +4741,7 @@
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless grass tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless grass tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4849,7 +4849,7 @@
       "name": "ice-tile",
       "file": "tiles/ice-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless ice tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless ice tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4867,7 +4867,7 @@
       "name": "lava-tile",
       "file": "tiles/lava-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless lava tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless lava tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5245,7 +5245,7 @@
       "name": "sand-tile",
       "file": "tiles/sand-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless sand tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless sand tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5587,7 +5587,7 @@
       "name": "water-tile",
       "file": "tiles/water-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless water tile \u2014 quiet poison-accent ground",
+      "prompt": "nano-banana seamless water tile — quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
