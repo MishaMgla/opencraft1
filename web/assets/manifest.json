@@ -1,6 +1,31 @@
 {
   "version": 1,
   "assets": {
+    "character:critter-imp": {
+      "type": "character",
+      "name": "critter-imp",
+      "directions": 4,
+      "size": 64,
+      "frames": {
+        "north-east": "characters/critter-imp-north-east.png",
+        "south-east": "characters/critter-imp-south-east.png",
+        "south-west": "characters/critter-imp-south-west.png",
+        "north-west": "characters/critter-imp-north-west.png"
+      },
+      "prompt": "tiny round critter creature, small cute blob imp with stubby legs, half the height of a person",
+      "placement": {
+        "anchor": {
+          "x": 0.5,
+          "y": 0.8
+        },
+        "footprint": {
+          "w": 1,
+          "h": 1
+        },
+        "sortOffset": 0
+      },
+      "facings": "ordinal"
+    },
     "character:horse": {
       "type": "character",
       "name": "horse",
