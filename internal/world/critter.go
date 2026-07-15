@@ -1,6 +1,11 @@
 package world
 
-import "math/rand"
+import (
+	"math"
+	"math/rand"
+
+	"opencraft1/internal/wire"
+)
 
 // Critters — small NPCs that live off painted terrain, and the god-hand that
 // carries them. Server-authoritative and transient like fire/bombs: sim-owned,
@@ -19,6 +24,7 @@ const critterDetachDist = 768.0   // ~6 tiles: following breaks past this
 const critterTrailGap = 64.0      // following critters hold ~half a tile off the player
 const critterPanicSteps = 9       // behavior steps of panic (~2.5s)
 const grabRange = 512.0           // ~4 tiles: max cursor reach for grab AND hold clamp
+const flowerConvertChance = 300   // ~1 conversion per critter per ~80s of settled wandering
 
 // wire state byte (mirrored in web/src/wire.ts docs)
 const (
@@ -131,5 +137,170 @@ func (s *Sim) critterHabitat(painted map[tileKey]paintedTile, cw *critterWorld) 
 	} else if cw.grace == -1 {
 		cw.hadHabitat = false
 		cw.grace = 0
+	}
+}
+
+func dist2(ax, ay, bx, by int16) float64 {
+	dx := float64(ax) - float64(bx)
+	dy := float64(ay) - float64(by)
+	return dx*dx + dy*dy
+}
+
+// hazardTile: critters refuse to step onto these (and panic when dropped there).
+func hazardTile(painted map[tileKey]paintedTile, burning map[tileKey]int, k tileKey) bool {
+	if _, on := burning[k]; on {
+		return true
+	}
+	t, ok := painted[k]
+	return ok && (isLava(t.color) || t.color == colorWater)
+}
+
+// nearestLivePlayer returns the id of a live player within critterFollowRadius,
+// or 0. First match wins — critters aren't picky.
+func nearestLivePlayer(players map[uint32]*player, c *critter) uint32 {
+	r2 := critterFollowRadius * critterFollowRadius
+	for id, p := range players {
+		if p.alive && dist2(c.x, c.y, p.x, p.y) <= r2 {
+			return id
+		}
+	}
+	return 0
+}
+
+// critterMove advances every unheld critter toward its target at critterSpeed,
+// one axis-clamped step per sim tick, refusing steps into temple or hazard
+// tiles. Called every tick so motion is smooth; targets change on the slower
+// behavior cadence.
+func (s *Sim) critterMove(painted map[tileKey]paintedTile, burning map[tileKey]int, cw *critterWorld) {
+	for _, c := range cw.critters {
+		if c.state == critterHeld {
+			continue
+		}
+		step := func(v, target int16) int16 {
+			switch {
+			case target > v+critterSpeed:
+				return v + critterSpeed
+			case target < v-critterSpeed:
+				return v - critterSpeed
+			default:
+				return target
+			}
+		}
+		nx, ny := clamp(step(c.x, c.tx)), clamp(step(c.y, c.ty))
+		next := paintTileFor(nx, ny)
+		if isTempleTile(next) || hazardTile(painted, burning, next) {
+			// blocked: stop here; the next behavior step picks a new target
+			c.tx, c.ty = c.x, c.y
+			continue
+		}
+		c.x, c.y = nx, ny
+	}
+}
+
+// pickWanderTarget picks a short random drift target near the critter,
+// preferring living tiles: try a few candidates, take the first living one,
+// else the last candidate (roaming off-grass is allowed, hazards are not —
+// critterMove enforces that).
+func (cw *critterWorld) pickWanderTarget(painted map[tileKey]paintedTile, c *critter) (int16, int16) {
+	var tx, ty int16
+	for try := 0; try < 4; try++ {
+		tx = clamp(c.x + int16(cw.rng.Intn(2*int(PaintTileSize)+1)-int(PaintTileSize)))
+		ty = clamp(c.y + int16(cw.rng.Intn(2*int(PaintTileSize)+1)-int(PaintTileSize)))
+		if t, ok := painted[paintTileFor(tx, ty)]; ok && isLivingTile(t) {
+			return tx, ty
+		}
+	}
+	return tx, ty
+}
+
+// critterStep makes behavior decisions (state transitions + new targets) at
+// the slow cadence. Movement itself happens in critterMove every tick.
+func (s *Sim) critterStep(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, cw *critterWorld) {
+	for _, c := range cw.critters {
+		switch c.state {
+		case critterHeld:
+			continue
+
+		case critterPanic:
+			c.stepsIn--
+			if c.stepsIn <= 0 {
+				c.state = critterWander
+				c.tx, c.ty = c.x, c.y
+			}
+
+		case critterFollow:
+			p := players[c.followID]
+			if p == nil || !p.alive || dist2(c.x, c.y, p.x, p.y) > critterDetachDist*critterDetachDist {
+				c.state = critterWander
+				c.followID = 0
+				c.tx, c.ty = c.x, c.y
+				continue
+			}
+			// trail: aim at a point critterTrailGap short of the player
+			dx := float64(p.x) - float64(c.x)
+			dy := float64(p.y) - float64(c.y)
+			d := dx*dx + dy*dy
+			if d > critterTrailGap*critterTrailGap {
+				scale := 1 - critterTrailGap/math.Max(1, math.Sqrt(d))
+				c.tx = clamp(c.x + int16(dx*scale))
+				c.ty = clamp(c.y + int16(dy*scale))
+			} else {
+				c.tx, c.ty = c.x, c.y
+			}
+
+		case critterWander:
+			// follow attachment: a live player lingering nearby wins the critter
+			if pid := nearestLivePlayer(players, c); pid != 0 {
+				if pid == c.candID {
+					c.candFor++
+				} else {
+					c.candID, c.candFor = pid, 1
+				}
+				if c.candFor >= critterFollowSteps {
+					c.state = critterFollow
+					c.followID = pid
+					c.candID, c.candFor = 0, 0
+					continue
+				}
+			} else {
+				c.candID, c.candFor = 0, 0
+			}
+			// settled ecology: occasionally upgrade the grass underfoot to flowers
+			key := paintTileFor(c.x, c.y)
+			if t, ok := painted[key]; ok && t.color == colorGrass && cw.rng.Intn(flowerConvertChance) == 0 {
+				s.convertToFlowers(players, painted, burning, key)
+			}
+			// arrived (or blocked): pick a fresh drift target
+			if c.x == c.tx && c.y == c.ty {
+				c.tx, c.ty = cw.pickWanderTarget(painted, c)
+			}
+		}
+	}
+}
+
+// convertToFlowers is the critter terrain consequence: grass -> flowers, owner
+// 0, broadcast as a normal SPaint, persisted, NEVER charging any ult (no
+// player is credited). Ignition parity with s.paint: fresh flowers next to
+// lava/fire catch immediately.
+func (s *Sim) convertToFlowers(players map[uint32]*player, painted map[tileKey]paintedTile, burning map[tileKey]int, key tileKey) {
+	t, ok := painted[key]
+	if !ok || t.color != colorGrass {
+		return
+	}
+	tile := paintedTile{x: key.x, y: key.y, color: colorFlowers, ownerID: 0}
+	painted[key] = tile
+	for _, o := range players {
+		send(o, wire.EncodePaint(tile.x, tile.y, tile.color, tile.ownerID))
+	}
+	s.savePaint(SavedTile{X: tile.x, Y: tile.y, Color: tile.color, Owner: ""})
+	for _, n := range neighbors4(key) {
+		if _, on := burning[n]; on {
+			s.ignite(players, painted, burning, key)
+			break
+		}
+		if nt, ok := painted[n]; ok && isLava(nt.color) {
+			s.ignite(players, painted, burning, key)
+			break
+		}
 	}
 }
