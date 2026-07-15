@@ -337,6 +337,32 @@ async function start(name: string, role: number, character: string): Promise<voi
   let lastHeldPaintTile = '';
   let tapStart: { id: number; x: number; y: number } | null = null;
 
+  const GRAB_HIT_RADIUS = 64; // world units around a critter that counts as a hit
+
+  function critterIdAt(wx: number, wy: number): number {
+    let best = 0;
+    let bestD = GRAB_HIT_RADIUS * GRAB_HIT_RADIUS;
+    for (const [id, v] of critters) {
+      const dx = v.token.rx - wx;
+      const dy = v.token.ry - wy;
+      const d = dx * dx + dy * dy;
+      if (d < bestD) {
+        bestD = d;
+        best = id;
+      }
+    }
+    return best;
+  }
+
+  // Hand: heldId is our *request*; confirmation arrives when the snapshot
+  // shows holderId === me.id. Until then we don't predict.
+  let heldId = 0;
+  let handCursor = { x: 0, y: 0 };
+  function handConfirmed(): boolean {
+    const v = heldId ? critters.get(heldId) : undefined;
+    return !!v && v.holderId === me.id;
+  }
+
   r.app.canvas.addEventListener('pointerdown', (e) => {
     if (!document.body.classList.contains('mobile-controls-enabled') || !e.isPrimary || e.button !== 0) return;
     tapStart = { id: e.pointerId, x: e.clientX, y: e.clientY };
@@ -347,10 +373,45 @@ async function start(name: string, role: number, character: string): Promise<voi
     tapStart = null;
     if (!document.body.classList.contains('mobile-controls-enabled') || drift > TAP_MOVE_MAX_DRIFT_PX) return;
     e.preventDefault();
-    input.setMoveDestination(r.screenToWorld(e.clientX, e.clientY), bounds, isTemplePosition);
+    const w = r.screenToWorld(e.clientX, e.clientY);
+    if (heldId) {
+      // second tap = drop at the tapped ground position; NOT a move destination
+      conn.sendDrop(Math.round(w.x), Math.round(w.y));
+      heldId = 0;
+      return;
+    }
+    const critter = critterIdAt(w.x, w.y);
+    if (critter) {
+      conn.sendGrab(critter);
+      heldId = critter; // server derives the carry position (above the player)
+      return;
+    }
+    input.setMoveDestination(w, bounds, isTemplePosition);
   });
   r.app.canvas.addEventListener('pointercancel', (e) => {
     if (tapStart?.id === e.pointerId) tapStart = null;
+  });
+
+  r.app.canvas.addEventListener('pointerdown', (e) => {
+    if (document.body.classList.contains('mobile-controls-enabled')) return;
+    if (!e.isPrimary || e.button !== 0 || !me.alive) return;
+    const w = r.screenToWorld(e.clientX, e.clientY);
+    const id = critterIdAt(w.x, w.y);
+    if (id) {
+      conn.sendGrab(id);
+      heldId = id;
+      handCursor = w;
+    }
+  });
+  r.app.canvas.addEventListener('pointermove', (e) => {
+    if (!heldId || document.body.classList.contains('mobile-controls-enabled')) return;
+    handCursor = r.screenToWorld(e.clientX, e.clientY);
+  });
+  r.app.canvas.addEventListener('pointerup', (e) => {
+    if (!heldId || document.body.classList.contains('mobile-controls-enabled')) return;
+    const w = r.screenToWorld(e.clientX, e.clientY);
+    conn.sendDrop(Math.round(w.x), Math.round(w.y));
+    heldId = 0;
   });
 
   mobilePaint.addEventListener('pointerdown', (e) => {
@@ -505,6 +566,11 @@ async function start(name: string, role: number, character: string): Promise<voi
         if (o) r.jumpToken(o);
       },
       critters(m) {
+        // our grab was denied or our critter was released elsewhere: un-stick the hand
+        if (heldId) {
+          const mine = m.ents.find((e) => e.id === heldId);
+          if (!mine || (mine.holderId !== me.id && mine.holderId !== 0)) heldId = 0;
+        }
         const seen = new Set<number>();
         for (const e of m.ents) {
           seen.add(e.id);
@@ -600,6 +666,12 @@ async function start(name: string, role: number, character: string): Promise<voi
       r.placeToken(o);
     }
 
+    if (heldId && handConfirmed() && !document.body.classList.contains('mobile-controls-enabled')) {
+      const v = critters.get(heldId)!;
+      v.token.tx = handCursor.x;
+      v.token.ty = handCursor.y;
+    }
+
     for (const v of critters.values()) {
       v.token.rx += (v.token.tx - v.token.rx) * 0.2;
       v.token.ry += (v.token.ty - v.token.ry) * 0.2;
@@ -614,6 +686,9 @@ async function start(name: string, role: number, character: string): Promise<voi
       // Don't stream input until Welcome has set our id + spawn position, or the
       // first frames would overwrite a returning player's restored position.
       if (me.id !== 0) conn.sendInput(Math.round(me.x), Math.round(me.y));
+      if (heldId && handConfirmed() && !document.body.classList.contains('mobile-controls-enabled')) {
+        conn.sendHold(Math.round(handCursor.x), Math.round(handCursor.y));
+      }
     }
 
     hudStatus.textContent = `players online: ${rosterPlayers.size}`;
