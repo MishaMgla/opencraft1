@@ -28,10 +28,7 @@ type landmarkRect struct {
 }
 
 var landmarks = []landmarkRect{
-	{templeSouthwestX, templeSouthwestY, 2, 2}, // panelka-deity (big, the old temple spot)
-	{1536, 2304, 2, 1},                         // panelka-temple
-	{2560, 2560, 1, 1},                         // khrushchevka-altar
-	{1536, 1536, 1, 1},                         // totem
+	{templeSouthwestX, templeSouthwestY, 2, 2}, // panelka-deity (the old temple spot)
 }
 
 // Fire — a forest-fire cellular automaton over the painted map. Lava ignites

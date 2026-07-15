@@ -15,9 +15,6 @@ export interface Landmark {
 
 export const LANDMARKS: Landmark[] = [
   { name: 'landmark-panelka-deity', swX: 2048, swY: 2048 - 2 * TEMPLE_TILE_SIZE, w: 2, h: 2 },
-  { name: 'landmark-panelka-temple', swX: 1536, swY: 2304, w: 2, h: 1 },
-  { name: 'landmark-khrushchevka-altar', swX: 2560, swY: 2560, w: 1, h: 1 },
-  { name: 'landmark-totem', swX: 1536, swY: 1536, w: 1, h: 1 },
 ];
 
 function tileCoord(value: number): number {

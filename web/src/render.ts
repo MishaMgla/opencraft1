@@ -411,7 +411,9 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       sprite.anchor.set(0.5, await feetAnchorY(tile.file));
       const wpx = hw * (l.w + l.h); // full iso footprint width on screen
       sprite.width = wpx;
-      sprite.height = wpx; // square sources; the building fills the frame vertically
+      // preserve the source aspect: a tall building rises above its footprint
+      // and overlaps tiles behind it (normal for iso), never squashes square
+      sprite.height = wpx * (tex.height / tex.width);
       c.addChild(sprite);
     } else {
       c.addChild(drawTempleFallback(hw * ((l.w + l.h) / 3), hh * ((l.w + l.h) / 3)));
