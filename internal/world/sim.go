@@ -15,13 +15,24 @@ const UltChargeNeeded byte = 12
 const TrailUltTiles = 8
 const SpawnCoord int16 = 2048
 
-// Temple — one fixed 3x3 solid landmark northeast of spawn. The southwest
-// corner is two tile steps northeast (-Y in the isometric view), leaving the
-// intervening tile clear. Its remaining tiles extend east (+X) and northeast
-// (-Y) from that corner.
-const templeSize int16 = 3
+// Landmarks — fixed solid buildings (the soviet-eclectic set). Footprints
+// extend east (+X) and northeast (-Y) from the southwest tile center. Movement,
+// paint, fire, bombs and critters treat every landmark tile as blocked. The
+// client mirrors this table in web/src/temple.ts — keep them in sync.
 const templeSouthwestX = SpawnCoord
 const templeSouthwestY = SpawnCoord - 2*PaintTileSize
+
+type landmarkRect struct {
+	swX, swY int16 // southwest tile center
+	w, h     int16 // size in tiles: w east (+X), h northeast (-Y)
+}
+
+var landmarks = []landmarkRect{
+	{templeSouthwestX, templeSouthwestY, 2, 2}, // panelka-deity (big, the old temple spot)
+	{1536, 2304, 2, 1},                         // panelka-temple
+	{2560, 2560, 1, 1},                         // khrushchevka-altar
+	{1536, 1536, 1, 1},                         // totem
+}
 
 // Fire — a forest-fire cellular automaton over the painted map. Lava ignites
 // flammable neighbours; fire crawls one ring per fireTickEvery ticks, each
@@ -306,20 +317,38 @@ func paintTileFor(x, y int16) tileKey {
 	}
 }
 
+// isTempleTile reports whether a tile sits inside ANY fixed landmark (the name
+// survives from the single-temple era; every call site means "blocked by a
+// landmark").
 func isTempleTile(key tileKey) bool {
-	return key.x >= templeSouthwestX && key.x < templeSouthwestX+templeSize*PaintTileSize &&
-		key.y <= templeSouthwestY && key.y > templeSouthwestY-templeSize*PaintTileSize
+	for _, l := range landmarks {
+		if key.x >= l.swX && key.x < l.swX+l.w*PaintTileSize &&
+			key.y <= l.swY && key.y > l.swY-l.h*PaintTileSize {
+			return true
+		}
+	}
+	return false
 }
 
 // templeBlocksMovement rejects both ordinary entry and a malicious position
-// jump across the landmark. Tile snapping makes the blocked point rectangle
+// jump across any landmark. Tile snapping makes each blocked point rectangle
 // inclusive at its northwest edges and one unit short of the next tile center
 // at its southeast edges.
 func templeBlocksMovement(fromX, fromY, toX, toY int16) bool {
-	minX := float64(templeSouthwestX - PaintTileSize/2)
-	maxX := float64(templeSouthwestX + templeSize*PaintTileSize - PaintTileSize/2 - 1)
-	minY := float64(templeSouthwestY - templeSize*PaintTileSize + PaintTileSize/2)
-	maxY := float64(templeSouthwestY + PaintTileSize/2 - 1)
+	for _, l := range landmarks {
+		minX := float64(l.swX - PaintTileSize/2)
+		maxX := float64(l.swX + l.w*PaintTileSize - PaintTileSize/2 - 1)
+		minY := float64(l.swY - l.h*PaintTileSize + PaintTileSize/2)
+		maxY := float64(l.swY + PaintTileSize/2 - 1)
+		if segmentHitsRect(float64(fromX), float64(fromY), float64(toX), float64(toY), minX, maxX, minY, maxY) {
+			return true
+		}
+	}
+	return false
+}
+
+// segmentHitsRect is a Liang-Barsky segment/axis-aligned-rect intersection.
+func segmentHitsRect(fx, fy, tx, ty, minX, maxX, minY, maxY float64) bool {
 	tMin, tMax := 0.0, 1.0
 	clip := func(position, delta, low, high float64) bool {
 		if delta == 0 {
@@ -338,9 +367,9 @@ func templeBlocksMovement(fromX, fromY, toX, toY int16) bool {
 		}
 		return tMin <= tMax
 	}
-	dx := float64(toX) - float64(fromX)
-	dy := float64(toY) - float64(fromY)
-	return clip(float64(fromX), dx, minX, maxX) && clip(float64(fromY), dy, minY, maxY)
+	dx := tx - fx
+	dy := ty - fy
+	return clip(fx, dx, minX, maxX) && clip(fy, dy, minY, maxY)
 }
 
 func paintTileCoord(v int16) int16 {

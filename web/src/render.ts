@@ -1,14 +1,7 @@
 import { Application, Container, Graphics, Text, Sprite, Texture } from 'https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs';
 import { worldToScreen, screenToWorld, depth, KX, KY } from './iso.js';
 import { resolveTile, loadTexture, resolveCharacter, resolveEffect, assetUrl, type Manifest } from './assets.js';
-import {
-  TEMPLE_CENTER_X,
-  TEMPLE_CENTER_Y,
-  TEMPLE_FRONT_X,
-  TEMPLE_FRONT_Y,
-  TEMPLE_IDLE_NAMES,
-  TEMPLE_SIZE,
-} from './temple.js';
+import { LANDMARKS, TEMPLE_TILE_SIZE } from './temple.js';
 
 const GROUND_STEP = 128; // world units between iso floor tiles
 const WORLD_SIZE = 8192;
@@ -26,8 +19,6 @@ const MARKER_SHADOW = 0x020605;
 // Tiny visual overdraw hides independent sprite/mask rasterization seams while
 // keeping tile centers, grid spacing, and gameplay footprint unchanged.
 const PAINT_TILE_EDGE_OVERDRAW = 1.5;
-const TEMPLE_IDLE_FPS = 3;
-const TEMPLE_ANCHOR_Y = 0.72;
 
 const PAINT_TILE_BY_COLOR = new Map<number, string>([
   [0xe6194b, 'lava-tile'],
@@ -73,7 +64,7 @@ function drawIsoDiamond(
 
 function drawTempleFallback(hw: number, hh: number): Container {
   const fallback = new Container();
-  const footprint = drawIsoDiamond(new Graphics(), 0, 0, hw * TEMPLE_SIZE, hh * TEMPLE_SIZE, 0x372743, 0.98, 0x9ca568, 1, 4);
+  const footprint = drawIsoDiamond(new Graphics(), 0, 0, hw * 3, hh * 3, 0x372743, 0.98, 0x9ca568, 1, 4);
   const walls = new Graphics()
     .moveTo(-hw * 1.35, hh * 0.5)
     .lineTo(-hw * 1.15, -hh * 2.9)
@@ -402,32 +393,31 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
   ground.zIndex = -1_000_000;
   world.addChild(ground);
 
-  // One fixed landmark, rendered as a single depth-sorted object over its full
-  // 3x3 footprint. All four frames must load before animation is enabled;
-  // otherwise a deterministic solid fallback remains visible and stationary.
-  const loadedTempleTextures = await Promise.all(TEMPLE_IDLE_NAMES.map(async (name) => {
-    const tile = resolveTile(manifest, name);
-    return tile ? loadTexture(tile.file) : null;
+  // Fixed landmarks: one depth-sorted building sprite per footprint. Sprites
+  // are transparent PNGs grounded via alpha feet-detection (same as character
+  // skins); a missing asset falls back to the deterministic solid structure.
+  await Promise.all(LANDMARKS.map(async (l) => {
+    const cx = l.swX + ((l.w - 1) * TEMPLE_TILE_SIZE) / 2;
+    const cy = l.swY - ((l.h - 1) * TEMPLE_TILE_SIZE) / 2;
+    const p = worldToScreen(cx, cy);
+    const c = new Container();
+    c.x = p.x;
+    c.y = p.y;
+    c.zIndex = depth(l.swX + (l.w - 1) * TEMPLE_TILE_SIZE, l.swY);
+    const tile = resolveTile(manifest, l.name);
+    const tex = tile ? await loadTexture(tile.file) : null;
+    if (tex && tile) {
+      const sprite = new Sprite(tex);
+      sprite.anchor.set(0.5, await feetAnchorY(tile.file));
+      const wpx = hw * (l.w + l.h); // full iso footprint width on screen
+      sprite.width = wpx;
+      sprite.height = wpx; // square sources; the building fills the frame vertically
+      c.addChild(sprite);
+    } else {
+      c.addChild(drawTempleFallback(hw * ((l.w + l.h) / 3), hh * ((l.w + l.h) / 3)));
+    }
+    world.addChild(c);
   }));
-  const templeTextures: Texture[] = loadedTempleTextures.some((texture) => !texture)
-    ? []
-    : loadedTempleTextures as Texture[];
-  const templePoint = worldToScreen(TEMPLE_CENTER_X, TEMPLE_CENTER_Y);
-  const temple = new Container();
-  temple.x = templePoint.x;
-  temple.y = templePoint.y;
-  temple.zIndex = depth(TEMPLE_FRONT_X, TEMPLE_FRONT_Y);
-  let templeSprite: Sprite | null = null;
-  if (templeTextures.length === TEMPLE_IDLE_NAMES.length) {
-    templeSprite = new Sprite(templeTextures[0]);
-    templeSprite.anchor.set(0.5, TEMPLE_ANCHOR_Y);
-    templeSprite.width = hw * TEMPLE_SIZE * 2;
-    templeSprite.height = templeSprite.width;
-    temple.addChild(templeSprite);
-  } else {
-    temple.addChild(drawTempleFallback(hw, hh));
-  }
-  world.addChild(temple);
 
   await Promise.all([...PAINT_TILE_BY_COLOR.values()].map(async (name) => {
     const tile = resolveTile(manifest, name);
@@ -647,21 +637,11 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
 
   const FLASH_MS = 400;
   const fireStepMs = 1000 / fireFps;
-  const templeStepMs = 1000 / TEMPLE_IDLE_FPS;
-  let templeFrame = 0;
-  let templeAcc = 0;
-  let templeLast = performance.now();
   // One shared ticker animates flames (sprite frame-swap or procedural wobble),
-  // the temple idle loop, bomb fuses (pulse), and explosion flashes.
+  // bomb fuses (pulse), and explosion flashes.
   app.ticker.add(() => {
     const now = performance.now();
     const t = now / 1000;
-    if (templeSprite && templeTextures.length) {
-      templeAcc += now - templeLast;
-      templeLast = now;
-      while (templeAcc >= templeStepMs) { templeAcc -= templeStepMs; templeFrame++; }
-      templeSprite.texture = templeTextures[templeFrame % templeTextures.length];
-    }
     for (const f of fireTiles.values()) {
       if (f.sprite && fireTextures.length) {
         f.acc += now - f.last;

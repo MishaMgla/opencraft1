@@ -4561,7 +4561,7 @@
       "name": "copper-tile",
       "file": "tiles/copper-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless copper tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless copper tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4579,7 +4579,7 @@
       "name": "crystal-tile",
       "file": "tiles/crystal-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless crystal tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless crystal tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4669,7 +4669,7 @@
       "name": "flowers-tile",
       "file": "tiles/flowers-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless flowers tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless flowers tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4741,7 +4741,7 @@
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless grass tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless grass tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4849,7 +4849,7 @@
       "name": "ice-tile",
       "file": "tiles/ice-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless ice tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless ice tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4867,7 +4867,7 @@
       "name": "lava-tile",
       "file": "tiles/lava-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless lava tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless lava tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5245,7 +5245,7 @@
       "name": "sand-tile",
       "file": "tiles/sand-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless sand tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless sand tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5420,78 +5420,6 @@
         "sortOffset": 0
       }
     },
-    "tile:temple-idle-0": {
-      "type": "tile",
-      "name": "temple-idle-0",
-      "file": "tiles/temple-idle-0.png",
-      "size": 128,
-      "prompt": "ancient temple with a face-like arched doorway, mismatched leaning columns, and stacked crooked roof slabs",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "tile:temple-idle-1": {
-      "type": "tile",
-      "name": "temple-idle-1",
-      "file": "tiles/temple-idle-1.png",
-      "size": 128,
-      "prompt": "ancient temple with a face-like arched doorway, mismatched leaning columns, and roof slabs tilting outward",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "tile:temple-idle-2": {
-      "type": "tile",
-      "name": "temple-idle-2",
-      "file": "tiles/temple-idle-2.png",
-      "size": 128,
-      "prompt": "ancient temple with a face-like arched doorway, mismatched leaning columns, and roof slabs skewed far apart",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
-    "tile:temple-idle-3": {
-      "type": "tile",
-      "name": "temple-idle-3",
-      "file": "tiles/temple-idle-3.png",
-      "size": 128,
-      "prompt": "ancient temple with a face-like arched doorway, mismatched leaning columns, and roof slabs settling crookedly together",
-      "placement": {
-        "anchor": {
-          "x": 0.5,
-          "y": 0.5
-        },
-        "footprint": {
-          "w": 1,
-          "h": 1
-        },
-        "sortOffset": 0
-      }
-    },
     "tile:toy-render-grass-tile": {
       "type": "tile",
       "name": "toy-render-grass-tile",
@@ -5587,7 +5515,7 @@
       "name": "water-tile",
       "file": "tiles/water-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless water tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless water tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5653,6 +5581,38 @@
         },
         "sortOffset": 0
       }
+    },
+    "tile:landmark-panelka-deity": {
+      "type": "tile",
+      "name": "landmark-panelka-deity",
+      "file": "tiles/landmark-panelka-deity.png",
+      "size": 512,
+      "prompt": "monolithic soviet 17-story concrete panel apartment tower P-44 as a worshipped deity monument: mismatched balconies with random glazing, satellite dishes, patterned carpets hanging off the facade, TOO MANY hallucinated human arms sprouting from windows at wrong angles, tree branches growing out of upper floors, ghost cyrillic label text fragments on the walls, entrance canopy like an open mouth",
+      "placement": "landmark"
+    },
+    "tile:landmark-panelka-temple": {
+      "type": "tile",
+      "name": "landmark-panelka-temple",
+      "file": "tiles/landmark-panelka-temple.png",
+      "size": 384,
+      "prompt": "eclectic soviet panel building fused with an ancient temple: concrete portico with crooked mismatched columns of a soviet house of culture at the base, typical prefab panel apartment floors in the middle, golden onion dome and kokoshnik arches on the roof, soviet space-themed mosaic mural on the facade",
+      "placement": "landmark"
+    },
+    "tile:landmark-khrushchevka-altar": {
+      "type": "tile",
+      "name": "landmark-khrushchevka-altar",
+      "file": "tiles/landmark-khrushchevka-altar.png",
+      "size": 256,
+      "prompt": "squat five-story soviet khrushchevka apartment block as a sacred altar: entire facade covered in an ornamental red carpet pattern, glitchy ghost neon sign with corrupted cyrillic letters GASTRONOM above the entrance, warm light glowing from every window, candles on the roof",
+      "placement": "landmark"
+    },
+    "tile:landmark-totem": {
+      "type": "tile",
+      "name": "landmark-totem",
+      "file": "tiles/landmark-totem.png",
+      "size": 256,
+      "prompt": "totem pole stack of three mismatched soviet buildings twisted together: a tiny street kiosk at the bottom, a prefab panel apartment block section in the middle, a stalinist empire-style tower with a spire on top, each rotated at a slightly wrong angle, melty doubled joints between them",
+      "placement": "landmark"
     }
   }
 }

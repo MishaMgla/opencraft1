@@ -1,30 +1,35 @@
-// Fixed server-owned temple landmark. World -Y reads as northeast under the
-// isometric camera, so the nearest (southwest) temple tile sits two -Y steps
-// from spawn and leaves the tile between them clear.
+// Fixed server-owned landmarks (the soviet-eclectic building set). World -Y
+// reads as northeast under the isometric camera; footprints extend east (+X)
+// and northeast (-Y) from the southwest tile center. MUST mirror the
+// `landmarks` table in internal/world/sim.go — the server enforces the same
+// collision independently.
 export const TEMPLE_TILE_SIZE = 128;
-export const TEMPLE_SIZE = 3;
-export const TEMPLE_SOUTHWEST_X = 2048;
-export const TEMPLE_SOUTHWEST_Y = 2048 - 2 * TEMPLE_TILE_SIZE;
-export const TEMPLE_CENTER_X = TEMPLE_SOUTHWEST_X + TEMPLE_TILE_SIZE;
-export const TEMPLE_CENTER_Y = TEMPLE_SOUTHWEST_Y - TEMPLE_TILE_SIZE;
-export const TEMPLE_FRONT_X = TEMPLE_SOUTHWEST_X + (TEMPLE_SIZE - 1) * TEMPLE_TILE_SIZE;
-export const TEMPLE_FRONT_Y = TEMPLE_SOUTHWEST_Y;
-export const TEMPLE_IDLE_NAMES = [
-  'temple-idle-0',
-  'temple-idle-1',
-  'temple-idle-2',
-  'temple-idle-3',
-] as const;
+
+export interface Landmark {
+  name: string; // manifest sprite: tile:<name>
+  swX: number;  // southwest tile center
+  swY: number;
+  w: number;    // tiles east (+X)
+  h: number;    // tiles northeast (-Y)
+}
+
+export const LANDMARKS: Landmark[] = [
+  { name: 'landmark-panelka-deity', swX: 2048, swY: 2048 - 2 * TEMPLE_TILE_SIZE, w: 2, h: 2 },
+  { name: 'landmark-panelka-temple', swX: 1536, swY: 2304, w: 2, h: 1 },
+  { name: 'landmark-khrushchevka-altar', swX: 2560, swY: 2560, w: 1, h: 1 },
+  { name: 'landmark-totem', swX: 1536, swY: 1536, w: 1, h: 1 },
+];
 
 function tileCoord(value: number): number {
   return Math.round(value / TEMPLE_TILE_SIZE) * TEMPLE_TILE_SIZE;
 }
 
+// isTemplePosition reports whether a world point falls on ANY landmark tile
+// (name kept from the single-temple era; all call sites mean "blocked").
 export function isTemplePosition(x: number, y: number): boolean {
   const tileX = tileCoord(x);
   const tileY = tileCoord(y);
-  return tileX >= TEMPLE_SOUTHWEST_X &&
-    tileX < TEMPLE_SOUTHWEST_X + TEMPLE_SIZE * TEMPLE_TILE_SIZE &&
-    tileY <= TEMPLE_SOUTHWEST_Y &&
-    tileY > TEMPLE_SOUTHWEST_Y - TEMPLE_SIZE * TEMPLE_TILE_SIZE;
+  return LANDMARKS.some((l) =>
+    tileX >= l.swX && tileX < l.swX + l.w * TEMPLE_TILE_SIZE &&
+    tileY <= l.swY && tileY > l.swY - l.h * TEMPLE_TILE_SIZE);
 }
