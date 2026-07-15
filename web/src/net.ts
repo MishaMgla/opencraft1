@@ -1,5 +1,5 @@
-import { encodeHello, encodeInput, encodePaint, encodeUlt, encodeJump, encodeBomb, encodeChat, decodeServer } from './wire.js';
-import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, Fire, Bomb, Blast, KO, Respawn, Chat, ServerMsg } from './wire.js';
+import { encodeHello, encodeInput, encodePaint, encodeUlt, encodeJump, encodeBomb, encodeChat, encodeGrab, encodeHold, encodeDrop, decodeServer } from './wire.js';
+import type { Welcome, Snapshot, Enter, Leave, Pong, Paint, Shake, PlayerState, Jump, Fire, Bomb, Blast, KO, Respawn, Chat, Critters, ServerMsg } from './wire.js';
 
 export interface Handlers {
   welcome?: (m: Welcome) => void;
@@ -17,6 +17,7 @@ export interface Handlers {
   ko?: (m: KO) => void;
   respawn?: (m: Respawn) => void;
   chat?: (m: Chat) => void;
+  critters?: (m: Critters) => void;
   close?: () => void;
 }
 
@@ -27,6 +28,9 @@ export interface NetControl {
   sendJump(): void;
   sendBomb(): void;
   sendChat(text: string): void;
+  sendGrab(critterId: number): void;
+  sendHold(x: number, y: number): void;
+  sendDrop(x: number, y: number): void;
   close(): void;
 }
 
@@ -62,6 +66,15 @@ export function connect(url: string, name: string, role: number, character: stri
     },
     sendChat(text) {
       if (ws.readyState === WebSocket.OPEN) ws.send(encodeChat(text));
+    },
+    sendGrab(critterId) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(encodeGrab(critterId));
+    },
+    sendHold(x, y) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(encodeHold(x, y));
+    },
+    sendDrop(x, y) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(encodeDrop(x, y));
     },
     close() {
       ws.close();

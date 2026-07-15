@@ -7,6 +7,9 @@ const C_ULT = 0x05;
 const C_JUMP = 0x06;
 const C_BOMB = 0x07;
 const C_CHAT = 0x08;
+const C_GRAB = 0x09;
+const C_HOLD = 0x0a;
+const C_DROP = 0x0b;
 
 const S_WELCOME = 0x81;
 const S_SNAPSHOT = 0x82;
@@ -23,6 +26,7 @@ const S_BLAST = 0x8c;
 const S_KO = 0x8d;
 const S_RESPAWN = 0x8e;
 const S_CHAT = 0x8f;
+const S_CRITTERS = 0x90;
 
 export const ROLE_PULSE = 1;
 export const ROLE_CROSS = 2;
@@ -126,10 +130,22 @@ export interface Chat {
   name: string;
   text: string;
 }
+export interface CritterEnt {
+  id: number;
+  kind: number;
+  x: number;
+  y: number;
+  state: number; // 0 wander, 1 follow, 2 panic, 3 held
+  holderId: number; // 0 = unheld
+}
+export interface Critters {
+  type: 'critters';
+  ents: CritterEnt[];
+}
 export interface Unknown {
   type: 'unknown';
 }
-export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | KO | Respawn | Chat | Unknown;
+export type ServerMsg = Welcome | Snapshot | Enter | Leave | Pong | Paint | Shake | PlayerState | Jump | Fire | Bomb | Blast | KO | Respawn | Chat | Critters | Unknown;
 
 export function encodeHello(name: string, role = 0, character = ''): ArrayBuffer {
   const n = enc.encode(name.slice(0, 255));
@@ -192,6 +208,34 @@ export function encodeChat(text: string): ArrayBuffer {
   v.setUint16(1, t.length, true);
   b.set(t, 3);
   return b.buffer;
+}
+
+export function encodeGrab(critterId: number): ArrayBuffer {
+  const b = new ArrayBuffer(5);
+  const v = new DataView(b);
+  v.setUint8(0, C_GRAB);
+  v.setUint32(1, critterId, true);
+  return b;
+}
+
+// encodeHold/encodeDrop carry only (x, y): the server knows which critter this
+// player holds (one hand, one critter).
+export function encodeHold(x: number, y: number): ArrayBuffer {
+  const b = new ArrayBuffer(5);
+  const v = new DataView(b);
+  v.setUint8(0, C_HOLD);
+  v.setInt16(1, x, true);
+  v.setInt16(3, y, true);
+  return b;
+}
+
+export function encodeDrop(x: number, y: number): ArrayBuffer {
+  const b = new ArrayBuffer(5);
+  const v = new DataView(b);
+  v.setUint8(0, C_DROP);
+  v.setInt16(1, x, true);
+  v.setInt16(3, y, true);
+  return b;
 }
 
 // view is a DataView over the received ArrayBuffer.
@@ -297,6 +341,23 @@ export function decodeServer(view: DataView): ServerMsg {
       const tlen = view.getUint16(off, true);
       const text = dec.decode(new Uint8Array(view.buffer, view.byteOffset + off + 2, tlen));
       return { type: 'chat', name, text };
+    }
+    case S_CRITTERS: {
+      const count = view.getUint16(1, true);
+      const ents: CritterEnt[] = [];
+      let off = 3;
+      for (let i = 0; i < count; i++) {
+        ents.push({
+          id: view.getUint32(off, true),
+          kind: view.getUint8(off + 4),
+          x: view.getInt16(off + 5, true),
+          y: view.getInt16(off + 7, true),
+          state: view.getUint8(off + 9),
+          holderId: view.getUint32(off + 10, true),
+        });
+        off += 14;
+      }
+      return { type: 'critters', ents };
     }
   }
   return { type: 'unknown' };
