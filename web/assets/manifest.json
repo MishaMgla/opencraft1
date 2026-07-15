@@ -5,14 +5,14 @@
       "type": "character",
       "name": "critter-imp",
       "directions": 4,
-      "size": 64,
+      "size": 128,
       "frames": {
         "north-east": "characters/critter-imp-north-east.png",
         "south-east": "characters/critter-imp-south-east.png",
         "south-west": "characters/critter-imp-south-west.png",
         "north-west": "characters/critter-imp-north-west.png"
       },
-      "prompt": "tiny round critter creature, small cute blob imp with stubby legs, half the height of a person",
+      "prompt": "tiny round critter creature, one single cute chunky blob imp with stubby legs and big eyes, highly saturated warm orange-red body with bright teal belly, high contrast, reads clearly against pale terrain, no text, no letters, single creature only",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4534,7 +4534,7 @@
       "name": "copper-tile",
       "file": "tiles/copper-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless copper tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless copper tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4552,7 +4552,7 @@
       "name": "crystal-tile",
       "file": "tiles/crystal-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless crystal tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless crystal tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4642,7 +4642,7 @@
       "name": "flowers-tile",
       "file": "tiles/flowers-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless flowers tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless flowers tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4714,7 +4714,7 @@
       "name": "grass-tile",
       "file": "tiles/grass-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless grass tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless grass tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4822,7 +4822,7 @@
       "name": "ice-tile",
       "file": "tiles/ice-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless ice tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless ice tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -4840,7 +4840,7 @@
       "name": "lava-tile",
       "file": "tiles/lava-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless lava tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless lava tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5218,7 +5218,7 @@
       "name": "sand-tile",
       "file": "tiles/sand-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless sand tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless sand tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,
@@ -5560,7 +5560,7 @@
       "name": "water-tile",
       "file": "tiles/water-tile.png",
       "size": 256,
-      "prompt": "nano-banana seamless water tile — quiet poison-accent ground",
+      "prompt": "nano-banana seamless water tile \u2014 quiet poison-accent ground",
       "placement": {
         "anchor": {
           "x": 0.5,

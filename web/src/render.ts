@@ -153,6 +153,9 @@ interface SkinState {
   prevY: number;
 }
 
+const PLAYER_SCALE = 0.75;  // player avatars drawn a quarter smaller than their art
+const CRITTER_SCALE = 0.5;  // critter art is 128px → 64px effective on screen
+
 const SKIN_MOVE_EPS = 0.5; // world units; below this a token is "stationary" (idle pose)
 const SKIN_FALLBACK_WALK_FPS = 8;
 const SKIN_FALLBACK_WALK_BOB = 3;
@@ -457,6 +460,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
 
   // Local player token.
   const { container: localContainer, avatar: localAvatar, label: localLabel } = makeToken('you', 0xffffff, LOCAL_LABEL_COLOR);
+  localAvatar.scale.set(PLAYER_SCALE);
   world.addChild(localContainer);
   const localToken = makeTokenState(localContainer, localAvatar, localLabel, 0, 0);
 
@@ -688,6 +692,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     addToken(this: Renderer, id: number, name: string, color: number, x: number, y: number) {
       const { container, avatar, label } = makeToken(name, color);
       world.addChild(container);
+      avatar.scale.set(PLAYER_SCALE);
       const token = makeTokenState(container, avatar, label, x, y);
       this.placeToken(token);
       return token;
@@ -695,7 +700,7 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
     addCritter(this: Renderer, id: number, x: number, y: number) {
       const token = this.addToken(id, '', 0x9acd32, x, y); // yellow-green procedural fallback
       token.label.visible = false;      // critters have no name label
-      token.avatar.scale.set(0.5);      // ~half character height
+      token.avatar.scale.set(CRITTER_SCALE);
       void this.setSkin(token, 'critter-imp'); // no-op fallback if asset missing
       return token;
     },
@@ -858,7 +863,9 @@ export async function createRenderer(manifest: Manifest): Promise<Renderer> {
       // far taller than the procedural token the default label.y was sized for).
       const texH = idle[startDir].height || 0;
       const topAnchor = Math.max(...Object.values(anchorY), ch.anchor.y);
-      token.label.y = -Math.round(topAnchor * texH) - 4;
+      // label lives outside the (scaled) avatar, so scale the art height into
+      // container units before lifting the label above the sprite's head
+      token.label.y = -Math.round(topAnchor * texH * token.avatar.scale.y) - 4;
       token.skin = {
         sprite, fps, idle, walk, idleAnim, idleFps, anchorY, dir: startDir,
         frame: 0, idleFrame: 0, idleAcc: 0, acc: 0,

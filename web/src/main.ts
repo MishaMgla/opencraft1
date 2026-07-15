@@ -401,17 +401,22 @@ async function start(name: string, role: number, character: string): Promise<voi
       conn.sendGrab(id);
       heldId = id;
       handCursor = w;
+      r.app.canvas.style.cursor = 'grabbing';
     }
   });
   r.app.canvas.addEventListener('pointermove', (e) => {
-    if (!heldId || document.body.classList.contains('mobile-controls-enabled')) return;
-    handCursor = r.screenToWorld(e.clientX, e.clientY);
+    if (document.body.classList.contains('mobile-controls-enabled')) return;
+    const w = r.screenToWorld(e.clientX, e.clientY);
+    if (heldId) handCursor = w;
+    // hand cursor telegraphs the god-hand: open hand over a critter, closed while carrying
+    r.app.canvas.style.cursor = heldId ? 'grabbing' : critterIdAt(w.x, w.y) ? 'grab' : '';
   });
   r.app.canvas.addEventListener('pointerup', (e) => {
     if (!heldId || document.body.classList.contains('mobile-controls-enabled')) return;
     const w = r.screenToWorld(e.clientX, e.clientY);
     conn.sendDrop(Math.round(w.x), Math.round(w.y));
     heldId = 0;
+    r.app.canvas.style.cursor = critterIdAt(w.x, w.y) ? 'grab' : '';
   });
 
   mobilePaint.addEventListener('pointerdown', (e) => {
