@@ -1,5 +1,7 @@
 # opencraft1 — product vision
 
+> **Planning update, 2026-09-06:** this document preserves the original engine-first vision. The proposed player-driven evolving world and low-poly 3D direction are documented in the [current product plan](prd/evolving-world-product-plan.md). That plan describes future work, not implemented behavior.
+
 > north-star description. the "why" and the long shape. the MVP scope lives in [`prd/mvp.md`](prd/mvp.md); the engine design lives in [`superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md`](superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md).
 
 ## one line

@@ -21,6 +21,16 @@ single source of truth for rules and documentation pointers shared by all AI cod
 
 ## product scope (PM guardrail)
 
+**Evolving-world planning (2026-09-06).** For the new player-driven world,
+start at `docs/prd/evolving-world-product-plan.md`, then read the scenario or
+visual/UX document linked there. The user currently requests planning and
+Markdown documentation; this does not initiate implementation or deployment.
+The new direction is mobile-first low-poly 3D inspired by TempleOS, with
+generative geometry independent of a required image-generation service or
+manual modeling tool. Distinguish confirmed direction, proposed details, and
+historical discussion. The existing-build guidance below is not the visual
+brief for that new direction.
+
 issues are for **changing or improving the game** within the product vision
 (`docs/vision.md`) — features, fixes, balance/tuning, polish, and additive layers
 that build on the existing engine. this is a **product** guardrail, separate from
@@ -51,6 +61,11 @@ the security classifier (which handles spam / abuse / injection / malicious code
 - **client:** vanilla ES modules under `web/src/`, no bundler. PixiJS v8 imported from CDN. `camelCase` functions, one responsibility per module file.
 
 ## visual style (house art direction)
+
+**Scope:** the following describes the existing 2D build. For evolving-world
+planning, use `docs/prd/evolving-world-visual-ux.md`; its user-approved low-poly
+3D direction supersedes this legacy style for the proposed new experience.
+Do not infer that the new renderer or asset-generation approach is implemented.
 
 opencraft1's chosen visual identity is **dataset-poison AI-slop** (the
 `dataset-poison-extra-limbs` style picked from the nano-banana style exploration
@@ -160,7 +175,10 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 |---|---|
 | repo overview | `docs/project-map/README.md` |
 | project-specific terms / acronyms | `docs/project-map/glossary.md` |
-| product vision / north star | `docs/vision.md` |
+| evolving-world plan / current planning context | `docs/prd/evolving-world-product-plan.md` |
+| evolving-world player flow / evolution lifecycle | `docs/prd/evolving-world-first-session.md` |
+| evolving-world low-poly 3D / generative forms / UI | `docs/prd/evolving-world-visual-ux.md` |
+| original product vision | `docs/vision.md` |
 | MVP product requirements | `docs/prd/mvp.md` |
 | MVP engine architecture (technical design) | `docs/superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
 | Go engine (server / sim / wire / grid) | `docs/project-map/server.md` |

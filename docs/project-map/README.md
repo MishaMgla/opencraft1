@@ -10,6 +10,11 @@ navigation hub for AI agents. mirrors the source tree. each leaf doc describes o
 2. find the leaf doc for your task in the table below.
 3. load only that leaf. avoid loading the full tree.
 
+For the evolving-world concept, start with `../prd/evolving-world-product-plan.md`.
+It routes to the player scenario and visual/UX brief and distinguishes confirmed
+direction from proposals. This is planning documentation, not shipped behavior;
+the original vision and subsystem docs remain context for the existing build.
+
 ## tree
 
 ```
@@ -26,7 +31,10 @@ docs/project-map/
 |---|---|
 | repo overview | `README.md` |
 | terms / acronyms | `glossary.md` |
-| product vision / north star | `../vision.md` |
+| evolving-world plan / current planning context | `../prd/evolving-world-product-plan.md` |
+| evolving-world scenario / evolution lifecycle | `../prd/evolving-world-first-session.md` |
+| evolving-world low-poly 3D / generative forms / UI | `../prd/evolving-world-visual-ux.md` |
+| original product vision | `../vision.md` |
 | MVP product requirements | `../prd/mvp.md` |
 | MVP engine architecture (technical) | `../superpowers/specs/2026-06-11-opencraft-mvp-engine-design.md` |
 | Go engine (server, sim, wire, grid) | `server.md` |
@@ -39,6 +47,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-09-06 (planning only): add evolving-world product plan, player scenario and low-poly 3D visual/UX brief with phone wireframes; link the planning context for agents and scope the prior art direction to the existing build. No gameplay implementation or deployment.
 - 2026-07-15 (follow-up): landmarks pass 2 — the four free-projection buildings read alien (wrong axonometry, inconsistent scale), so the set is reduced to ONE guided building: `gen-landmark.mjs` now composes a 2:1 iso base-diamond + player-sprite scale reference and generates img2img, locking the projection to the game camera and the door to player height; renderer keeps the crop aspect (no square squash).
 - 2026-07-15: replace the blurry 3×3 temple with four **soviet-eclectic landmarks** in the slop house style (2×2 panelka-deity with arms from windows on the old temple spot, 2×1 panelka-temple with onion dome + space mosaic, 1×1 carpet-facade GASTRONOM khrushchevka-altar, 1×1 kiosk/panelka/stalinka totem), generated at native res via new `gen-landmark.mjs` (transparent, no baked ground — fixes the upscale blur); server + client generalize the single temple footprint to a shared `landmarks` table (collision/paint/fire/bomb/critters unchanged in behavior).
 - 2026-07-15 (branch `critters-god-hand`): add transient **critters** (habitat-capped spawn pool, wander/follow/panic/held FSM, hazard/temple avoidance, grass→flowers conversion, habitat-empty despawn) and **god-hand** grab/hold/drop (`CGrab`/`CHold`/`CDrop`), broadcast every 2nd tick via `SCritters` (0x90) through a new per-connection latest-only snap slot that never evicts event frames, plus a reliable snapshot in the join handshake. Client renders critters as half-scale tokens, adds desktop cursor carry (server-confirmed) and mobile two-tap grab/drop. Verified: Go 55 tests, web 42 unit + e2e (incl. `SCritters` → `window.__game.critters` end-to-end, skips when the joining player's palette color isn't flammable).
