@@ -1,6 +1,38 @@
 # deployment runbook
 
-## Current production — evolving 3D world (2026-09-08)
+## Current production — fixed avatars and compact chat (2026-09-09)
+
+Live at **https://opencraft1.com/**. Source commit `c391533a98c52f9ed7a608b95ed03848e3984fa6`
+was fast-forwarded and pushed to `main`. Railway deployment
+`0be1ef35-2136-468e-b3a6-1c1ebf41e33b` is online in the production service below.
+It was built from an allowlisted `git archive` of that exact commit, staged at
+`/tmp/opencraft-release.ytHiCt`; no env files, repository metadata or root legacy
+Railway configuration were uploaded. Image digest:
+`sha256:c2adc91ec169e68ac08b2ae8b3d3f0002db07bbbb3a8fa540f6cad663918bf41`.
+
+This release adds five procedural body families, versioned stable appearance,
+one-time legacy guest choice, and compact/expanded chat. [API, migration and
+local checks](project-map/evolving-preview.md#доработка-2026-09-09).
+Public entry remains direct HTTPS 200 without Basic authentication.
+
+Verified after deployment: hosted smoke; production HTML/CSS/four client modules
+match the tested files; new browser guest joins by WebSocket, moves with compact
+chat open, stops while typing, sends with input focus retained, and returns to
+the same guest and saved message. Two pre-release test guests retained their
+seeds and v1 recipes; keeping one and upgrading the other consumed their rights,
+and repeat changes returned 409. Test guests and one browser test message remain.
+GitHub runs `34292543200` (tests) and `34292543145` (Vercel alias deployment) passed.
+Temporary local app processes and the local test DB were stopped; its volume remains.
+
+Rollback must retain recipe v2 support and consumed-choice state. Do not roll
+back to the v1 binary listed in the historical section after v2 guests exist:
+it cannot render them faithfully. Keep added columns and saved seeds. A compatible
+fix-forward or compatible prior image is required. Database restoration and
+real-phone keyboard/performance verification remain outstanding; evolution is
+still unimplemented. Railway GitHub auto-deploy remains disconnected; the legacy
+root `railway.json` is not the production build source.
+
+## Initial production cutover — historical (2026-09-08)
 
 The user explicitly authorized replacing production, then rejected the external
 redirect and shared password. **https://opencraft1.com/** now serves the game
