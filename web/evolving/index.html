@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Пробная общая пустота: персонажи, движение и разговор.">
+  <title>Пустота — OpenCraft</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%239BAF96' d='M16 2 27 10 23 26 10 29 5 12Z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/evolving/style.css">
+  <script type="importmap">{"imports":{"three":"/preview-vendor/three.module.js"}}</script>
+</head>
+<body>
+  <main id="world" aria-label="Общая трёхмерная пустота">
+    <canvas id="scene" aria-label="Персонажи в общем мире"></canvas>
+    <div id="labels" aria-hidden="true"></div>
+  </main>
+  <header id="hud" hidden>
+    <span id="your-name"></span>
+    <span id="presence" aria-live="polite"></span>
+  </header>
+  <section id="entry" aria-labelledby="entry-title">
+    <div class="entry-copy">
+      <p class="eyebrow">OpenCraft / пробная сцена</p>
+      <h1 id="entry-title">Пока — только мы.</h1>
+      <p>Можно идти и разговаривать.</p>
+    </div>
+    <form id="entry-form">
+      <label for="name">Как тебя называть</label>
+      <input id="name" name="name" maxlength="24" autocomplete="nickname" required placeholder="Имя" aria-describedby="entry-note">
+      <div class="entry-actions">
+        <button id="previous-look" type="button" hidden aria-label="Вернуть предыдущий облик">Назад</button>
+        <button id="reroll" type="button" disabled>Другой облик</button>
+        <button id="join" type="submit" disabled>Войти</button>
+      </div>
+      <p id="appearance-note" class="note">Этот облик останется с тобой.</p>
+      <button id="keep-look" type="button" hidden>Вернуть прежний облик</button>
+      <p id="entry-note" class="note">Изолированная проба. История пока не сохраняется, эволюция ещё не подключена.</p>
+    </form>
+  </section>
+  <div id="connection" role="status" hidden>
+    <span id="connection-text"></span>
+    <button id="retry" type="button" hidden>Подключиться снова</button>
+  </div>
+  <div id="controls" hidden>
+    <button id="stick" type="button" aria-label="Движение: потяни в нужную сторону или используй стрелки">
+      <span id="stick-knob"></span>
+    </button>
+    <p id="move-help" class="note">WASD / стрелки — идти</p>
+    <div class="conversation-control">
+      <button id="open-chat" type="button" aria-expanded="false" aria-controls="conversation">Разговор <span id="unread-dot" hidden aria-hidden="true"></span></button>
+    </div>
+  </div>
+  <section id="conversation" aria-labelledby="conversation-title" hidden>
+    <header><h2 id="conversation-title">Разговор</h2><div><button id="expand-chat" type="button" aria-expanded="false" aria-controls="messages">История</button><button id="close-chat" type="button" aria-label="Закрыть разговор">×</button></div></header>
+    <p id="history-status" class="note" role="status">Только это посещение. Сообщения пока не сохраняются.</p>
+    <div id="history-controls" hidden><button id="earlier" type="button">Раньше</button><button id="latest" type="button" hidden>К свежим</button></div>
+    <ol id="messages" tabindex="0" aria-label="Сообщения разговора"><li id="empty-chat" class="note">Здесь ещё никто не написал.</li></ol>
+    <form id="message-form">
+      <label class="sr-only" for="message">Сообщение</label>
+      <input id="message" name="message" maxlength="200" autocomplete="off" placeholder="Сообщение…" disabled>
+      <button id="send" type="submit" disabled>Отправить</button>
+    </form>
+    <p id="delivery" class="note" role="status"></p>
+  </section>
+  <script type="module">
+    import('/src/evolving/main.js').catch(error => {
+      const status = document.getElementById('connection');
+      status.hidden = false;
+      document.getElementById('connection-text').textContent = String(error).includes('WebGL')
+        ? 'Не удалось включить 3D. Попробуй браузер с поддержкой WebGL 2.'
+        : 'Не удалось загрузить сцену. Проверь сборку клиента и обнови страницу.';
+    });
+  </script>
+</body>
+</html>

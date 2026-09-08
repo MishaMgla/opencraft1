@@ -1,4 +1,74 @@
-# deploy runbook — split client/server
+# deployment runbook
+
+## Current production — evolving 3D world (2026-09-08)
+
+The user explicitly authorized replacing production, then rejected the external
+redirect and shared password. **https://opencraft1.com/** now serves the game
+directly (HTTP 200), with no Basic authentication. The existing Railway service
+serves HTML, local assets, HTTP API and WebSocket on that same origin. Creating
+a guest only requires the in-game name; cookie ownership, exact-origin checks
+and write validation remain. This is still an early build, not a claim of
+completed evolution or public-service hardening.
+
+- Project: `1b8ea81a-5e3b-43e0-bd07-8b8d181aac53`.
+- Production environment: `d25afc26-9021-46cc-b7f6-1b079c09d075`.
+- App service: `4ea90048-d5f6-46ad-b16c-c5a1b6f72cf5`; direct-domain deployment `ae93ea7f-1238-4f27-b56d-50036b885ee2`.
+- New private DB service `world-db`: `a48d4b61-a13b-4878-8d2e-61dd479bcc47`; volume `5ca289f5-7afb-49c5-bf3d-4059960d0a50`, mounted at `/var/lib/postgresql/data`.
+- Railway custom domains: apex `acd678ca-5699-4333-b878-fec0d5c15fe2`, www `3b195ac5-76ed-4d42-8b00-0d4372f53bab`; target port 8080.
+
+DNS remains managed by Vercel. Explicit apex ALIAS `eaial9ul.up.railway.app`
+(`rec_b9104ee5f8e7bd0aa1eeac11`) overrides its default Vercel route. `www` CNAME
+is `aubz5x74.up.railway.app` (`rec_01be81092e92831e46a418ed`); the app redirects
+www to the canonical apex. Railway verification TXT records exist at
+`_railway-verify` and `_railway-verify.www`; keep them for verification/renewal.
+Both domains have working HTTPS. Root `/` serves HTML, not a redirect to
+`/evolving/`; that old path still works. Asset URLs are absolute.
+
+Verified after cutover: root HTTPS 200 without Location/WWW-Authenticate; hosted
+smoke passed without credentials; a clean browser opened the canonical URL,
+created a guest, received the WebSocket welcome and loaded the saved chat.
+Go test/vet and whitespace checks passed. Vercel alias-only deployment is
+`dpl_BcJztVnFmZ85ohM4EBWAsp6QG1LK`. No database was reset during this correction.
+
+Use `Dockerfile.preview` and its Dockerfile-specific allowlist. These internal
+filenames and `PREVIEW_*` variables remain for compatibility; they do not mean
+the deployment targets a preview environment. `PREVIEW_PUBLIC_ORIGIN` is the
+exact `https://opencraft1.com` origin, `PREVIEW_DATABASE_HOST=world-db.railway.internal`,
+and the DSN references `${{world-db.POSTGRES_PASSWORD}}`. Database and role remain
+`opencraft_preview`. The old Supabase `DATABASE_URL` is preserved but not read by
+this entrypoint. The new production DB starts independently; preview guests and
+history were not migrated or deleted. Cookie identity does not transfer domains.
+`PREVIEW_ACCESS_PASSWORD` is no longer read; no password is needed by the hosted
+smoke check. The old Railway hostname is not the public entry and fails the
+exact-host guard. Do not send players there.
+
+Repeat the allowlisted staging procedure in [the scene runbook](project-map/evolving-preview.md),
+but pass the production IDs above to `railway up`. The workspace CLI is now
+linked to production; still use explicit IDs. Validate with
+`node web/tools/check-evolving-hosted.mjs production`, then browser join/chat.
+The smoke check leaves one named guest, and the browser check left one test
+message. No local game server is needed for a deploy. Browser return through
+opencraft1.com restored the same guest and saved message. Both preview app and
+preview PostgreSQL deployments are stopped; their volume remains intact.
+
+Vercel aliases use prebuilt Build Output API v3: one route `/(.*)` returning
+307 to the canonical `https://opencraft1.com/`, with `Cache-Control: no-store`.
+They are not on the canonical domain's request path after the DNS change.
+The same alias redirect is recorded in `web/vercel.json`. Railway's old GitHub source
+was disconnected to prevent the old `main` from redeploying the legacy game.
+No commit/push was performed. Reconnect GitHub only after the production build
+configuration and this implementation are in that branch. Existing CI files
+below describe the legacy path, not an already migrated autonomous workflow.
+
+Legacy rollback also requires restoring the original Vercel DNS route by removing
+only the two explicit traffic records identified above (not the domain or zone).
+Then restore Railway deployment `e8e8d3a7-2f4d-484c-aec7-00564035ccea`
+with its original `ALLOWED_ORIGINS` for the Vercel domains, then promote Vercel
+deployment `dpl_7YURN6L4tHaC2FNwc2SFs8Q6FWnv`. Keep the new DB and volumes; neither
+a release rollback nor a restart requires deleting data. Backup restoration and
+long-lived connection stability remain unverified.
+
+## Historical split client/server runbook
 
 opencraft1 deploys as two independent halves:
 

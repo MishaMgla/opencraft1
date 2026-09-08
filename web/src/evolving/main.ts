@@ -1,0 +1,398 @@
+import { connect } from '../net.js';
+import type { NetControl } from '../net.js';
+import { createScene } from './scene.js';
+import type { Avatar } from './scene.js';
+import { movementInput } from './input.js';
+import { previewRequest, savedConversation } from './conversation.js';
+import type { Guest } from './conversation.js';
+
+function element<T extends HTMLElement>(id: string) { return document.getElementById(id) as T; }
+const canvas = element<HTMLCanvasElement>('scene');
+const entry = element('entry');
+const nameInput = element<HTMLInputElement>('name');
+const joinButton = element<HTMLButtonElement>('join');
+const reroll = element<HTMLButtonElement>('reroll');
+const previousLook = element<HTMLButtonElement>('previous-look');
+const keepLook = element<HTMLButtonElement>('keep-look');
+const expandChat = element<HTMLButtonElement>('expand-chat');
+const controls = element('controls');
+const conversation = element('conversation');
+const openChat = element<HTMLButtonElement>('open-chat');
+const closeChat = element<HTMLButtonElement>('close-chat');
+const messageInput = element<HTMLInputElement>('message');
+const sendButton = element<HTMLButtonElement>('send');
+const delivery = element('delivery');
+const retry = element<HTMLButtonElement>('retry');
+const connection = element('connection');
+const messages = element<HTMLOListElement>('messages');
+const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const profileKey = 'opencraft.evolving-preview.profile';
+
+let seed = crypto.getRandomValues(new Uint32Array(1))[0]!;
+let avatarVersion = 2;
+const previousLooks: { seed: number; version: number }[] = [];
+try {
+  const saved = JSON.parse(localStorage.getItem(profileKey) || 'null');
+  if (saved && typeof saved.name === 'string' && Number.isInteger(saved.seed) && saved.seed >= 0 && saved.seed <= 0xffffffff) {
+    seed = saved.seed;
+    nameInput.value = saved.name.slice(0, 24);
+  }
+} catch { /* Browser-local convenience only; not authentication or world storage. */ }
+
+const scene = createScene(canvas, element('labels'));
+const actors = new Map<number, Avatar>();
+let me = scene.makeAvatar(seed, '');
+let id = 0;
+let online = false;
+let starting = false;
+let fatal = false;
+let verified = false;
+let persistent = false;
+let guest: Guest | undefined;
+let savedChat: ReturnType<typeof savedConversation> | undefined;
+let network: NetControl | undefined;
+let generation = 0;
+let joinedName = '';
+let bounds = { minX: 0, minY: 0, maxX: 8191, maxY: 8191 };
+let pending = '';
+let deliveryTimer = 0;
+let expanded = false;
+let chatScroll = { top: 0, bottom: true };
+const input = movementInput(element<HTMLButtonElement>('stick'), element('stick-knob'),
+  () => online && !expanded && document.activeElement !== messageInput && document.activeElement !== messages && !document.hidden);
+
+function status(text: string, canRetry = false) {
+  connection.hidden = !text;
+  element('connection-text').textContent = text;
+  retry.hidden = !canRetry;
+}
+function updatePresence() {
+  element('presence').textContent = online ? `В мире: ${actors.size + 1}` : 'Нет соединения';
+}
+function stopMoving() {
+  input.clear();
+  me.tx = me.x; me.ty = me.y;
+}
+function rememberScroll() {
+  if (!conversation.hidden) chatScroll = { top: messages.scrollTop, bottom: messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40 };
+  conversation.dataset.reading = String(!chatScroll.bottom);
+}
+function restoreScroll() { messages.scrollTop = chatScroll.bottom ? messages.scrollHeight : chatScroll.top; }
+function unread(value: boolean) {
+  element('unread-dot').hidden = !value;
+  openChat.setAttribute('aria-label', value ? 'Разговор: новые сообщения' : 'Открыть разговор');
+}
+function setChat(open: boolean) {
+  rememberScroll();
+  conversation.hidden = !open;
+  if (!open) expanded = false;
+  conversation.classList.toggle('expanded', expanded);
+  expandChat.textContent = expanded ? 'Уменьшить' : 'История';
+  expandChat.setAttribute('aria-expanded', String(expanded));
+  openChat.hidden = open;
+  openChat.setAttribute('aria-expanded', String(open));
+  if (open) {
+    unread(false);
+    closeChat.focus({ preventScroll: true });
+  } else {
+    messageInput.blur();
+    openChat.focus({ preventScroll: true });
+  }
+  viewport();
+  if (open) restoreScroll();
+}
+openChat.addEventListener('click', () => setChat(true));
+closeChat.addEventListener('click', () => setChat(false));
+expandChat.addEventListener('click', () => {
+  rememberScroll();
+  expanded = !expanded;
+  if (expanded) stopMoving();
+  conversation.classList.toggle('expanded', expanded);
+  expandChat.textContent = expanded ? 'Уменьшить' : 'История';
+  expandChat.setAttribute('aria-expanded', String(expanded));
+  viewport(); restoreScroll();
+});
+messageInput.addEventListener('focus', () => { stopMoving(); viewport(); });
+messageInput.addEventListener('blur', () => requestAnimationFrame(viewport));
+messages.addEventListener('focus', stopMoving);
+// A send tap keeps the input/keyboard focused, including while the write is pending.
+sendButton.addEventListener('pointerdown', event => { if (document.activeElement === messageInput) event.preventDefault(); });
+window.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || conversation.hidden) return;
+  if (document.activeElement === messageInput) { messageInput.blur(); closeChat.focus(); }
+  else setChat(false);
+});
+
+function viewport() {
+  const view = window.visualViewport;
+  const inset = view ? Math.max(0, innerHeight - view.height - view.offsetTop) : 0;
+  const typing = document.activeElement === messageInput;
+  document.body.classList.toggle('typing', typing);
+  controls.hidden = !entry.hidden || typing || expanded;
+  document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`);
+  conversation.style.maxHeight = `${(view?.height ?? innerHeight) * .78}px`;
+  entry.style.bottom = `${inset}px`;
+  const available = !entry.hidden ? element('entry-form').getBoundingClientRect().top
+    : !conversation.hidden && innerWidth <= 600 ? conversation.getBoundingClientRect().top : innerHeight;
+  element('world').style.height = `${Math.max(120, available)}px`;
+}
+window.addEventListener('resize', viewport);
+window.visualViewport?.addEventListener('resize', viewport);
+window.visualViewport?.addEventListener('scroll', viewport);
+viewport();
+
+function showLook() {
+  scene.remove(me);
+  me = scene.makeAvatar(seed, '', avatarVersion);
+}
+function choiceControls() {
+  const canChoose = !guest || guest.appearanceChoicePending;
+  reroll.hidden = !canChoose;
+  reroll.disabled = starting || !verified;
+  previousLook.hidden = !canChoose || !previousLooks.length;
+  previousLook.disabled = starting;
+  keepLook.hidden = !guest?.appearanceChoicePending || (seed === guest.seed && avatarVersion === guest.avatarVersion);
+  keepLook.disabled = starting;
+  element('appearance-note').textContent = guest?.appearanceChoicePending
+    ? 'Мир научился новым формам. Один раз можно оставить прежний облик или выбрать другой.'
+    : guest ? 'Твой облик сохранён.' : 'Этот облик останется с тобой.';
+  joinButton.textContent = guest?.appearanceChoicePending
+    ? avatarVersion === guest.avatarVersion && seed === guest.seed ? 'Оставить и войти' : 'Выбрать и войти'
+    : guest ? 'Вернуться' : 'Войти';
+  viewport();
+}
+keepLook.addEventListener('click', () => {
+  if (starting || !guest?.appearanceChoicePending) return;
+  seed = guest.seed; avatarVersion = guest.avatarVersion;
+  previousLooks.length = 0; showLook(); choiceControls();
+});
+reroll.addEventListener('click', () => {
+  if (starting || !verified || (guest && !guest.appearanceChoicePending)) return;
+  previousLooks.push({ seed, version: avatarVersion });
+  // Keep the immediately previous choices, not an unbounded character catalogue.
+  if (previousLooks.length > 20) previousLooks.splice(1, 1); // Retain the original body too.
+  const previousKind = avatarVersion === 2 ? seed % 5 : -1;
+  do { seed = crypto.getRandomValues(new Uint32Array(1))[0]!; } while (seed % 5 === previousKind);
+  avatarVersion = 2;
+  showLook(); choiceControls();
+});
+previousLook.addEventListener('click', () => {
+  if (starting) return;
+  const look = previousLooks.pop();
+  if (look) { seed = look.seed; avatarVersion = look.version; showLook(); choiceControls(); }
+});
+
+function loseConnection() {
+  savedChat?.stop();
+  online = false;
+  starting = false;
+  input.clear();
+  me.tx = me.x; me.ty = me.y;
+  for (const actor of actors.values()) scene.remove(actor);
+  actors.clear();
+  messageInput.disabled = true;
+  sendButton.disabled = true;
+  joinButton.disabled = false;
+  choiceControls();
+  if (pending) delivery.textContent = 'Доставка не подтверждена. Черновик сохранён в поле; повтор может создать дубликат.';
+  pending = '';
+  clearTimeout(deliveryTimer);
+  updatePresence();
+  status(persistent ? 'Соединения с миром нет. Если гость открыт в другой вкладке, закрой её и подключись снова.' : 'Соединение прервалось. Мир недоступен, текст остался на экране.', true);
+}
+
+function appendMessage(name: string, text: string, record?: { id: string; createdAt: string }) {
+  element('empty-chat')?.remove();
+  const atEnd = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40;
+  const li = document.createElement('li');
+  const author = document.createElement('span');
+  author.className = 'author';
+  author.textContent = name;
+  if (record) {
+    li.dataset.messageId = record.id;
+    const time = document.createElement('time');
+    time.dateTime = record.createdAt;
+    time.textContent = ` · ${new Date(record.createdAt).toLocaleString('ru-RU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+    author.append(time);
+  }
+  li.append(author, document.createTextNode(text));
+  messages.append(li);
+  // ponytail: render at most 200 lines; older durable messages are read by cursor.
+  if (messages.children.length > 200) messages.firstElementChild?.remove();
+  if (atEnd) messages.scrollTop = messages.scrollHeight;
+  if (!record && conversation.hidden) unread(true);
+  if (pending && name === joinedName && text === pending) {
+    // The legacy chat frame has no sender ID or message ID. With duplicate
+    // display names, never discard a draft based on another person's echo.
+    if ([...actors.values()].some(actor => actor.label.textContent === joinedName)) return;
+    clearTimeout(deliveryTimer);
+    if (messageInput.value.trim() === pending) messageInput.value = '';
+    pending = '';
+    delivery.textContent = 'Получено сервером. История пока не сохраняется.';
+    // Match the existing server's chat throttle without pretending rejected sends succeeded.
+    sendButton.disabled = true;
+    deliveryTimer = window.setTimeout(() => { sendButton.disabled = !online; }, 650);
+  }
+}
+
+async function join() {
+  let name = nameInput.value.trim();
+  if (!name || starting || fatal || !verified) return;
+  generation++;
+  const attempt = generation;
+  network?.close();
+  starting = true;
+  joinButton.disabled = true;
+  reroll.disabled = true;
+  previousLook.disabled = true;
+  keepLook.disabled = true;
+  joinedName = name;
+  status('Соединяемся с общей пустотой…');
+  input.clear();
+  for (const actor of actors.values()) scene.remove(actor);
+  actors.clear();
+  try { localStorage.setItem(profileKey, JSON.stringify({ name, seed })); } catch { /* Optional local profile. */ }
+  const timeout = window.setTimeout(() => {
+    if (attempt === generation && starting) { network?.close(); loseConnection(); }
+  }, 10000);
+  if (persistent) {
+    try {
+      if (guest?.appearanceChoicePending) {
+        try {
+          guest = await previewRequest('appearance', avatarVersion === guest.avatarVersion && seed === guest.seed ? { keep: true } : { seed });
+        } catch {
+          // A response may be lost after commit. Read before offering another choice.
+          guest = await previewRequest('session');
+          if (guest?.appearanceChoicePending) throw new Error('choice not saved');
+        }
+      }
+      guest = await previewRequest('session', { name, seed, avatarVersion: 2 });
+      if (attempt !== generation || !starting || fatal) return;
+      name = guest!.name; seed = guest!.seed; avatarVersion = guest!.avatarVersion;
+      nameInput.value = name; nameInput.readOnly = true;
+      previousLooks.length = 0;
+      showLook();
+    } catch {
+      clearTimeout(timeout); loseConnection();
+      status('Не удалось восстановить гостя. Проверь соединение и повтори вход.', true);
+      return;
+    }
+  }
+  network = connect(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws?recipes=2`, name, 1, `${avatarVersion === 1 ? 'shape' : 'shape2'}-${seed.toString(16)}`, {
+    welcome: message => {
+      if (attempt !== generation) return;
+      clearTimeout(timeout);
+      starting = false; online = true; id = message.id; bounds = message;
+      me.x = me.tx = message.x; me.y = me.ty = message.y;
+      me.label.textContent = name;
+      entry.hidden = true;
+      element('hud').hidden = false;
+      element('your-name').textContent = name;
+      choiceControls(); viewport();
+      nameInput.blur();
+      messageInput.disabled = false; sendButton.disabled = false;
+      updatePresence(); status('');
+      if (guest) savedChat?.start(guest);
+    },
+    enter: message => {
+      if (attempt !== generation || message.id === id) return;
+      const previous = actors.get(message.id);
+      if (previous) scene.remove(previous);
+      const recipe = /^(shape|shape2)-([a-f0-9]{1,8})$/.exec(message.character);
+      if (!recipe) { fatal = true; network?.close(); stopMoving(); status('Обнови страницу: в мире появились новые формы.', true); retry.textContent = 'Перезагрузить'; return; }
+      const actorSeed = Number.parseInt(recipe[2]!, 16) >>> 0;
+      const actor = scene.makeAvatar(actorSeed, message.name, recipe[1] === 'shape' ? 1 : 2);
+      actor.x = actor.tx = message.x; actor.y = actor.ty = message.y;
+      actors.set(message.id, actor); updatePresence();
+    },
+    snapshot: message => {
+      if (attempt !== generation) return;
+      for (const entity of message.ents) {
+        const actor = actors.get(entity.id);
+        if (actor) { actor.tx = entity.x; actor.ty = entity.y; }
+      }
+    },
+    leave: message => {
+      if (attempt !== generation) return;
+      const actor = actors.get(message.id);
+      if (actor) scene.remove(actor);
+      actors.delete(message.id); updatePresence();
+    },
+    chat: message => { if (!persistent && attempt === generation) appendMessage(message.name, message.text); },
+    close: () => { clearTimeout(timeout); if (attempt === generation && !fatal) loseConnection(); },
+  });
+}
+
+element<HTMLFormElement>('entry-form').addEventListener('submit', event => { event.preventDefault(); join(); });
+retry.addEventListener('click', () => { if (fatal) location.reload(); else join(); });
+element<HTMLFormElement>('message-form').addEventListener('submit', event => {
+  event.preventDefault();
+  if (persistent) return;
+  const text = messageInput.value.trim();
+  if (!text || !online || sendButton.disabled || pending) return;
+  pending = text;
+  sendButton.disabled = true;
+  delivery.textContent = 'Отправляется…';
+  network?.sendChat(text);
+  deliveryTimer = window.setTimeout(() => {
+    pending = '';
+    sendButton.disabled = !online;
+    delivery.textContent = 'Доставка не подтверждена. Повторная отправка может создать дубликат.';
+  }, 5000);
+});
+
+canvas.addEventListener('webglcontextlost', event => {
+  savedChat?.stop();
+  event.preventDefault(); fatal = true; online = false; input.clear(); network?.close();
+  messageInput.disabled = true; sendButton.disabled = true;
+  status('Графическая сцена остановилась. Для восстановления перезагрузи страницу.', true);
+  retry.textContent = 'Перезагрузить';
+});
+
+let lastTime = performance.now();
+let lastSend = 0;
+function frame(now: number) {
+  const dt = Math.min((now - lastTime) / 1000, .05);
+  lastTime = now;
+  const direction = input.direction();
+  const movement = scene.movement(direction.x, direction.y);
+  me.tx = Math.min(bounds.maxX, Math.max(bounds.minX, me.tx + movement.x * 180 * dt));
+  me.ty = Math.min(bounds.maxY, Math.max(bounds.minY, me.ty + movement.y * 180 * dt));
+  if (online && now - lastSend >= 1000 / 15) {
+    network?.sendInput(Math.round(me.tx), Math.round(me.ty)); lastSend = now;
+  }
+  if (!fatal && !document.hidden) scene.render([me, ...actors.values()], me, dt, reducedMotion.matches);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// Never connect this page to the legacy production world, even if served there.
+try {
+  const response = await fetch('/preview-info', { signal: AbortSignal.timeout(5000) });
+  const info = await response.json();
+  if (!response.ok || info.mode !== 'evolving-preview') throw new Error('wrong server');
+  persistent = info.persistent === true;
+  if (persistent) {
+    if (info.apiVersion !== 2) throw new Error('incompatible preview');
+    savedChat = savedConversation(appendMessage, () => { if (conversation.hidden) unread(true); });
+    element('entry-note').textContent = 'Гость закреплён за этим браузером на 30 дней. Разговор сохраняется и доступен участникам и оператору пробы; автоудаления пока нет. Эволюция не подключена.';
+    element('history-status').textContent = 'Сохранённый разговор загрузится после входа.';
+    try {
+      guest = await previewRequest('session');
+      nameInput.value = guest!.name; nameInput.readOnly = true;
+      seed = guest!.seed; avatarVersion = guest!.avatarVersion; showLook();
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== '401') throw error;
+    }
+  }
+  verified = true;
+  joinButton.disabled = false;
+  choiceControls(); viewport();
+} catch {
+  fatal = true;
+  status(persistent ? 'Не удалось загрузить гостя. Проверь сервер пробы и перезагрузи страницу.' : 'Нужен отдельный сервер пробной сцены. Обычный сервер игры не подключён.', persistent);
+  if (persistent) retry.textContent = 'Перезагрузить';
+}
+
+window.addEventListener('pagehide', () => { generation++; savedChat?.stop(); network?.close(); scene.dispose(); });
+window.addEventListener('pageshow', event => { if (event.persisted) location.reload(); });

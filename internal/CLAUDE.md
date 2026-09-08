@@ -2,6 +2,8 @@
 
 Go authoritative game engine: a single-goroutine world sim behind a WebSocket server, with a binary wire protocol and optional Postgres persistence.
 
+Local-only 3D slice: `world.NewEmptyPreview()` reuses the sim without a legacy Store, rejects legacy action commands and disables landmark collision. Explicit `PREVIEW_DATABASE_URL` adds `store.Preview` + `server.NewPersistentPreview` for cookie-owned guests and durable HTTP chat; `JoinPreview` accepts verified profiles and positions. Only `cmd/evolving-preview` selects this behavior; default `NewSim`/`server.New` are unchanged. Read `docs/project-map/evolving-preview.md` before extending it.
+
 ## Public surface
 - `server.New(sim, BuildInfo) *Server` → `.Handler() http.Handler` (mux: `/healthz`, `/version`, `/ws`, `/`).
 - `world.NewSim(store) *Sim`; `.Run(ctx)` (blocks, run in a goroutine); `.Join/.Input/.Leave/.Ping`; `.Grab/.Hold/.Drop` (god-hand: grab a critter by id, hold/drop at x,y); `.Done()`.

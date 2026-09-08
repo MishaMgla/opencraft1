@@ -1,5 +1,7 @@
 # client (web)
 
+The legacy client below is unchanged by the separate [local evolving-world preview](evolving-preview.md). That preview uses `web/evolving/` and `web/src/evolving/`, pinned Three.js served locally, and shared `net.ts`/`wire.ts` for movement. Its opt-in persistence mode uses guest cookies plus `conversation.ts` for HTTP history/idempotent sends; memory-only chat remains available. It does not use the legacy renderer or connect without a preview-server mode check. Three.js is a runtime dependency for this preview only; the legacy page still uses PixiJS from CDN.
+
 TypeScript source compiled in-place to ESM by `tsc` (no bundler). Emitted `.js` files live beside their `.ts` sources and are gitignored build artifacts. Run `cd web && npm run build` before serving locally (the Go server serves `web/` from disk). PixiJS v8 from CDN (the jsdelivr prebuilt ESM bundle, `https://cdn.jsdelivr.net/npm/pixi.js@8.19.0/dist/pixi.min.mjs` — esm.sh was found to break Pixi v8 extension registration during E2E testing). renders an isometric view of the shared world. The shipped client has **zero runtime npm dependencies**; devDeps are build-time only (`typescript`, `@types/node`, `pixi.js` types, `@vercel/node` types, Playwright).
 
 ## modules (`web/src/`)

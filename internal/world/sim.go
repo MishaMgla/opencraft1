@@ -3,6 +3,7 @@ package world
 import (
 	"context"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -134,10 +135,11 @@ type paintedTile struct {
 // off the sim goroutine (in Join); paint writes run through an ordered async
 // queue. A nil store disables persistence.
 type Sim struct {
-	cmds     chan any
-	store    Store
-	done     chan struct{} // closed when Run returns (after the shutdown flush)
-	paintOps chan SavedTile
+	cmds         chan any
+	store        Store
+	emptyPreview bool          // construction-only; legacy NewSim behavior stays unchanged
+	done         chan struct{} // closed when Run returns (after the shutdown flush)
+	paintOps     chan SavedTile
 }
 
 type cmdJoin struct {
@@ -195,6 +197,14 @@ func NewSim(store Store) *Sim {
 	return &Sim{cmds: make(chan any, 1024), store: store, done: make(chan struct{}), paintOps: make(chan SavedTile, 8192)}
 }
 
+// NewEmptyPreview reuses movement, presence and chat without legacy mechanics
+// or persistence. It deliberately cannot receive a production Store.
+func NewEmptyPreview() *Sim {
+	s := NewSim(nil)
+	s.emptyPreview = true
+	return s
+}
+
 // Done is closed once Run has returned, i.e. after the synchronous shutdown
 // player flush and queued paint writes complete. Callers wait on it before
 // closing the Store / exiting so the final persist isn't cut short.
@@ -226,7 +236,33 @@ func (s *Sim) JoinWithRole(name string, role byte, out chan []byte) (uint32, [][
 }
 
 func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan []byte, snap chan []byte) (uint32, [][]byte) {
-	var saved *SavedPlayer
+	return s.joinProfile(name, role, character, nil, out, snap)
+}
+
+// JoinPreview restores a server-authenticated profile without name-keyed I/O.
+// It cannot be used to inject saved state into the legacy world.
+func (s *Sim) JoinPreview(name, character string, saved *SavedPlayer, out, snap chan []byte) (uint32, [][]byte) {
+	if !s.emptyPreview {
+		panic("JoinPreview requires NewEmptyPreview")
+	}
+	return s.joinProfile(name, wire.RolePulse, character, saved, out, snap)
+}
+
+func (s *Sim) joinProfile(name string, role byte, character string, saved *SavedPlayer, out chan []byte, snap chan []byte) (uint32, [][]byte) {
+	if s.emptyPreview {
+		prefix := "shape-"
+		if strings.HasPrefix(character, "shape2-") {
+			prefix = "shape2-"
+		}
+		seed, err := strconv.ParseUint(strings.TrimPrefix(character, prefix), 16, 32)
+		if err != nil {
+			seed = 1
+			prefix = "shape-"
+		}
+		character = prefix + strconv.FormatUint(seed, 16)
+	} else {
+		character = validCharacter(character)
+	}
 	if s.store != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 		sp, ok, err := s.store.Load(ctx, name)
@@ -239,7 +275,7 @@ func (s *Sim) JoinWithProfile(name string, role byte, character string, out chan
 		}
 	}
 	reply := make(chan joinResult, 1)
-	s.cmds <- cmdJoin{name: name, role: validRole(role), character: validCharacter(character), out: out, snap: snap, saved: saved, reply: reply}
+	s.cmds <- cmdJoin{name: name, role: validRole(role), character: character, out: out, snap: snap, saved: saved, reply: reply}
 	r := <-reply
 	return r.id, r.initial
 }
@@ -879,17 +915,28 @@ func (s *Sim) Run(ctx context.Context) {
 			s.flushAsync(players)
 
 		case c := <-s.cmds:
+			if s.emptyPreview {
+				switch c.(type) {
+				case cmdJoin, cmdInput, cmdChat, cmdPing, cmdLeave:
+				default:
+					continue // fail closed even when a client sends a legacy action
+				}
+			}
 			switch m := c.(type) {
 			case cmdJoin:
 				id := nextID
 				nextID++
 				px, py := SpawnCoord, SpawnCoord
+				if s.emptyPreview {
+					px += int16((id-1)%5) * 96
+					py += int16(((id-1)/5)%5) * 96
+				}
 				color := colorFor(id)
 				if m.saved != nil {
 					px, py = clamp(m.saved.X), clamp(m.saved.Y)
 					color = m.saved.Color
 				}
-				if isTempleTile(paintTileFor(px, py)) {
+				if !s.emptyPreview && isTempleTile(paintTileFor(px, py)) {
 					px, py = SpawnCoord, SpawnCoord
 				}
 				p := &player{id: id, x: px, y: py, name: m.name, character: m.character, color: color, role: m.role, out: m.out, snap: m.snap, lastPaintTile: paintTileFor(px, py), alive: true}
@@ -927,7 +974,7 @@ func (s *Sim) Run(ctx context.Context) {
 					continue // dead players are frozen at their death spot until respawn
 				}
 				nx, ny := clamp(m.x), clamp(m.y)
-				if templeBlocksMovement(p.x, p.y, nx, ny) {
+				if !s.emptyPreview && templeBlocksMovement(p.x, p.y, nx, ny) {
 					continue
 				}
 				grid.Move(p.id, p.x, p.y, nx, ny)

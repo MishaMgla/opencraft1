@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "",
+  "redirects": [
+    { "source": "/:path*", "destination": "https://opencraft1.com/", "permanent": false }
+  ],
   "rewrites": [
     { "source": "/config.json", "destination": "/api/config" }
   ],

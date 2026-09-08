@@ -1,0 +1,16 @@
+**
+!go.mod
+!go.sum
+!internal/
+!internal/**
+!cmd/
+!cmd/evolving-preview/
+!cmd/evolving-preview/**
+!web/
+!web/package.json
+!web/package-lock.json
+!web/tsconfig.json
+!web/src/
+!web/src/**
+!web/evolving/
+!web/evolving/**

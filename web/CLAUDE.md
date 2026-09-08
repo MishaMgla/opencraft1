@@ -2,6 +2,8 @@
 
 Browser multiplayer client: TypeScript, no bundler, PixiJS isometric renderer talking to the Go engine over a binary WebSocket protocol.
 
+An isolated 3D preview lives in `evolving/` + `src/evolving/`, with locally served pinned Three.js and shared `net.ts`/`wire.ts`. With its explicit database mode, `conversation.ts` reads committed cursor history and sends idempotent chat over HTTP; guest ownership is a server cookie, not localStorage. Memory-only mode retains ephemeral chat. The legacy entrypoint is unchanged; no evolution yet. Read `docs/project-map/evolving-preview.md` for setup and verification.
+
 ## Public surface
 - `index.html` loads `src/main.js` as an ES module; name-form submit calls `start(name)`.
 - Runtime WS endpoint comes from `GET /config.json` (`{wsUrl}`); falls back to same-origin `ws(s)://<host>/ws`.

@@ -1,5 +1,7 @@
 # server (Go engine)
 
+Separate opt-in entrypoint: `cmd/evolving-preview` uses `world.NewEmptyPreview()` without a legacy Store; its allowlist permits only presence, movement and chat, with legacy obstacles disabled. With explicit `PREVIEW_DATABASE_URL`, `store.Preview` and `server.NewPersistentPreview` add cookie-owned guests, committed HTTP chat and final position saves in a dedicated local database; `JoinPreview` restores the verified profile without name-keyed access. The ordinary `NewSim(store)`/`server.New` and production entrypoint are unchanged. See [preview setup and limits](evolving-preview.md).
+
 the authoritative real-time engine. one process, one binary.
 
 ## packages

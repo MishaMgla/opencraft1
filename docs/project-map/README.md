@@ -12,8 +12,9 @@ navigation hub for AI agents. mirrors the source tree. each leaf doc describes o
 
 For the evolving-world concept, start with `../prd/evolving-world-product-plan.md`.
 It routes to the player scenario and visual/UX brief and distinguishes confirmed
-direction from proposals. This is planning documentation, not shipped behavior;
-the original vision and subsystem docs remain context for the existing build.
+direction from proposals. The first implemented, separately hosted 3D slice is documented
+in `evolving-preview.md`; the full evolving world is not shipped behavior.
+The original vision and subsystem docs remain context for the existing build.
 
 ## tree
 
@@ -23,6 +24,7 @@ docs/project-map/
   glossary.md            # project-specific terms (empty until the domain emerges)
   server.md              # Go engine (cmd + internal packages)
   client.md              # web client (web/ modules)
+  evolving-preview.md    # isolated 3D scene, hosted test and current limits
 ```
 
 ## task → doc
@@ -32,6 +34,8 @@ docs/project-map/
 | repo overview | `README.md` |
 | terms / acronyms | `glossary.md` |
 | evolving-world plan / current planning context | `../prd/evolving-world-product-plan.md` |
+| evolving-world implementation sequence / reuse and readiness | `../prd/evolving-world-implementation-plan.md` |
+| isolated evolving-world 3D preview / hosted test and local checks | `evolving-preview.md` |
 | evolving-world scenario / evolution lifecycle | `../prd/evolving-world-first-session.md` |
 | evolving-world low-poly 3D / generative forms / UI | `../prd/evolving-world-visual-ux.md` |
 | original product vision | `../vision.md` |
@@ -47,6 +51,14 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-09-09 (implementation): versioned procedural bodies, atomic one-time choice for legacy guests, compact/expanded chat with preserved drafts and reading position. API v2 guards old clients; added storage and browser acceptance checks. Release status in `../deploy.md`.
+- 2026-09-08 (production entry fix): connect opencraft1.com directly to Railway with HTTPS, serve the game at `/`, remove shared Basic auth, keep guest ownership/CSRF checks; update the hosted smoke check to reject redirects/password prompts.
+- 2026-09-08 (production): deploy the evolving 3D scene to the existing Railway production service with a new private database; redirect opencraft1.com to it. Preserve legacy/preview data, stop the preview app, disconnect old Railway GitHub auto-deploy; current runbook and rollback in `../deploy.md`.
+
+- 2026-09-08 (separate test deployment): user authorized remote testing; deploy preview app and private PostgreSQL in Railway `evolving-preview`, with HTTPS/password gate and guest-authenticated sockets. Production unchanged; local preview processes stopped. Runbook in `evolving-preview.md`.
+- 2026-09-08 (local implementation, not deployed): add isolated PostgreSQL guest ownership, idempotent committed chat, numeric cursor history and disconnect/graceful-shutdown position saves; document browser/outage/restart checks and remaining limits.
+- 2026-09-07 (local implementation, not deployed): add isolated empty-preview sim/entrypoint, locally served procedural Three.js avatars, keyboard/stick movement and live chat. Reuse existing transport; disable legacy actions and obstacles. At this initial slice there was no durable history/auth/evolution.
+- 2026-09-07 (planning only): add one consolidated evolving-world implementation plan grounded in current client, server, storage and agent workflow; separate proposed reuse, staged acceptance and release prerequisites. No code, infrastructure or deployment changes.
 - 2026-09-06 (planning only): add evolving-world product plan, player scenario and low-poly 3D visual/UX brief with phone wireframes; link the planning context for agents and scope the prior art direction to the existing build. No gameplay implementation or deployment.
 - 2026-07-15 (follow-up): landmarks pass 2 — the four free-projection buildings read alien (wrong axonometry, inconsistent scale), so the set is reduced to ONE guided building: `gen-landmark.mjs` now composes a 2:1 iso base-diamond + player-sprite scale reference and generates img2img, locking the projection to the game camera and the door to player height; renderer keeps the crop aspect (no square squash).
 - 2026-07-15: replace the blurry 3×3 temple with four **soviet-eclectic landmarks** in the slop house style (2×2 panelka-deity with arms from windows on the old temple spot, 2×1 panelka-temple with onion dome + space mosaic, 1×1 carpet-facade GASTRONOM khrushchevka-altar, 1×1 kiosk/panelka/stalinka totem), generated at native res via new `gen-landmark.mjs` (transparent, no baked ground — fixes the upscale blur); server + client generalize the single temple footprint to a shared `landmarks` table (collision/paint/fire/bomb/critters unchanged in behavior).

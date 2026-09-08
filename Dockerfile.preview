@@ -1,0 +1,26 @@
+FROM node:24-alpine AS client
+WORKDIR /src/web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --ignore-scripts --no-audit --no-fund
+COPY web/tsconfig.json ./
+COPY web/src ./src
+RUN npm run build
+
+FROM golang:1.25-alpine AS engine
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY internal ./internal
+COPY cmd/evolving-preview ./cmd/evolving-preview
+RUN CGO_ENABLED=0 go build -trimpath -o /out/preview ./cmd/evolving-preview
+
+FROM alpine:3.20
+WORKDIR /app
+RUN addgroup -S preview && adduser -S -G preview preview
+COPY --from=engine /out/preview /app/preview
+COPY web/evolving ./web/evolving
+COPY --from=client /src/web/src/evolving/*.js ./web/src/evolving/
+COPY --from=client /src/web/src/net.js /src/web/src/wire.js ./web/src/
+COPY --from=client /src/web/node_modules/three/build/three.module.js /src/web/node_modules/three/build/three.core.js ./web/node_modules/three/build/
+USER preview
+CMD ["/app/preview"]

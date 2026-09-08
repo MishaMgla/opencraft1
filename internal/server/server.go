@@ -7,17 +7,27 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/coder/websocket"
 
+	"opencraft1/internal/store"
 	"opencraft1/internal/wire"
 	"opencraft1/internal/world"
 )
 
 type Server struct {
-	sim        *world.Sim
-	buildInfo  BuildInfo
-	acceptOpts *websocket.AcceptOptions
+	sim                *world.Sim
+	buildInfo          BuildInfo
+	acceptOpts         *websocket.AcceptOptions
+	preview            *store.Preview
+	previewOrigin      string
+	guestMu            sync.Mutex
+	guests             map[string]bool
+	previewStop        chan struct{}
+	previewClosing     bool
+	previewConnections sync.WaitGroup
 }
 
 type healthResponse struct {
@@ -53,6 +63,11 @@ func acceptOptions() *websocket.AcceptOptions {
 
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
+	if s.preview != nil {
+		mux.HandleFunc("/evolving-api/session", s.previewSession)
+		mux.HandleFunc("/evolving-api/messages", s.previewMessages)
+		mux.HandleFunc("/evolving-api/appearance", s.previewAppearance)
+	}
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		body, err := json.Marshal(healthResponse{Status: "ok"})
 		if err != nil {
@@ -87,6 +102,38 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
+	var guest store.Guest
+	if s.preview != nil {
+		var ok bool
+		guest, ok = s.previewGuest(w, r)
+		if !ok {
+			return
+		}
+		s.guestMu.Lock()
+		if s.previewClosing {
+			s.guestMu.Unlock()
+			http.Error(w, "preview stopping", http.StatusServiceUnavailable)
+			return
+		}
+		busy := s.guests[guest.ID]
+		if !busy {
+			s.guests[guest.ID] = true
+			s.previewConnections.Add(1)
+		}
+		s.guestMu.Unlock()
+		if busy {
+			http.Error(w, "guest already connected", http.StatusConflict)
+			return
+		}
+		defer s.previewConnections.Done()
+		defer func() { s.guestMu.Lock(); delete(s.guests, guest.ID); s.guestMu.Unlock() }()
+		// A choice may have committed between authentication and reservation.
+		refreshed, valid := s.previewGuest(w, r)
+		if !valid {
+			return
+		}
+		guest = refreshed
+	}
 	c, err := websocket.Accept(w, r, s.acceptOpts)
 	if err != nil {
 		log.Printf("ws accept: %v", err)
@@ -97,6 +144,15 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
+	if s.preview != nil {
+		go func() {
+			select {
+			case <-s.previewStop:
+				cancel()
+			case <-ctx.Done():
+			}
+		}()
+	}
 
 	// First frame must be Hello.
 	_, data, err := c.Read(ctx)
@@ -110,7 +166,28 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	out := make(chan []byte, 64)
 	snap := make(chan []byte, 1)
-	id, initial := s.sim.JoinWithProfile(msg.Name, msg.Role, msg.Character, out, snap)
+	var id uint32
+	var initial [][]byte
+	var px, py int16
+	if s.preview != nil {
+		var saved *world.SavedPlayer
+		if guest.PositionSaved {
+			saved = &world.SavedPlayer{X: guest.X, Y: guest.Y}
+		}
+		id, initial = s.sim.JoinPreview(guest.Name, previewCharacter(guest), saved, out, snap)
+		// The first frame is Welcome; use its validated spawn, including fresh
+		// guests' staggered positions. No database work runs on the sim tick.
+		px, py = previewSpawn(initial[0])
+		defer func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			if err := s.preview.SavePosition(ctx, guest.ID, px, py); err != nil {
+				log.Print("preview position not saved")
+			}
+		}()
+	} else {
+		id, initial = s.sim.JoinWithProfile(msg.Name, msg.Role, msg.Character, out, snap)
+	}
 	defer s.sim.Leave(id)
 
 	// Deliver the joining player's initial state (Welcome + painted world +
@@ -157,6 +234,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		}
 		switch m.Type {
 		case wire.CInput:
+			if s.preview != nil {
+				px, py = max(0, min(m.X, world.WorldSize-1)), max(0, min(m.Y, world.WorldSize-1))
+			}
 			s.sim.Input(id, m.X, m.Y)
 		case wire.CPaint:
 			s.sim.Paint(id)
@@ -167,7 +247,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 		case wire.CBomb:
 			s.sim.Bomb(id)
 		case wire.CChat:
-			s.sim.Chat(id, m.Text)
+			if s.preview == nil {
+				s.sim.Chat(id, m.Text)
+			} // durable chat uses the authenticated HTTP path
 		case wire.CPing:
 			s.sim.Ping(id, m.T)
 		case wire.CGrab:
