@@ -83,6 +83,16 @@ try {
   assert.equal(guest.appearanceChoicePending, false);
   run('click', '#open-chat');
   run('wait', '--fn', 'document.querySelector("#messages [data-message-id]") !== null');
+  assert.deepEqual(evaluate(`({background:getComputedStyle(document.querySelector('#conversation')).backgroundColor,
+    border:getComputedStyle(document.querySelector('#conversation')).borderWidth,
+    height:document.querySelector('#conversation').getBoundingClientRect().height <= 150,
+    world:document.querySelector('#world').getBoundingClientRect().height === innerHeight,
+    header:getComputedStyle(document.querySelector('#conversation header')).display,
+    author:getComputedStyle(document.querySelector('#messages .author')).display,
+    date:getComputedStyle(document.querySelector('#messages time')).display,
+    input:getComputedStyle(document.querySelector('#message')).fontSize,
+    targets:['send','expand-chat','close-chat'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();return r.width>=44&&r.height>=44})})`),
+    {background:'rgba(0, 0, 0, 0)',border:'0px',height:true,world:true,header:'none',author:'inline',date:'none',input:'16px',targets:true});
   assert.deepEqual(evaluate(`({controls:document.querySelector('#controls').hidden,
     keyboard:document.activeElement.id === 'message',overflow:document.documentElement.scrollWidth>innerWidth,
     overlap:document.querySelector('#conversation').getBoundingClientRect().bottom > document.querySelector('#stick').getBoundingClientRect().top})`),
@@ -99,17 +109,25 @@ try {
   assert.equal(evaluate('document.querySelector("#controls").hidden'), true);
   run('click', '#expand-chat');
   assert.equal(evaluate('document.querySelector("#conversation").classList.contains("expanded")'), true);
+  assert.equal(evaluate('getComputedStyle(document.querySelector("#messages time")).display'), 'inline');
+  run('screenshot', '/tmp/opencraft-ui-history.png');
   run('eval', 'document.querySelector("#messages").scrollTop = 75');
-  const scroll = evaluate('document.querySelector("#messages").scrollTop');
+  const readingPosition = () => evaluate(`(() => {
+    const list=document.querySelector('#messages'), top=list.getBoundingClientRect().top;
+    const line=[...list.children].find(line=>line.getBoundingClientRect().bottom>top);
+    return {id:line.dataset.messageId,offset:Math.round(line.getBoundingClientRect().top-top)};
+  })()`);
+  const reading = readingPosition();
   run('click', '#close-chat');
+  assert.equal(evaluate('document.activeElement.id'), 'open-chat');
   run('click', '#open-chat');
   assert.equal(evaluate('document.querySelector("#message").value'), 'Незавершённый текст');
-  assert.ok(Math.abs(evaluate('document.querySelector("#messages").scrollTop') - scroll) < 2);
+  assert.deepEqual(readingPosition(), reading);
   const first = evaluate('document.querySelector("#messages").firstElementChild.dataset.messageId');
   assert.equal(post(), 200);
   run('wait', '--fn', '!document.querySelector("#latest").hidden');
   assert.equal(evaluate('document.querySelector("#messages").firstElementChild.dataset.messageId'), first);
-  assert.ok(Math.abs(evaluate('document.querySelector("#messages").scrollTop') - scroll) < 2);
+  assert.deepEqual(readingPosition(), reading);
   run('set', 'viewport', '320', '568');
   assert.equal(evaluate('document.documentElement.scrollWidth>innerWidth'), false);
   run('screenshot', '/tmp/opencraft-ui-small.png');
@@ -124,7 +142,11 @@ try {
   run('wait', '--fn', 'document.querySelector("#entry").hidden');
   run('click', '#open-chat');
   assert.equal(evaluate('document.querySelector("#message").value'), 'Незавершённый текст');
-  console.log('PASS: unobstructed entry at four viewports, connected leg pivots, five body topologies, deterministic legacy form, previous choice, fixed profile, phone/desktop chat, input focus, draft/scroll preservation and return.');
+  run('fill', '#message', 'Проверка компактной отправки');
+  run('click', '#send');
+  run('wait', '--fn', 'document.querySelector("#message").value === "" && document.querySelector("#delivery").textContent === "Сохранено в разговоре."');
+  assert.equal(evaluate('document.activeElement.id'), 'message');
+  console.log('PASS: entry and body regressions; transparent compact chat, fixed camera viewport, readable input, touch targets, expanded dates, focus return, draft/message-anchor preservation, guest return and send.');
 } catch (error) {
   console.error(run('snapshot', '-i'));
   console.error(run('eval', 'document.querySelector("#connection-text").textContent'));

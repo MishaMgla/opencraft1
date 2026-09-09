@@ -49,18 +49,20 @@
     </button>
     <p id="move-help" class="note">WASD / стрелки — идти</p>
     <div class="conversation-control">
-      <button id="open-chat" type="button" aria-expanded="false" aria-controls="conversation">Разговор <span id="unread-dot" hidden aria-hidden="true"></span></button>
+      <button id="open-chat" type="button" aria-expanded="false" aria-controls="conversation">Чат <span id="unread-dot" hidden aria-hidden="true"></span></button>
     </div>
   </div>
   <section id="conversation" aria-labelledby="conversation-title" hidden>
-    <header><h2 id="conversation-title">Разговор</h2><div><button id="expand-chat" type="button" aria-expanded="false" aria-controls="messages">История</button><button id="close-chat" type="button" aria-label="Закрыть разговор">×</button></div></header>
+    <header><h2 id="conversation-title">Разговор</h2></header>
     <p id="history-status" class="note" role="status">Только это посещение. Сообщения пока не сохраняются.</p>
     <div id="history-controls" hidden><button id="earlier" type="button">Раньше</button><button id="latest" type="button" hidden>К свежим</button></div>
     <ol id="messages" tabindex="0" aria-label="Сообщения разговора"><li id="empty-chat" class="note">Здесь ещё никто не написал.</li></ol>
     <form id="message-form">
       <label class="sr-only" for="message">Сообщение</label>
       <input id="message" name="message" maxlength="200" autocomplete="off" placeholder="Сообщение…" disabled>
-      <button id="send" type="submit" disabled>Отправить</button>
+      <button id="send" type="submit" aria-label="Отправить" title="Отправить" disabled>↑</button>
+      <button id="expand-chat" type="button" aria-label="Открыть историю" title="Открыть историю" aria-expanded="false" aria-controls="messages">≡</button>
+      <button id="close-chat" type="button" aria-label="Закрыть разговор" title="Закрыть разговор">×</button>
     </form>
     <p id="delivery" class="note" role="status"></p>
   </section>

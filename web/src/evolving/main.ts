@@ -57,6 +57,7 @@ let pending = '';
 let deliveryTimer = 0;
 let expanded = false;
 let chatScroll = { top: 0, bottom: true };
+let chatAnchor: { line: Element; offset: number } | undefined;
 const input = movementInput(element<HTMLButtonElement>('stick'), element('stick-knob'),
   () => online && !expanded && document.activeElement !== messageInput && document.activeElement !== messages && !document.hidden);
 
@@ -73,10 +74,23 @@ function stopMoving() {
   me.tx = me.x; me.ty = me.y;
 }
 function rememberScroll() {
-  if (!conversation.hidden) chatScroll = { top: messages.scrollTop, bottom: messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40 };
+  if (!conversation.hidden) {
+    chatScroll = { top: messages.scrollTop, bottom: messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40 };
+    const top = messages.getBoundingClientRect().top;
+    const line = [...messages.children].find(line => line.getBoundingClientRect().bottom > top);
+    chatAnchor = line ? { line, offset: line.getBoundingClientRect().top - top } : undefined;
+  }
   conversation.dataset.reading = String(!chatScroll.bottom);
 }
-function restoreScroll() { messages.scrollTop = chatScroll.bottom ? messages.scrollHeight : chatScroll.top; }
+function restoreScroll() {
+  messages.scrollTop = chatScroll.bottom ? messages.scrollHeight : chatScroll.top;
+  // The same message stays in view when widths or timestamp visibility change.
+  if (!chatScroll.bottom && chatAnchor?.line.isConnected) {
+    const line = chatAnchor.line.getBoundingClientRect();
+    const offset = Math.max(chatAnchor.offset, 1 - line.height);
+    messages.scrollTop += line.top - messages.getBoundingClientRect().top - offset;
+  }
+}
 function unread(value: boolean) {
   element('unread-dot').hidden = !value;
   openChat.setAttribute('aria-label', value ? 'Разговор: новые сообщения' : 'Открыть разговор');
@@ -86,18 +100,20 @@ function setChat(open: boolean) {
   conversation.hidden = !open;
   if (!open) expanded = false;
   conversation.classList.toggle('expanded', expanded);
-  expandChat.textContent = expanded ? 'Уменьшить' : 'История';
+  expandChat.textContent = expanded ? '−' : '≡';
+  expandChat.title = expanded ? 'Уменьшить историю' : 'Открыть историю';
+  expandChat.setAttribute('aria-label', expandChat.title);
   expandChat.setAttribute('aria-expanded', String(expanded));
   openChat.hidden = open;
   openChat.setAttribute('aria-expanded', String(open));
+  if (!open) messageInput.blur();
+  viewport();
   if (open) {
     unread(false);
     closeChat.focus({ preventScroll: true });
   } else {
-    messageInput.blur();
     openChat.focus({ preventScroll: true });
   }
-  viewport();
   if (open) restoreScroll();
 }
 openChat.addEventListener('click', () => setChat(true));
@@ -107,7 +123,9 @@ expandChat.addEventListener('click', () => {
   expanded = !expanded;
   if (expanded) stopMoving();
   conversation.classList.toggle('expanded', expanded);
-  expandChat.textContent = expanded ? 'Уменьшить' : 'История';
+  expandChat.textContent = expanded ? '−' : '≡';
+  expandChat.title = expanded ? 'Уменьшить историю' : 'Открыть историю';
+  expandChat.setAttribute('aria-label', expandChat.title);
   expandChat.setAttribute('aria-expanded', String(expanded));
   viewport(); restoreScroll();
 });
@@ -132,8 +150,7 @@ function viewport() {
   conversation.style.maxHeight = `${(view?.height ?? innerHeight) * .78}px`;
   entry.style.bottom = `${inset}px`;
   const top = entry.hidden ? 0 : entry.querySelector('.entry-copy')!.getBoundingClientRect().bottom + 8;
-  const available = !entry.hidden ? element('entry-form').getBoundingClientRect().top
-    : !conversation.hidden && innerWidth <= 600 ? conversation.getBoundingClientRect().top : innerHeight;
+  const available = entry.hidden ? innerHeight : element('entry-form').getBoundingClientRect().top;
   element('world').style.top = `${top}px`;
   element('world').style.height = `${Math.max(1, available - top)}px`;
 }

@@ -51,6 +51,7 @@ docs/project-map/
 
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
+- 2026-09-09: replace the compact chat panel with a transparent text overlay and one composer/control row; keep the game viewport fixed, dates in expanded history, accessible touch targets and message-anchored reading position. Runtime/checks in `evolving-preview.md`, release record in `../deploy.md`.
 - 2026-09-09 (production, main `a323b38`): simplify the avatar chooser, collapse storage information, center/fit preview bodies between header and form, repair detached body joints without changing saved seeds or choice rights. Four-viewport/five-family browser regression, production checks and CI passed; deployment `b720ecd4-de34-4827-a474-1f638a10c26d`, release record in `../deploy.md`.
 - 2026-09-09 (production, main `c391533`): versioned procedural bodies, atomic one-time choice for legacy guests, compact/expanded chat with preserved drafts and reading position. API v2 guards old clients; local checks, GitHub CI and hosted browser/legacy-transition checks passed. Deployment `0be1ef35-2136-468e-b3a6-1c1ebf41e33b`; release and rollback limits in `../deploy.md`.
 - 2026-09-08 (production entry fix): connect opencraft1.com directly to Railway with HTTPS, serve the game at `/`, remove shared Basic auth, keep guest ownership/CSRF checks; update the hosted smoke check to reject redirects/password prompts.
