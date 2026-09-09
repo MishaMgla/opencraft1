@@ -27,8 +27,8 @@ label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 9px
 .entry-actions { display: flex; gap: 12px; margin: 12px 0; }
 .entry-actions button { flex: 1; }
 #previous-look { flex: 0; padding-inline: .65rem; }
-#appearance-note { margin-bottom: 8px; color: var(--ink); }
-#keep-look { min-height: 44px; padding: .4rem 0; margin-bottom: 8px; border-color: transparent; background: transparent; color: var(--accent); font-size: 13px; }
+#entry-info summary { cursor: pointer; width: fit-content; min-height: 44px; padding-block: 12px; }
+#entry-info p { max-height: 20dvh; overflow-y: auto; }
 #join { background: var(--accent); color: #101510; border-color: var(--accent); }
 #join:hover:not(:disabled) { background: #b0c0aa; }
 .note { color: var(--muted); font-size: 12px; }
@@ -74,5 +74,5 @@ h2 { font-size: 16px; font-weight: 500; margin: 0; }
   .entry-actions { gap: 6px; }
   .entry-actions button { padding-inline: .55rem; font-size: 14px; }
 }
-@media (max-height: 560px) { .entry-copy { padding-top: 0; } .entry-copy .eyebrow { margin-bottom: 8px; } .entry-copy > p:last-child { display: none; } #entry-form { margin-right: 0; max-width: 300px; } .entry-copy { margin-left: 0; } #conversation { height: 85dvh; } }
+@media (max-height: 560px) { #entry { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom)); } .entry-copy { padding-top: 0; } .entry-copy .eyebrow { display: none; } .entry-copy > p:last-child { display: none; } h1 { margin-bottom: 0; } #conversation { height: 85dvh; } }
 @media (prefers-reduced-motion: reduce) { button { transition: none; } }

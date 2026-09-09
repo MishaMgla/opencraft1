@@ -13,7 +13,6 @@ const nameInput = element<HTMLInputElement>('name');
 const joinButton = element<HTMLButtonElement>('join');
 const reroll = element<HTMLButtonElement>('reroll');
 const previousLook = element<HTMLButtonElement>('previous-look');
-const keepLook = element<HTMLButtonElement>('keep-look');
 const expandChat = element<HTMLButtonElement>('expand-chat');
 const controls = element('controls');
 const conversation = element('conversation');
@@ -132,10 +131,13 @@ function viewport() {
   document.documentElement.style.setProperty('--keyboard-inset', `${inset}px`);
   conversation.style.maxHeight = `${(view?.height ?? innerHeight) * .78}px`;
   entry.style.bottom = `${inset}px`;
+  const top = entry.hidden ? 0 : entry.querySelector('.entry-copy')!.getBoundingClientRect().bottom + 8;
   const available = !entry.hidden ? element('entry-form').getBoundingClientRect().top
     : !conversation.hidden && innerWidth <= 600 ? conversation.getBoundingClientRect().top : innerHeight;
-  element('world').style.height = `${Math.max(120, available)}px`;
+  element('world').style.top = `${top}px`;
+  element('world').style.height = `${Math.max(1, available - top)}px`;
 }
+element('entry-info').addEventListener('toggle', viewport);
 window.addEventListener('resize', viewport);
 window.visualViewport?.addEventListener('resize', viewport);
 window.visualViewport?.addEventListener('scroll', viewport);
@@ -151,21 +153,9 @@ function choiceControls() {
   reroll.disabled = starting || !verified;
   previousLook.hidden = !canChoose || !previousLooks.length;
   previousLook.disabled = starting;
-  keepLook.hidden = !guest?.appearanceChoicePending || (seed === guest.seed && avatarVersion === guest.avatarVersion);
-  keepLook.disabled = starting;
-  element('appearance-note').textContent = guest?.appearanceChoicePending
-    ? 'Мир научился новым формам. Один раз можно оставить прежний облик или выбрать другой.'
-    : guest ? 'Твой облик сохранён.' : 'Этот облик останется с тобой.';
-  joinButton.textContent = guest?.appearanceChoicePending
-    ? avatarVersion === guest.avatarVersion && seed === guest.seed ? 'Оставить и войти' : 'Выбрать и войти'
-    : guest ? 'Вернуться' : 'Войти';
+  joinButton.textContent = guest && !guest.appearanceChoicePending ? 'Вернуться' : 'Войти';
   viewport();
 }
-keepLook.addEventListener('click', () => {
-  if (starting || !guest?.appearanceChoicePending) return;
-  seed = guest.seed; avatarVersion = guest.avatarVersion;
-  previousLooks.length = 0; showLook(); choiceControls();
-});
 reroll.addEventListener('click', () => {
   if (starting || !verified || (guest && !guest.appearanceChoicePending)) return;
   previousLooks.push({ seed, version: avatarVersion });
@@ -245,7 +235,6 @@ async function join() {
   joinButton.disabled = true;
   reroll.disabled = true;
   previousLook.disabled = true;
-  keepLook.disabled = true;
   joinedName = name;
   status('Соединяемся с общей пустотой…');
   input.clear();
@@ -361,7 +350,7 @@ function frame(now: number) {
   if (online && now - lastSend >= 1000 / 15) {
     network?.sendInput(Math.round(me.tx), Math.round(me.ty)); lastSend = now;
   }
-  if (!fatal && !document.hidden) scene.render([me, ...actors.values()], me, dt, reducedMotion.matches);
+  if (!fatal && !document.hidden) scene.render([me, ...actors.values()], me, dt, reducedMotion.matches, !entry.hidden);
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

@@ -27,15 +27,16 @@
     </div>
     <form id="entry-form">
       <label for="name">Как тебя называть</label>
-      <input id="name" name="name" maxlength="24" autocomplete="nickname" required placeholder="Имя" aria-describedby="entry-note">
+      <input id="name" name="name" maxlength="24" autocomplete="nickname" required placeholder="Имя">
       <div class="entry-actions">
         <button id="previous-look" type="button" hidden aria-label="Вернуть предыдущий облик">Назад</button>
         <button id="reroll" type="button" disabled>Другой облик</button>
         <button id="join" type="submit" disabled>Войти</button>
       </div>
-      <p id="appearance-note" class="note">Этот облик останется с тобой.</p>
-      <button id="keep-look" type="button" hidden>Вернуть прежний облик</button>
-      <p id="entry-note" class="note">Изолированная проба. История пока не сохраняется, эволюция ещё не подключена.</p>
+      <details id="entry-info" class="note">
+        <summary>Об игре</summary>
+        <p id="entry-note">Изолированная проба. История пока не сохраняется, эволюция ещё не подключена.</p>
+      </details>
     </form>
   </section>
   <div id="connection" role="status" hidden>

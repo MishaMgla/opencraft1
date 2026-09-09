@@ -79,6 +79,7 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
         case 0: // A narrow, long-legged tripod with a crosswise head.
           height = 2.45 * variation;
           part(torso, crystal, color, [.27, .5, .28], [0, height - .65, 0]);
+          part(torso, box, color, [.65, .18, .52], [0, height - .94, -.08]);
           part(torso, box, bone, [.85, .22, .25], [0, height - .12, 0]);
           part(torso, box, dark, [.55, .06, .03], [0, height - .1, .14]);
           leg(-.28, .12, height - 1, .09); leg(.28, .12, height - 1, .09); leg(0, -.3, height - 1, .09);
@@ -86,6 +87,7 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
         case 1: // A low, broad six-legged shell.
           height = 1.05 * variation;
           part(torso, bodyGeometry, color, [.95, .6, .68], [0, .62, 0]);
+          part(torso, box, color, [1.62, .18, .94], [0, .43, 0]);
           part(torso, box, bone, [.48, .24, .3], [0, .66, .63]);
           for (const x of [-.76, .76]) for (const z of [-.4, 0, .4]) leg(x, z, .33, .13);
           part(torso, box, dark, [.32, .06, .03], [0, .71, .8]);
@@ -94,7 +96,7 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
           height = 1.9 * variation;
           part(torso, crystal, color, [.62, .82 * variation, .62], [0, 1.1, 0]);
           part(torso, crystal, bone, [.2, .2, .2], [0, 1.22, .55]);
-          part(torso, box, dark, [.09, .09, .03], [0, 1.24, .75]);
+          part(torso, box, dark, [.09, .09, .03], [0, 1.24, .70]);
           break;
         case 3: // Three separated stones and two small orbiting fragments.
           height = 2.2 * variation;
@@ -112,12 +114,13 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
         case 4: // An offset body carried by a large claw and one foot.
           height = 1.65 * variation;
           part(torso, bodyGeometry, color, [.4, .85, .36], [-.13, 1, 0]);
+          part(torso, box, color, [.2, .32, .2], [-.3, 1.4, .06]);
           part(torso, crystal, bone, [.32, .32, .3], [-.3, 1.65, .06]);
           leg(-.35, 0, .5, .17);
           part(torso, box, color, [.65, .18, .22], [.4, 1.1, 0]);
           part(torso, bodyGeometry, color, [.45, .85, .4], [.77, .64, 0]);
           for (const x of [.55, .92]) part(torso, box, bone, [.16, .2, .45], [x, .16, .12]);
-          part(torso, box, dark, [.16, .07, .03], [-.3, 1.69, .35]);
+          part(torso, box, dark, [.16, .07, .03], [-.3, 1.69, .29]);
           break;
       }
     }
@@ -126,7 +129,9 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
     label.textContent = name;
     labels.append(label);
     world.add(root);
-    return { root, torso, limbs, floating, kind, label, height, phase: 0, age: seed % 11, walking: 0, x: CENTER, y: CENTER, tx: CENTER, ty: CENTER, heading: .45 };
+    const previewBounds = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
+    root.rotation.y = .45;
+    return { root, torso, limbs, floating, kind, label, height, previewBounds, phase: 0, age: seed % 11, walking: 0, x: CENTER, y: CENTER, tx: CENTER, ty: CENTER, heading: .45 };
   }
 
   function resize() {
@@ -143,11 +148,17 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
     makeAvatar,
     remove(avatar: ReturnType<typeof makeAvatar>) { world.remove(avatar.root); avatar.label.remove(); },
     movement(x: number, y: number) { return { x: right.x * x - forward.x * y, y: right.z * x - forward.z * y }; },
-    render(avatars: Iterable<ReturnType<typeof makeAvatar>>, target: ReturnType<typeof makeAvatar>, dt: number, reducedMotion: boolean) {
+    render(avatars: Iterable<ReturnType<typeof makeAvatar>>, target: ReturnType<typeof makeAvatar>, dt: number, reducedMotion: boolean, preview = false) {
       point.set((target.x - CENTER) / UNIT, .85, (target.y - CENTER) / UNIT);
       focus.lerp(point, reducedMotion ? 1 : 1 - Math.exp(-7 * dt));
-      // Keep bodies readable when the phone chat leaves a short scene above it.
-      camera.position.copy(focus).addScaledVector(offset, Math.max(.5, Math.min(1, canvas.clientHeight / 420)));
+      let distance = 13 * Math.max(.5, Math.min(1, canvas.clientHeight / 420));
+      if (preview) {
+        focus.copy(target.previewBounds.center).applyQuaternion(target.root.quaternion).add(target.root.position);
+        const halfFov = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * Math.min(1, camera.aspect));
+        distance = target.previewBounds.radius * 1.35 / Math.sin(halfFov);
+      }
+      // The chooser fits the actual body; the world keeps its existing follow camera.
+      camera.position.copy(focus).addScaledVector(offset, distance / 13);
       camera.lookAt(focus);
       camera.updateMatrixWorld();
       for (const avatar of avatars) {
