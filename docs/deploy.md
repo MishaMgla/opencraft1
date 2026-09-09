@@ -1,6 +1,37 @@
 # deployment runbook
 
-## Current production — chooser and body fixes (2026-09-09)
+## Current production — transparent chat overlay (2026-09-09)
+
+Live at **https://opencraft1.com/** from `main`
+`f9d5df1e8c46c9736e9001e8c313bb49baf2e052`. Railway deployment
+`faf2a148-e2b5-414f-9d60-859cf58c64bc` succeeded from the allowlisted archive at
+`/tmp/opencraft-release.imL25f`. Image digest:
+`sha256:9ff348071de2f1996ea79462bc13cdcb7b48d1c15dc76d1cb8c16e4a785240b0`.
+
+Compact chat is now text over the world with no panel, border or header:
+up to 88 px of messages plus a single input/control row. Names are inline;
+dates remain in expanded history. Buttons retain 44 px targets and accessible
+names; input stays 16 px. Opening chat no longer changes the scene viewport.
+Reading position follows the visible message across layout changes. Guest
+identity, appearance, storage and transport are unchanged.
+
+Verified: 42 client tests, Go test/vet, browser layout/guest/body regressions,
+compact transparency/height, full scene viewport, expanded timestamps, focus
+return, draft/message-anchor preservation and send acknowledgement with input
+focus retained. One repeat was interrupted when the temporary server exited;
+the complete rerun passed after restarting it. Production smoke passed; root
+HTML, CSS and changed JS match tested files exactly. Public browser verified
+join, saved history, 141 px compact height at 390×844, expansion/collapse and
+retained draft without camera reframing. No production chat messages were sent;
+test guests remain. CI `34342611817` and Vercel alias run `34342611834` passed.
+Own browsers/test processes were closed and the local DB stopped, volume kept.
+
+The preceding v2 image is a compatible rollback; no data restore/reset is needed.
+Keep v2 recipe support and consumed-choice state. Real-phone keyboard/performance,
+backup restoration and evolution remain outside this release. Railway GitHub
+auto-deploy remains disconnected; use the explicit production staging procedure.
+
+## Previous production — chooser and body fixes (2026-09-09)
 
 Live at **https://opencraft1.com/** from `main`
 `a323b38ceac509b5fd731901d91bb41bd2943970`. Railway deployment
