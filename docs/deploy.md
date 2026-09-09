@@ -1,6 +1,34 @@
 # deployment runbook
 
-## Current production — fixed avatars and compact chat (2026-09-09)
+## Current production — chooser and body fixes (2026-09-09)
+
+Live at **https://opencraft1.com/** from `main`
+`a323b38ceac509b5fd731901d91bb41bd2943970`. Railway deployment
+`b720ecd4-de34-4827-a474-1f638a10c26d` succeeded, built from an allowlisted
+`git archive` staged at `/tmp/opencraft-release.qk4RnT`. Image digest:
+`sha256:37bb00b18d38d33d1c339d4af6fc1731320fcb4a5fb67e977259ee5c7db5f0f0`.
+
+Removed the verbose appearance announcement and separate keep-look control;
+storage information is collapsed under “Об игре”. The chooser frames each body
+in the gap between heading and form. Added missing body joints and seated the
+eyes; no database, recipe-version, seed or choice-right changes.
+
+Verified: 42 client tests, Go test/vet, browser checks at 320×568, 390×844,
+844×390 and 1280×800, all five families across seven seed variants (body joints,
+visible centered rendering), fixed guest and chat regressions. Production smoke
+passed; `/`, CSS and both changed client modules exactly match local files.
+Public browser verified reroll/back, WebSocket join, saved conversation and
+unchanged guest on return. Two test guests remain; no production messages were
+added by this check. GitHub tests `34341005165` and Vercel alias workflow
+`34341005088` passed. Own browser sessions and local test servers were closed;
+the local database container is stopped, with its volume preserved.
+
+The preceding v2 image below is a compatible rollback for this visual-only fix;
+do not restore the earlier v1 binary. No data reset is needed. Auto-deploy remains
+disconnected; real-phone keyboard/performance and backup restoration remain
+unverified. Evolution is still unimplemented.
+
+## Previous production — fixed avatars and compact chat (2026-09-09)
 
 Live at **https://opencraft1.com/**. Source commit `c391533a98c52f9ed7a608b95ed03848e3984fa6`
 was fast-forwarded and pushed to `main`. Railway deployment
