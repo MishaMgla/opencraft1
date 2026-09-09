@@ -74,7 +74,7 @@ function stopMoving() {
   me.tx = me.x; me.ty = me.y;
 }
 function rememberScroll() {
-  if (!conversation.hidden) {
+  if (!conversation.hidden && expanded) {
     chatScroll = { top: messages.scrollTop, bottom: messages.scrollHeight - messages.scrollTop - messages.clientHeight < 40 };
     const top = messages.getBoundingClientRect().top;
     const line = [...messages.children].find(line => line.getBoundingClientRect().bottom > top);
@@ -114,20 +114,21 @@ function setChat(open: boolean) {
   } else {
     openChat.focus({ preventScroll: true });
   }
-  if (open) restoreScroll();
+  if (open && expanded) restoreScroll();
 }
 openChat.addEventListener('click', () => setChat(true));
 closeChat.addEventListener('click', () => setChat(false));
 expandChat.addEventListener('click', () => {
   rememberScroll();
   expanded = !expanded;
-  if (expanded) stopMoving();
+  if (expanded) { stopMoving(); unread(false); }
   conversation.classList.toggle('expanded', expanded);
   expandChat.textContent = expanded ? '−' : '≡';
   expandChat.title = expanded ? 'Уменьшить историю' : 'Открыть историю';
   expandChat.setAttribute('aria-label', expandChat.title);
   expandChat.setAttribute('aria-expanded', String(expanded));
-  viewport(); restoreScroll();
+  viewport();
+  if (expanded) restoreScroll();
 });
 messageInput.addEventListener('focus', () => { stopMoving(); viewport(); });
 messageInput.addEventListener('blur', () => requestAnimationFrame(viewport));
@@ -324,7 +325,13 @@ async function join() {
       if (actor) scene.remove(actor);
       actors.delete(message.id); updatePresence();
     },
-    chat: message => { if (!persistent && attempt === generation) appendMessage(message.name, message.text); },
+    chat: message => {
+      if (persistent || attempt !== generation) return;
+      appendMessage(message.name, message.text);
+      const speakers = [me, ...actors.values()].filter(actor => actor.label.textContent === message.name);
+      // The legacy frame has only a name. Never attach speech to a guessed author.
+      if (speakers.length === 1) scene.say(speakers[0]!, message.text);
+    },
     close: () => { clearTimeout(timeout); if (attempt === generation && !fatal) loseConnection(); },
   });
 }
@@ -339,11 +346,13 @@ element<HTMLFormElement>('message-form').addEventListener('submit', event => {
   pending = text;
   sendButton.disabled = true;
   delivery.textContent = 'Отправляется…';
+  scene.say(me, text, 'pending');
   network?.sendChat(text);
   deliveryTimer = window.setTimeout(() => {
     pending = '';
     sendButton.disabled = !online;
     delivery.textContent = 'Доставка не подтверждена. Повторная отправка может создать дубликат.';
+    scene.say(me, text, 'error');
   }, 5000);
 });
 
@@ -380,7 +389,11 @@ try {
   persistent = info.persistent === true;
   if (persistent) {
     if (info.apiVersion !== 2) throw new Error('incompatible preview');
-    savedChat = savedConversation(appendMessage, () => { if (conversation.hidden) unread(true); });
+    savedChat = savedConversation(appendMessage, () => { if (conversation.hidden || !expanded) unread(true); }, record => {
+      const actor = actors.get(record.actorId ?? 0);
+      // Backlog after a network gap belongs in history, not above today's head.
+      if (actor && Date.now() - Date.parse(record.createdAt) < 15000) scene.say(actor, record.text);
+    }, (text, state) => scene.say(me, text, state));
     element('entry-note').textContent = 'Гость закреплён за этим браузером на 30 дней. Разговор сохраняется и доступен участникам и оператору пробы; автоудаления пока нет. Эволюция не подключена.';
     element('history-status').textContent = 'Сохранённый разговор загрузится после входа.';
     try {

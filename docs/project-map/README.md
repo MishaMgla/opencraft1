@@ -49,6 +49,7 @@ docs/project-map/
 
 ## changelog
 
+- 2026-09-09: speech above the actual avatar, immediate marked local echo, one-row composer and opt-in history. Live cursor continues while reading; transient actor IDs prevent duplicate-name confusion. Browser multiuser/failure/retry checks, persistence, Go test/vet/race and 42 client tests passed; production release recorded in `../deploy.md` after deployment.
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
 - 2026-09-09 (production, main `f9d5df1`): transparent chat overlay and one composer/control row; fixed game viewport, expanded dates, accessible touch targets and message-anchored reading position. Local/public checks and CI passed; deployment `faf2a148-e2b5-414f-9d60-859cf58c64bc`, release record in `../deploy.md`.

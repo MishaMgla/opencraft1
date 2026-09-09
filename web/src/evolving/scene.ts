@@ -127,11 +127,15 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
     const label = document.createElement('span');
     label.className = 'player-label';
     label.textContent = name;
-    labels.append(label);
+    const speech = document.createElement('span');
+    speech.className = 'player-speech';
+    speech.hidden = true;
+    labels.append(label, speech);
     world.add(root);
-    const previewBounds = new THREE.Box3().setFromObject(root).getBoundingSphere(new THREE.Sphere());
+    const bounds = new THREE.Box3().setFromObject(root);
+    const previewBounds = bounds.getBoundingSphere(new THREE.Sphere());
     root.rotation.y = .45;
-    return { root, torso, limbs, floating, kind, label, height, previewBounds, phase: 0, age: seed % 11, walking: 0, x: CENTER, y: CENTER, tx: CENTER, ty: CENTER, heading: .45 };
+    return { root, torso, limbs, floating, kind, label, speech, speechUntil: 0, speechTop: bounds.max.y + .2, height, previewBounds, phase: 0, age: seed % 11, walking: 0, x: CENTER, y: CENTER, tx: CENTER, ty: CENTER, heading: .45 };
   }
 
   function resize() {
@@ -146,7 +150,12 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
 
   return {
     makeAvatar,
-    remove(avatar: ReturnType<typeof makeAvatar>) { world.remove(avatar.root); avatar.label.remove(); },
+    remove(avatar: ReturnType<typeof makeAvatar>) { world.remove(avatar.root); avatar.label.remove(); avatar.speech.remove(); },
+    say(avatar: ReturnType<typeof makeAvatar>, text: string, state = 'saved') {
+      avatar.speech.textContent = text;
+      avatar.speech.dataset.state = state;
+      avatar.speechUntil = performance.now() + Math.min(12000, 5000 + text.length * 40);
+    },
     movement(x: number, y: number) { return { x: right.x * x - forward.x * y, y: right.z * x - forward.z * y }; },
     render(avatars: Iterable<ReturnType<typeof makeAvatar>>, target: ReturnType<typeof makeAvatar>, dt: number, reducedMotion: boolean, preview = false) {
       point.set((target.x - CENTER) / UNIT, .85, (target.y - CENTER) / UNIT);
@@ -189,6 +198,11 @@ export function createScene(canvas: HTMLCanvasElement, labels: HTMLElement) {
         const visible = point.z > -1 && point.z < 1 && Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1;
         avatar.label.hidden = !visible;
         if (visible) avatar.label.style.transform = `translate(${(point.x * .5 + .5) * canvas.clientWidth}px, ${(-point.y * .5 + .5) * canvas.clientHeight}px) translateX(-50%)`;
+        point.copy(avatar.root.position);
+        point.y += avatar.speechTop + avatar.torso.position.y;
+        point.project(camera);
+        avatar.speech.hidden = preview || performance.now() > avatar.speechUntil || point.z < -1 || point.z > 1 || Math.abs(point.x) > 1 || Math.abs(point.y) > 1;
+        if (!avatar.speech.hidden) avatar.speech.style.transform = `translate(${(point.x * .5 + .5) * canvas.clientWidth}px, ${(-point.y * .5 + .5) * canvas.clientHeight}px) translate(-50%, -100%)`;
       }
       renderer.render(world, camera);
     },

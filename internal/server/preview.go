@@ -24,7 +24,7 @@ func NewPersistentPreview(sim *world.Sim, db *store.Preview, publicOrigin string
 	s := New(sim, BuildInfo{CommitSHA: "isolated-preview"})
 	s.preview = db
 	s.previewOrigin = publicOrigin
-	s.guests = make(map[string]bool)
+	s.guests = make(map[string]uint32)
 	s.previewStop = make(chan struct{})
 	return s
 }
@@ -181,12 +181,13 @@ func (s *Server) previewAppearance(w http.ResponseWriter, r *http.Request) {
 	// Reserve this guest just like a connection; no world appearance changes
 	// mid-session and no database I/O while holding the shared mutex.
 	s.guestMu.Lock()
-	if s.previewClosing || s.guests[g.ID] {
+	_, busy := s.guests[g.ID]
+	if s.previewClosing || busy {
 		s.guestMu.Unlock()
 		http.Error(w, "guest busy", http.StatusConflict)
 		return
 	}
-	s.guests[g.ID] = true
+	s.guests[g.ID] = 0
 	s.previewConnections.Add(1)
 	s.guestMu.Unlock()
 	defer s.previewConnections.Done()
@@ -238,7 +239,18 @@ func (s *Server) previewMessages(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "history unavailable", 503)
 			return
 		}
-		previewJSON(w, list)
+		// Transient presence, not persisted identity: duplicate names are safe.
+		type spokenMessage struct {
+			store.Message
+			ActorID uint32 `json:"actorId"`
+		}
+		spoken := make([]spokenMessage, 0, len(list))
+		s.guestMu.Lock()
+		for _, m := range list {
+			spoken = append(spoken, spokenMessage{m, s.guests[m.PlayerID]})
+		}
+		s.guestMu.Unlock()
+		previewJSON(w, spoken)
 		return
 	}
 	var body struct {

@@ -1,5 +1,5 @@
 export interface Guest { id: string; name: string; seed: number; avatarVersion: number; appearanceChoicePending: boolean }
-interface SavedMessage { id: string; playerId: string; requestId: string; name: string; text: string; createdAt: string }
+interface SavedMessage { id: string; playerId: string; actorId?: number; requestId: string; name: string; text: string; createdAt: string }
 
 export async function previewRequest(path: string, body?: unknown) {
   const response = await fetch(`/evolving-api/${path}`, {
@@ -14,7 +14,8 @@ export async function previewRequest(path: string, body?: unknown) {
 
 // HTTP history is independent of the lossy movement socket. No second live
 // transport: bounded polling catches up by committed ID, including after gaps.
-export function savedConversation(append: (name: string, text: string, record: SavedMessage) => void, onNew: () => void) {
+export function savedConversation(append: (name: string, text: string, record: SavedMessage) => void, onNew: () => void,
+  speak: (record: SavedMessage) => void, ownSpeech: (text: string, state: string) => void) {
   const get = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const list = get<HTMLOListElement>('messages');
   const input = get<HTMLInputElement>('message');
@@ -56,10 +57,14 @@ export function savedConversation(append: (name: string, text: string, record: S
       historyStatus.classList.remove('error');
       if (!reset && !before && records.length) {
         onNew();
+        cursor = records[records.length - 1]!.id;
+        for (const record of records) {
+          if (record.playerId !== guest?.id) speak(record);
+        }
         // Freeze the displayed page when reading above its end. No eviction of
         // the line being read; the existing cursor API reloads on "К свежим".
-        if ((get('conversation').hidden && get('conversation').dataset.reading === 'true') ||
-          (!get('conversation').hidden && list.scrollHeight - list.scrollTop - list.clientHeight >= 40)) {
+        if (!live || ((!get('conversation').classList.contains('expanded') || get('conversation').hidden) && get('conversation').dataset.reading === 'true') ||
+          (!get('conversation').hidden && get('conversation').classList.contains('expanded') && list.scrollHeight - list.scrollTop - list.clientHeight >= 40)) {
           live = false;
           historyStatus.textContent = 'Есть новые сообщения — «К свежим».';
           return;
@@ -68,12 +73,12 @@ export function savedConversation(append: (name: string, text: string, record: S
       if (before && !records.length) {
         historyStatus.textContent = 'Это начало разговора.';
       } else {
-        if (reset || before) { list.replaceChildren(); cursor = ''; }
+        if (reset || before) list.replaceChildren();
+        if (reset) cursor = records[records.length - 1]?.id || '';
         needsReset = false;
         if (before) live = false;
         for (const record of records) {
           append(record.name, record.text, record);
-          cursor = record.id;
         }
         if (!list.children.length) {
           const empty = document.createElement('li');
@@ -90,7 +95,8 @@ export function savedConversation(append: (name: string, text: string, record: S
       earlier.disabled = !connected || !list.firstElementChild?.getAttribute('data-message-id');
       latest.disabled = !connected;
       latest.hidden = live;
-      if (connected && live) timer = window.setTimeout(() => void read(), 1000);
+      // Keep live speech flowing even while the visible history page is frozen.
+      if (connected) timer = window.setTimeout(() => void read(), 1000);
     }
   }
   earlier.addEventListener('click', () => void read(list.firstElementChild?.getAttribute('data-message-id') || ''));
@@ -107,15 +113,20 @@ export function savedConversation(append: (name: string, text: string, record: S
     remember(); // Keep the same request ID even across reload after a lost acknowledgement.
     const request = pending;
     sending = true; send.disabled = true;
-    delivery.textContent = storageOK ? 'Сохраняется…' : 'Сохраняется… Браузер не удержит черновик после перезагрузки.';
+    ownSpeech(text, 'pending');
+    delivery.dataset.state = 'pending';
+    delivery.textContent = storageOK ? 'Отправляется…' : 'Отправляется… Не закрывай страницу: черновик не сохраняется.';
     try {
       const saved: SavedMessage = await previewRequest('messages', request);
       if (saved.playerId !== guest.id || saved.requestId !== request.requestId || saved.text !== request.text) throw new Error('invalid acknowledgement');
       if (input.value.trim() === text) input.value = '';
       pending = undefined; remember();
+      ownSpeech(text, 'saved');
+      delivery.dataset.state = 'saved';
       delivery.textContent = 'Сохранено в разговоре.';
-      if (live) void read();
     } catch (error) {
+      ownSpeech(text, 'error');
+      delivery.dataset.state = 'error';
       delivery.textContent = error instanceof Error && error.message === '429'
         ? 'Подожди немного и отправь снова. Текст остался в поле.'
         : 'Подтверждения нет. Можно повторить: то же сообщение не запишется дважды.';

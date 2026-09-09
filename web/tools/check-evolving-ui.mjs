@@ -9,6 +9,8 @@ assert.equal(url.hostname, '127.0.0.1');
 assert.equal(url.protocol, 'http:');
 const session = `evolving-ui-${Date.now()}`;
 const run = (...args) => execFileSync('agent-browser', ['--session', session, ...args], { encoding: 'utf8', timeout: 45000 });
+const peer = (...args) => execFileSync('agent-browser', ['--session', `${session}-peer`, ...args], { encoding: 'utf8', timeout: 45000 });
+let peerOpened = false;
 const evaluate = code => JSON.parse(run('eval', code));
 try {
   run('open', origin);
@@ -85,14 +87,14 @@ try {
   run('wait', '--fn', 'document.querySelector("#messages [data-message-id]") !== null');
   assert.deepEqual(evaluate(`({background:getComputedStyle(document.querySelector('#conversation')).backgroundColor,
     border:getComputedStyle(document.querySelector('#conversation')).borderWidth,
-    height:document.querySelector('#conversation').getBoundingClientRect().height <= 150,
+    height:document.querySelector('#conversation').getBoundingClientRect().height <= 50,
     world:document.querySelector('#world').getBoundingClientRect().height === innerHeight,
     header:getComputedStyle(document.querySelector('#conversation header')).display,
-    author:getComputedStyle(document.querySelector('#messages .author')).display,
-    date:getComputedStyle(document.querySelector('#messages time')).display,
+    history:getComputedStyle(document.querySelector('#messages')).display,
     input:getComputedStyle(document.querySelector('#message')).fontSize,
     targets:['send','expand-chat','close-chat'].every(id=>{const r=document.getElementById(id).getBoundingClientRect();return r.width>=44&&r.height>=44})})`),
-    {background:'rgba(0, 0, 0, 0)',border:'0px',height:true,world:true,header:'none',author:'inline',date:'none',input:'16px',targets:true});
+    {background:'rgba(0, 0, 0, 0)',border:'0px',height:true,world:true,header:'none',history:'none',input:'16px',targets:true});
+  assert.equal(evaluate('document.querySelectorAll(".player-speech:not([hidden])").length'), 0, 'loaded history must not become live speech');
   assert.deepEqual(evaluate(`({controls:document.querySelector('#controls').hidden,
     keyboard:document.activeElement.id === 'message',overflow:document.documentElement.scrollWidth>innerWidth,
     overlap:document.querySelector('#conversation').getBoundingClientRect().bottom > document.querySelector('#stick').getBoundingClientRect().top})`),
@@ -122,6 +124,7 @@ try {
   assert.equal(evaluate('document.activeElement.id'), 'open-chat');
   run('click', '#open-chat');
   assert.equal(evaluate('document.querySelector("#message").value'), 'Незавершённый текст');
+  run('click', '#expand-chat');
   assert.deepEqual(readingPosition(), reading);
   const first = evaluate('document.querySelector("#messages").firstElementChild.dataset.messageId');
   assert.equal(post(), 200);
@@ -143,13 +146,50 @@ try {
   run('click', '#open-chat');
   assert.equal(evaluate('document.querySelector("#message").value'), 'Незавершённый текст');
   run('fill', '#message', 'Проверка компактной отправки');
+  // Hold the real POST before it reaches the server: speech must appear now,
+  // not after a response or a subsequent history read. Then exercise recovery.
+  run('eval', `window.originalFetch = window.fetch; window.fetch = (url, init) =>
+    String(url).endsWith('/messages') && init?.method === 'POST'
+      ? new Promise((resolve,reject) => { window.releaseSend = () => reject(new Error('test offline')); })
+      : window.originalFetch(url, init)`);
+  run('click', '#send');
+  assert.equal(evaluate(`(() => {
+    const speech = document.querySelector('.player-speech[data-state=pending]');
+    return speech && !speech.hidden && speech.textContent === 'Проверка компактной отправки' &&
+      document.querySelector('#message').value === speech.textContent;
+  })()`), true);
+  run('eval', 'window.fetch = window.originalFetch; window.releaseSend()');
+  run('wait', '--fn', 'document.querySelector("#delivery").dataset.state === "error"');
+  assert.equal(evaluate('document.querySelector("#message").value'), 'Проверка компактной отправки');
   run('click', '#send');
   run('wait', '--fn', 'document.querySelector("#message").value === "" && document.querySelector("#delivery").textContent === "Сохранено в разговоре."');
   assert.equal(evaluate('document.activeElement.id'), 'message');
-  console.log('PASS: entry and body regressions; transparent compact chat, fixed camera viewport, readable input, touch targets, expanded dates, focus return, draft/message-anchor preservation, guest return and send.');
+  assert.equal(evaluate('document.querySelector(".player-speech[data-state=saved]").textContent'), 'Проверка компактной отправки');
+  run('screenshot', '/tmp/opencraft-ui-speech.png');
+  run('wait', '--fn', 'document.querySelectorAll(".player-speech:not([hidden])").length === 0');
+  peerOpened = true;
+  peer('open', origin);
+  peer('wait', '--fn', '!document.querySelector("#join").disabled');
+  peer('fill', '#name', 'UI acceptance'); // Deliberately identical names, different owners.
+  peer('click', '#join');
+  peer('wait', '--fn', 'document.querySelector("#entry").hidden');
+  run('wait', '--fn', 'document.querySelectorAll(".player-speech").length === 2');
+  run('click', '#expand-chat');
+  run('eval', 'document.querySelector("#messages").scrollTop = 75');
+  const frozen = readingPosition();
+  const remoteText = 'Реплика другого игрока с таким же именем';
+  assert.equal(JSON.parse(peer('eval', `fetch('/evolving-api/messages', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({requestId:crypto.randomUUID().replaceAll('-',''),text:${JSON.stringify(remoteText)}})}).then(r=>r.status)`)), 200);
+  run('wait', '--fn', `document.querySelectorAll('.player-speech')[1].textContent === ${JSON.stringify(remoteText)}`);
+  assert.notEqual(evaluate('document.querySelector(".player-speech").textContent'), remoteText);
+  assert.deepEqual(readingPosition(), frozen, 'live speech must not move the history being read');
+  const prior = evaluate('document.querySelectorAll(".player-speech")[1].style.transform');
+  peer('eval', 'window.dispatchEvent(new KeyboardEvent("keydown", {code:"ArrowRight",key:"ArrowRight"}))');
+  run('wait', '--fn', `document.querySelectorAll('.player-speech')[1].style.transform !== ${JSON.stringify(prior)}`);
+  peer('eval', 'window.dispatchEvent(new KeyboardEvent("keyup", {code:"ArrowRight",key:"ArrowRight"}))');
+  console.log('PASS: entry/body regressions, one-row composer, history/anchor/draft preservation, immediate pending speech, failure/retry/expiry, duplicate-name identity, movement and live speech while reading history.');
 } catch (error) {
   console.error(run('snapshot', '-i'));
   console.error(run('eval', 'document.querySelector("#connection-text").textContent'));
   run('screenshot', '/tmp/opencraft-ui-failure.png');
   throw error;
-} finally { run('close'); }
+} finally { if (peerOpened) peer('close'); run('close'); }

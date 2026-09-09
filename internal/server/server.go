@@ -24,7 +24,7 @@ type Server struct {
 	preview            *store.Preview
 	previewOrigin      string
 	guestMu            sync.Mutex
-	guests             map[string]bool
+	guests             map[string]uint32 // zero reserves a guest; nonzero is the live actor ID
 	previewStop        chan struct{}
 	previewClosing     bool
 	previewConnections sync.WaitGroup
@@ -115,9 +115,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "preview stopping", http.StatusServiceUnavailable)
 			return
 		}
-		busy := s.guests[guest.ID]
+		_, busy := s.guests[guest.ID]
 		if !busy {
-			s.guests[guest.ID] = true
+			s.guests[guest.ID] = 0
 			s.previewConnections.Add(1)
 		}
 		s.guestMu.Unlock()
@@ -175,6 +175,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 			saved = &world.SavedPlayer{X: guest.X, Y: guest.Y}
 		}
 		id, initial = s.sim.JoinPreview(guest.Name, previewCharacter(guest), saved, out, snap)
+		s.guestMu.Lock()
+		s.guests[guest.ID] = id
+		s.guestMu.Unlock()
 		// The first frame is Welcome; use its validated spawn, including fresh
 		// guests' staggered positions. No database work runs on the sim tick.
 		px, py = previewSpawn(initial[0])
