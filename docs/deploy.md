@@ -1,6 +1,37 @@
 # deployment runbook
 
-## Current production — transparent chat overlay (2026-09-09)
+## Current production — avatar speech and one-row chat (2026-09-09)
+
+Live at **https://opencraft1.com/** from `main`
+`9ce13dd1942fed6b96cc6de9d2cda7bfe4700f55`. Railway deployment
+`66faa4f5-a50b-41b7-85dc-b45c22f58241` succeeded from the allowlisted archive
+`/tmp/opencraft-release.8FqmW6`. Image digest:
+`sha256:749e7fb5b4b6c0708108698152fb898cdf3db1cd365ff15fcb3b3651b7fb0d70`.
+
+Speech follows the actual avatar and expires; the corner contains only a composer
+row, with history on demand. Own speech is immediate and explicitly pending
+until commit; a failed send retains the draft/request ID. Removed the extra
+history GET after POST. GET history adds transient `actorId` from authenticated
+presence, avoiding duplicate-name guesses. Polling continues while the visible
+history page is frozen. No database migration or binary wire changes.
+
+Verified: 42 client tests, Go test/vet/race, durable history/restart check, browser
+entry/body regressions, one-row layout, draft/reading anchor, delayed and failed
+POST/retry, speech expiry, two identical names, movement and live speech while
+reading history. Production smoke and exact HTML/CSS/JS comparison passed.
+Public browser at 390×844 verified guest join, own speech, commit and history.
+Local echo appeared in 11 ms in that one browser check; this is not delivery
+latency. The preceding source's one VDS sample was POST 1277 ms + GET 363 ms.
+Remote speech still uses a one-second polling interval plus network time.
+
+Source CI `34347674861` and Vercel alias run `34347674685` passed. Diagnostic
+guests/messages remain in production (latency probes and one browser speech
+check). Own browser/test processes are closed; local DB stopped, volume retained.
+The preceding v2 release below is a compatible full-image rollback without a
+data reset. GitHub auto-deploy remains disconnected. Real-phone keyboard and
+performance, backup restoration and world evolution remain outside this release.
+
+## Previous production — transparent chat overlay (2026-09-09)
 
 Live at **https://opencraft1.com/** from `main`
 `f9d5df1e8c46c9736e9001e8c313bb49baf2e052`. Railway deployment
