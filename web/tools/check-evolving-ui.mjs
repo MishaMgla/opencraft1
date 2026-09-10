@@ -15,7 +15,7 @@ const evaluate = code => JSON.parse(run('eval', code));
 function checkEnglish() {
   assert.equal(evaluate('document.documentElement.lang'), 'en');
   const copy = evaluate(`(() => {
-    const nodes = [...document.querySelectorAll('button, label, [role=status], .entry-copy, #entry-info, #move-help, #empty-chat, #messages time')];
+    const nodes = [...document.querySelectorAll('button, label, [role=status], .entry-copy, #move-help, #empty-chat, #messages time')];
     const attributes = [...document.querySelectorAll('[aria-label], [placeholder], [title]')]
       .flatMap(e => ['aria-label', 'placeholder', 'title'].map(a => e.getAttribute(a) || ''));
     return [document.title, ...nodes.map(e => e.textContent), ...attributes].join(' ');
@@ -28,17 +28,14 @@ try {
   run('wait', '--fn', '!document.querySelector("#join").disabled');
   checkEnglish();
   assert.equal(evaluate('document.querySelector("#appearance-note, #keep-look") !== null'), false);
-  assert.equal(evaluate('document.querySelector("#entry-info").open'), false);
+  assert.equal(evaluate('document.querySelector("#entry-info, #entry-note")'), null);
   for (const [width, height] of [[320,568], [390,844], [844,390], [1280,800]]) {
     run('set', 'viewport', String(width), String(height));
-    for (const open of [true, false]) {
-      run('eval', `document.querySelector('#entry-info').open = ${open}`);
-      run('wait', '--fn', `(() => {
-        const scene = document.querySelector('#world').getBoundingClientRect();
-        return scene.top >= document.querySelector('.entry-copy').getBoundingClientRect().bottom &&
-          scene.height > 20 && Math.abs(scene.bottom - document.querySelector('#entry-form').getBoundingClientRect().top) < 2;
-      })()`);
-    }
+    run('wait', '--fn', `(() => {
+      const scene = document.querySelector('#world').getBoundingClientRect();
+      return scene.top >= document.querySelector('.entry-copy').getBoundingClientRect().bottom &&
+        scene.height > 20 && Math.abs(scene.bottom - document.querySelector('#entry-form').getBoundingClientRect().top) < 2;
+    })()`);
     assert.equal(evaluate('document.documentElement.scrollWidth > innerWidth'), false);
     run('screenshot', `/tmp/opencraft-entry-${width}.png`);
   }
