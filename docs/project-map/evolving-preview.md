@@ -85,6 +85,18 @@ go run ./cmd/evolving-preview -listen 127.0.0.1:8767
 
 Остановка контейнера `sudo docker stop opencraft-evolving-preview-db` сохраняет том. Том не удалять для «перезапуска»: в нём история. Резервное копирование и восстановление ещё не отрепетированы; наличие тома не заменяет бэкап.
 
+## English interface — 2026-09-10
+
+All game-authored copy is English: entry, help/disclosures, chat controls,
+empty/history states, send/retry confirmations, connection and graphics errors,
+accessibility names, page title and description. HTML uses `lang=en`; chat dates
+use `en-GB` while retaining the player's local timezone. Player-authored names,
+drafts and messages are unchanged, including existing non-English history.
+No localization library, data migration, protocol or gameplay change is needed.
+The browser check covers English copy, accessible attributes and dates while
+deliberately sending Cyrillic player messages to verify they remain untouched.
+Production release verification will be recorded here after deployment.
+
 ## Доработка 2026-09-09
 
 Последнее уточнение: реплики появляются над говорящими персонажами, а компактный чат содержит только строку ввода и кнопки (44 px), без списка. Текст следует за фигурой, переносится и исчезает через 5–12 секунд; новая реплика заменяет предыдущую. История остаётся по кнопке ≡. Успешный статус отправки не занимает место, ошибки остаются видимыми.

@@ -21,6 +21,18 @@ single source of truth for rules and documentation pointers shared by all AI cod
 
 ## product scope (PM guardrail)
 
+### in-game language (confirmed 2026-09-10)
+
+All game-authored, player-facing text must be in English: entry screens,
+buttons, labels, placeholders, tooltips, accessibility names, help, statuses,
+errors, notifications, and generated world/artifact names and stories.
+This applies to existing and future game content on every platform, regardless
+of the player's browser language or the language used to discuss the project.
+Preserve player-authored names and messages as written; do not translate or
+restrict them. Project discussions and planning documents may remain in Russian.
+Earlier Russian UI examples in planning docs are historical, not approved copy
+for implementation. Recording this rule does not mean existing UI is translated.
+
 **Evolving-world planning (2026-09-06).** For the new player-driven world,
 start at `docs/prd/evolving-world-product-plan.md`, then read the scenario or
 visual/UX document linked there. On 2026-09-07 the user authorized implementation

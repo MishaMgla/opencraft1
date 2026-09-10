@@ -1,5 +1,10 @@
 # Первый играбельный мир: продуктовый план
 
+**Language requirement, 2026-09-10:** all game-authored player-facing content
+must be in English. See the canonical [language rule](../../AGENT_RULES.md#in-game-language-confirmed-2026-09-10).
+Older Russian UI examples are historical. The English interface is implemented;
+see [implementation and release status](../project-map/evolving-preview.md#english-interface--2026-09-10).
+
 **Production update, 2026-09-08:** the user explicitly requested direct production
 deployment after the preview. The first scene is now live through
 https://opencraft1.com/; [deployment status and rollback](../deploy.md) supersede
