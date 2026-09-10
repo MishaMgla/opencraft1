@@ -49,7 +49,7 @@ docs/project-map/
 
 ## changelog
 
-- 2026-09-10: English-only game copy and `en-GB` chat dates, preserving player-authored content; language rule in `AGENT_RULES.md`, implementation/release record in `evolving-preview.md#english-interface--2026-09-10`.
+- 2026-09-10 (production, main `cb73fce`, PR #155): English-only game copy and `en-GB` chat dates, preserving player-authored content; local/CI/public read-only checks passed. Deployment `d363676f-d796-427e-8bf7-433ca3161b88`; current release record in `evolving-preview.md#english-interface--2026-09-10`.
 - 2026-09-09 (production, main `9ce13dd`): speech above the actual avatar, marked local echo, one-row composer and opt-in history. Live cursor continues while reading; transient actor IDs prevent duplicate-name confusion. Local/public checks and CI passed; deployment `66faa4f5-a50b-41b7-85dc-b45c22f58241`, release record in `../deploy.md`.
 Reverse-chronological. Tracks doc-structure changes and shipped feature milestones. When a branch is named, the work has not merged to `main` yet. New entries go on top; one line per entry; dates are absolute (YYYY-MM-DD).
 
