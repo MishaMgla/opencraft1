@@ -197,7 +197,32 @@ try {
   peer('eval', 'window.dispatchEvent(new KeyboardEvent("keydown", {code:"ArrowRight",key:"ArrowRight"}))');
   run('wait', '--fn', `document.querySelectorAll('.player-speech')[1].style.transform !== ${JSON.stringify(prior)}`);
   peer('eval', 'window.dispatchEvent(new KeyboardEvent("keyup", {code:"ArrowRight",key:"ArrowRight"}))');
-  console.log('PASS: entry/body regressions, one-row composer, history/anchor/draft preservation, immediate pending speech, failure/retry/expiry, duplicate-name identity, movement and live speech while reading history.');
+  // Exercise native lifecycle with a same-origin transport shim. This is not a
+  // device/cookie-jar check; the Go integration check covers native WS admission.
+  run('eval', `window.opencraftNative = {
+    request: async (path, body) => {
+      const response = await fetch(path, body === undefined ? {} : {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+      if (!response.ok) throw new Error('request failed');
+      return response.json();
+    },
+    socket: async () => ({url: 'ws://' + location.host + '/ws?recipes=2', protocols: []})
+  }`);
+  run('fill', '#message', 'Draft across suspension');
+  assert.equal(evaluate('!dispatchEvent(new Event("opencraft-back", {cancelable:true}))'), true);
+  assert.notEqual(evaluate('document.activeElement.id'), 'message');
+  assert.equal(evaluate('!dispatchEvent(new Event("opencraft-back", {cancelable:true}))'), true);
+  assert.equal(evaluate('document.querySelector("#conversation").hidden'), true);
+  run('eval', 'dispatchEvent(new CustomEvent("opencraft-app-state", {detail:false}))');
+  assert.equal(evaluate('document.querySelector("#send").disabled'), true);
+  peer('wait', '--fn', 'document.querySelectorAll(".player-speech").length === 1');
+  run('eval', 'dispatchEvent(new CustomEvent("opencraft-app-state", {detail:true}))');
+  peer('wait', '--fn', 'document.querySelectorAll(".player-speech").length === 2');
+  run('click', '#open-chat');
+  assert.equal(evaluate('document.querySelector("#message").value'), 'Draft across suspension');
+  assert.deepEqual(evaluate('fetch("/evolving-api/session").then(r=>r.json())'), guest);
+  console.log('PASS: entry/body regressions, compact chat, history/drafts, speech/retry, shared identity/movement, native lifecycle shim and Back handling (not device QA).');
 } catch (error) {
   console.error(run('snapshot', '-i'));
   console.error(run('eval', 'document.querySelector("#connection-text").textContent'));

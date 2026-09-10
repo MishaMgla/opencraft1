@@ -36,8 +36,8 @@ export interface NetControl {
 
 // Opens a WebSocket, sends Hello on open, and dispatches decoded server
 // frames to handlers[msg.type]. Returns a small control object.
-export function connect(url: string, name: string, role: number, character: string, handlers: Handlers): NetControl {
-  const ws = new WebSocket(url);
+export function connect(url: string, name: string, role: number, character: string, handlers: Handlers, protocols?: string[]): NetControl {
+  const ws = protocols ? new WebSocket(url, protocols) : new WebSocket(url);
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => ws.send(encodeHello(name, role, character));

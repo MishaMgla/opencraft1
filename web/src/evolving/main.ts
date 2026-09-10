@@ -5,6 +5,7 @@ import type { Avatar } from './scene.js';
 import { movementInput } from './input.js';
 import { previewRequest, savedConversation } from './conversation.js';
 import type { Guest } from './conversation.js';
+import { isNativeWorld, worldRequest, worldSocket } from './transport.js';
 
 function element<T extends HTMLElement>(id: string) { return document.getElementById(id) as T; }
 const canvas = element<HTMLCanvasElement>('scene');
@@ -52,6 +53,10 @@ let savedChat: ReturnType<typeof savedConversation> | undefined;
 let network: NetControl | undefined;
 let generation = 0;
 let joinedName = '';
+let suspended = false;
+let resumeWorld = false;
+let resumeAttempts = 0;
+let resumeTimer = 0;
 let bounds = { minX: 0, minY: 0, maxX: 8191, maxY: 8191 };
 let pending = '';
 let deliveryTimer = 0;
@@ -59,7 +64,7 @@ let expanded = false;
 let chatScroll = { top: 0, bottom: true };
 let chatAnchor: { line: Element; offset: number } | undefined;
 const input = movementInput(element<HTMLButtonElement>('stick'), element('stick-knob'),
-  () => online && !expanded && document.activeElement !== messageInput && document.activeElement !== messages && !document.hidden);
+  () => online && !suspended && !expanded && document.activeElement !== messageInput && document.activeElement !== messages && !document.hidden);
 
 function status(text: string, canRetry = false) {
   connection.hidden = !text;
@@ -206,6 +211,12 @@ function loseConnection() {
   clearTimeout(deliveryTimer);
   updatePresence();
   status(persistent ? 'Disconnected from the world. If this guest is open in another tab, close it and reconnect.' : 'Connection lost. The world is unavailable; your text is still here.', true);
+  if (resumeWorld && !suspended && !fatal) {
+    const delay = [500, 2000, 5000, 10000][resumeAttempts++];
+    clearTimeout(resumeTimer);
+    if (delay !== undefined) resumeTimer = window.setTimeout(() => void join(), delay);
+    else resumeWorld = false;
+  }
 }
 
 function appendMessage(name: string, text: string, record?: { id: string; createdAt: string }) {
@@ -244,7 +255,7 @@ function appendMessage(name: string, text: string, record?: { id: string; create
 
 async function join() {
   let name = nameInput.value.trim();
-  if (!name || starting || fatal || !verified) return;
+  if (!name || starting || suspended || fatal || !verified) return;
   generation++;
   const attempt = generation;
   network?.close();
@@ -259,8 +270,8 @@ async function join() {
   actors.clear();
   try { localStorage.setItem(profileKey, JSON.stringify({ name, seed })); } catch { /* Optional local profile. */ }
   const timeout = window.setTimeout(() => {
-    if (attempt === generation && starting) { network?.close(); loseConnection(); }
-  }, 10000);
+    if (attempt === generation && starting) { generation++; network?.close(); loseConnection(); }
+  }, isNativeWorld() ? 20000 : 10000);
   if (persistent) {
     try {
       if (guest?.appearanceChoicePending) {
@@ -279,15 +290,27 @@ async function join() {
       previousLooks.length = 0;
       showLook();
     } catch {
-      clearTimeout(timeout); loseConnection();
+      clearTimeout(timeout);
+      if (attempt !== generation || suspended) return;
+      loseConnection();
       status('Could not restore your guest. Check your connection and try entering again.', true);
       return;
     }
   }
-  network = connect(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws?recipes=2`, name, 1, `${avatarVersion === 1 ? 'shape' : 'shape2'}-${seed.toString(16)}`, {
+  let socket: Awaited<ReturnType<typeof worldSocket>>;
+  try {
+    socket = await worldSocket();
+  } catch {
+    clearTimeout(timeout);
+    if (attempt === generation) loseConnection();
+    return;
+  }
+  if (attempt !== generation || !starting || suspended || fatal) { clearTimeout(timeout); return; }
+  network = connect(socket.url, name, 1, `${avatarVersion === 1 ? 'shape' : 'shape2'}-${seed.toString(16)}`, {
     welcome: message => {
       if (attempt !== generation) return;
       clearTimeout(timeout);
+      resumeWorld = false; resumeAttempts = 0; clearTimeout(resumeTimer);
       starting = false; online = true; id = message.id; bounds = message;
       me.x = me.tx = message.x; me.y = me.ty = message.y;
       me.label.textContent = name;
@@ -332,11 +355,14 @@ async function join() {
       if (speakers.length === 1) scene.say(speakers[0]!, message.text);
     },
     close: () => { clearTimeout(timeout); if (attempt === generation && !fatal) loseConnection(); },
-  });
+  }, socket.protocols);
 }
 
 element<HTMLFormElement>('entry-form').addEventListener('submit', event => { event.preventDefault(); join(); });
-retry.addEventListener('click', () => { if (fatal) location.reload(); else join(); });
+retry.addEventListener('click', () => {
+  if (fatal) location.reload();
+  else { resumeWorld = false; clearTimeout(resumeTimer); void join(); }
+});
 element<HTMLFormElement>('message-form').addEventListener('submit', event => {
   event.preventDefault();
   if (persistent) return;
@@ -365,7 +391,9 @@ canvas.addEventListener('webglcontextlost', event => {
 
 let lastTime = performance.now();
 let lastSend = 0;
+let frameId = 0;
 function frame(now: number) {
+  if (suspended) return;
   const dt = Math.min((now - lastTime) / 1000, .05);
   lastTime = now;
   const direction = input.direction();
@@ -376,16 +404,51 @@ function frame(now: number) {
     network?.sendInput(Math.round(me.tx), Math.round(me.ty)); lastSend = now;
   }
   if (!fatal && !document.hidden) scene.render([me, ...actors.values()], me, dt, reducedMotion.matches, !entry.hidden);
-  requestAnimationFrame(frame);
+  frameId = requestAnimationFrame(frame);
 }
-requestAnimationFrame(frame);
+frameId = requestAnimationFrame(frame);
+
+function appActive(active: boolean) {
+  if (!isNativeWorld() || suspended === !active) return;
+  suspended = !active;
+  if (!active) {
+    resumeWorld = online || starting;
+    resumeAttempts = 0; clearTimeout(resumeTimer);
+    generation++; // Ignore callbacks from the connection being suspended.
+    stopMoving(); savedChat?.stop(); network?.close();
+    loseConnection();
+    cancelAnimationFrame(frameId);
+  } else {
+    lastTime = performance.now();
+    frameId = requestAnimationFrame(frame);
+    if (resumeWorld && !fatal) void join();
+  }
+}
+let nativeActive = true;
+window.addEventListener('opencraft-app-state', event => {
+  nativeActive = (event as CustomEvent<boolean>).detail;
+  appActive(nativeActive && !document.hidden);
+});
+document.addEventListener('visibilitychange', () => appActive(nativeActive && !document.hidden));
+window.addEventListener('online', () => {
+  if (isNativeWorld() && entry.hidden && !online && !starting && !suspended && !fatal) {
+    resumeWorld = true; resumeAttempts = 0; clearTimeout(resumeTimer); void join();
+  }
+});
+window.addEventListener('opencraft-back', event => {
+  if (document.activeElement === messageInput || document.activeElement === nameInput) {
+    (document.activeElement as HTMLElement).blur(); event.preventDefault();
+  } else if (!conversation.hidden) {
+    setChat(false); event.preventDefault();
+  }
+});
 
 // Never connect this page to the legacy production world, even if served there.
 try {
-  const response = await fetch('/preview-info', { signal: AbortSignal.timeout(5000) });
-  const info = await response.json();
-  if (!response.ok || info.mode !== 'evolving-preview') throw new Error('wrong server');
+  const info = await worldRequest('/preview-info');
+  if (info.mode !== 'evolving-preview') throw new Error('wrong server');
   persistent = info.persistent === true;
+  if (isNativeWorld() && (!persistent || info.mobileAuthVersion !== 1)) throw new Error('mobile server update required');
   if (persistent) {
     if (info.apiVersion !== 2) throw new Error('incompatible preview');
     savedChat = savedConversation(appendMessage, () => { if (conversation.hidden || !expanded) unread(true); }, record => {
@@ -407,8 +470,8 @@ try {
   choiceControls(); viewport();
 } catch {
   fatal = true;
-  status(persistent ? 'Could not load your guest. Check your connection and reload.' : 'This scene needs its own test server. The regular game server is not connected.', persistent);
-  if (persistent) retry.textContent = 'Reload';
+  status(isNativeWorld() ? 'Could not connect to the world. Check your connection; the app or server may need an update.' : persistent ? 'Could not load your guest. Check your connection and reload.' : 'This scene needs its own test server. The regular game server is not connected.', persistent || isNativeWorld());
+  if (persistent || isNativeWorld()) retry.textContent = 'Reload';
 }
 
 window.addEventListener('pagehide', () => { generation++; savedChat?.stop(); network?.close(); scene.dispose(); });

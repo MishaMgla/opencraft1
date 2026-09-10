@@ -1,0 +1,19 @@
+{
+  "name": "opencraft-mobile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix ../web run build && node tools/build.mjs",
+    "sync": "npm run build && cap sync",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.1",
+    "@capacitor/app": "8.1.1",
+    "@capacitor/core": "8.5.1",
+    "@capacitor/ios": "8.5.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.1"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "appId": "com.opencraft1.app",
+  "appName": "OpenCraft",
+  "webDir": "dist",
+  "backgroundColor": "#000000",
+  "loggingBehavior": "none",
+  "android": {
+    "allowMixedContent": false,
+    "webContentsDebuggingEnabled": false
+  }
+}

@@ -1,15 +1,10 @@
+import { worldRequest } from './transport.js';
+
 export interface Guest { id: string; name: string; seed: number; avatarVersion: number; appearanceChoicePending: boolean }
 interface SavedMessage { id: string; playerId: string; actorId?: number; requestId: string; name: string; text: string; createdAt: string }
 
 export async function previewRequest(path: string, body?: unknown) {
-  const response = await fetch(`/evolving-api/${path}`, {
-    method: body === undefined ? 'GET' : 'POST',
-    headers: body === undefined ? {} : { 'Content-Type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!response.ok) throw new Error(String(response.status));
-  return response.json();
+  return worldRequest(`/evolving-api/${path}`, body);
 }
 
 // HTTP history is independent of the lossy movement socket. No second live

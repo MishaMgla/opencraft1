@@ -199,6 +199,7 @@ start at `docs/project-map/README.md`, then load the subtree doc relevant to the
 | evolving-world plan / current planning context | `docs/prd/evolving-world-product-plan.md` |
 | evolving-world implementation sequence / reuse and readiness | `docs/prd/evolving-world-implementation-plan.md` |
 | isolated evolving-world 3D preview / hosted test and local checks | `docs/project-map/evolving-preview.md` |
+| mobile shells / shared transport / build and device gates | `docs/project-map/mobile.md` |
 | evolving-world player flow / evolution lifecycle | `docs/prd/evolving-world-first-session.md` |
 | evolving-world low-poly 3D / generative forms / UI | `docs/prd/evolving-world-visual-ux.md` |
 | original product vision | `docs/vision.md` |

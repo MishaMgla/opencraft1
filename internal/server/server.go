@@ -24,7 +24,8 @@ type Server struct {
 	preview            *store.Preview
 	previewOrigin      string
 	guestMu            sync.Mutex
-	guests             map[string]uint32 // zero reserves a guest; nonzero is the live actor ID
+	guests             map[string]uint32       // zero reserves a guest; nonzero is the live actor ID
+	mobileTickets      map[string]mobileTicket // guestMu; short-lived, one-use socket admission
 	previewStop        chan struct{}
 	previewClosing     bool
 	previewConnections sync.WaitGroup
@@ -67,6 +68,8 @@ func (s *Server) Handler() http.Handler {
 		mux.HandleFunc("/evolving-api/session", s.previewSession)
 		mux.HandleFunc("/evolving-api/messages", s.previewMessages)
 		mux.HandleFunc("/evolving-api/appearance", s.previewAppearance)
+		mux.HandleFunc("/evolving-api/socket-ticket", s.previewSocketTicket)
+		mux.HandleFunc("/evolving-api/socket", s.previewMobileSocket)
 	}
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		body, err := json.Marshal(healthResponse{Status: "ok"})
@@ -155,7 +158,17 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// First frame must be Hello.
-	_, data, err := c.Read(ctx)
+	read := func(timeout time.Duration) ([]byte, error) {
+		readCtx := ctx
+		if s.preview != nil && r.URL.Path == "/evolving-api/socket" {
+			var stop context.CancelFunc
+			readCtx, stop = context.WithTimeout(ctx, timeout)
+			defer stop()
+		}
+		_, data, err := c.Read(readCtx)
+		return data, err
+	}
+	data, err := read(5 * time.Second)
 	if err != nil {
 		return
 	}
@@ -227,7 +240,9 @@ func (s *Server) handleWS(w http.ResponseWriter, r *http.Request) {
 
 	// Reader loop.
 	for {
-		_, data, err := c.Read(ctx)
+		// Native clients send input even when still. Release a silently lost
+		// mobile connection instead of reserving that guest indefinitely.
+		data, err := read(15 * time.Second)
 		if err != nil {
 			return
 		}

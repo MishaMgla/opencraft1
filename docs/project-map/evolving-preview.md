@@ -1,5 +1,14 @@
 # Изолированная 3D-сцена
 
+## Mobile source implementation — 2026-09-10
+
+The shared client now has native shells, a transport adapter and background
+recovery. Persistent servers advertise `mobileAuthVersion: 1` and add
+guest-authenticated socket tickets plus a strict native-origin socket route.
+Browser origin checks, the world and chat tables remain shared/unchanged.
+See [mobile architecture, checks and device-build gates](mobile.md).
+This source change is not a native release or a production deployment record.
+
 ## Current production update — 2026-09-08
 
 The user subsequently requested direct production deployment. The new scene is

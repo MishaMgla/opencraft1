@@ -88,7 +88,7 @@ func main() {
 	}
 	mux.HandleFunc("GET /preview-info", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(map[string]any{"mode": "evolving-preview", "persistent": persistent, "apiVersion": 2})
+		_ = json.NewEncoder(w).Encode(map[string]any{"mode": "evolving-preview", "persistent": persistent, "apiVersion": 2, "mobileAuthVersion": 1})
 	})
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "web/evolving/index.html")
