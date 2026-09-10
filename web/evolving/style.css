@@ -31,8 +31,6 @@ label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 9px
 .entry-actions { display: flex; gap: 12px; margin: 12px 0; }
 .entry-actions button { flex: 1; }
 #previous-look { flex: 0; padding-inline: .65rem; }
-#entry-info summary { cursor: pointer; width: fit-content; min-height: 44px; padding-block: 12px; }
-#entry-info p { max-height: 20dvh; overflow-y: auto; }
 #join { background: var(--accent); color: #101510; border-color: var(--accent); }
 #join:hover:not(:disabled) { background: #b0c0aa; }
 .note { color: var(--muted); font-size: 12px; }

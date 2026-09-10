@@ -155,7 +155,6 @@ function viewport() {
   element('world').style.top = `${top}px`;
   element('world').style.height = `${Math.max(1, available - top)}px`;
 }
-element('entry-info').addEventListener('toggle', viewport);
 window.addEventListener('resize', viewport);
 window.visualViewport?.addEventListener('resize', viewport);
 window.visualViewport?.addEventListener('scroll', viewport);
@@ -394,7 +393,6 @@ try {
       // Backlog after a network gap belongs in history, not above today's head.
       if (actor && Date.now() - Date.parse(record.createdAt) < 15000) scene.say(actor, record.text);
     }, (text, state) => scene.say(me, text, state));
-    element('entry-note').textContent = 'Your guest belongs to this browser for 30 days. Chat is saved and visible to all participants and the test operator; messages are not automatically deleted. World evolution is not connected.';
     element('history-status').textContent = 'Saved chat will load after you enter.';
     try {
       guest = await previewRequest('session');

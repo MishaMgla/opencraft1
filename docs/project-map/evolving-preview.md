@@ -85,6 +85,15 @@ go run ./cmd/evolving-preview -listen 127.0.0.1:8767
 
 Остановка контейнера `sudo docker stop opencraft-evolving-preview-db` сохраняет том. Том не удалять для «перезапуска»: в нём история. Резервное копирование и восстановление ещё не отрепетированы; наличие тома не заменяет бэкап.
 
+## Entry simplification — 2026-09-10
+
+Removed the entire “About this world” details block at the user's request,
+including both memory-mode and persistent-mode copy, its toggle listener and
+unused styles. Nothing replaces it. The chooser still fits the available space
+between the heading and form. Browser checks now assert the block is absent
+and check all four viewport sizes without an expanded-disclosure variant.
+Storage behavior is unchanged; the entry no longer displays the storage notice.
+
 ## English interface — 2026-09-10
 
 All game-authored copy is English: entry, help/disclosures, chat controls,
@@ -160,7 +169,7 @@ API версии 2: создание сессии требует `avatarVersion:
 
 Позиция записывается при отключении и штатной остановке сервера. Принудительное завершение процесса или недоступная база могут потерять перемещение после последнего сохранения. Имя, облик и уже подтверждённые сообщения записываются сразу. Ошибка базы не останавливает движение уже подключённых игроков, но блокирует восстановление гостя и подтверждение нового сообщения.
 
-Нет артефактов, звука, агента эволюции, автоматического выпуска и полноценной защиты публичного сервиса. Беседа доступна всем гостям и оператору пробы; автоматического удаления нет — это указано в раскрываемом «Об игре» до входа. Перед приглашением реальных участников ещё нужны политика хранения/удаления, резервное восстановление и проверка настоящих телефонов.
+Artifacts, sound, world evolution, automated releases and comprehensive public-service protection are not implemented. Chat is visible to all guests and the test operator, with no automatic deletion. The entry notice was removed at the user's request on 2026-09-10; storage/retention policy, backup restoration and real-phone checks remain outstanding before wider invitations.
 
 В режиме **без базы** всё ещё используется эфемерный бинарный чат без ID сообщений. Только 200 строк текущего посещения, повтор может дублироваться, черновик не переживает перезагрузку. Его интерфейс прямо сообщает, что история не сохраняется.
 

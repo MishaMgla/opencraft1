@@ -2,6 +2,13 @@
 
 Дата: 2026-09-06. Статус: рабочее визуальное описание для обсуждения.
 
+## Entry simplification — confirmed 2026-09-10
+
+The user requested removing the entire “About this world” block, not relocating
+or collapsing it. Remove the heading, explanatory copy and associated behavior.
+This supersedes the earlier entry-disclosure placement below. Guest ownership,
+chat storage and world-evolution status do not change.
+
 ## In-game language — confirmed 2026-09-10
 
 English is required for all game-authored player-facing text. The canonical
