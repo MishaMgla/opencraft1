@@ -95,7 +95,21 @@ drafts and messages are unchanged, including existing non-English history.
 No localization library, data migration, protocol or gameplay change is needed.
 The browser check covers English copy, accessible attributes and dates while
 deliberately sending Cyrillic player messages to verify they remain untouched.
-Production release verification will be recorded here after deployment.
+Released through PR #155, main `cb73fce51d0d259d53b3043a38439193cbf8ed4c`.
+Railway production deployment `d363676f-d796-427e-8bf7-433ca3161b88` succeeded,
+using the allowlisted archive `/tmp/opencraft-release.4sDssG`, image digest
+`sha256:58446a058aa7508a84f6f934381399066f4b8440c9e6addf983cd9a4e967e99e`.
+This is the current release; the 2026-09-09 image in `docs/deploy.md` is the
+preceding compatible rollback. The established production deployment procedure
+and v2 data/recipe safeguards are unchanged.
+
+Checks passed: 42 client tests, Go build/test/vet, local browser checks at
+320/390/844/1280 widths, English copy/attributes/dates, preserved Cyrillic
+messages, speech, history and failed-send recovery; all PR #155 CI jobs passed.
+Production read-only checks verified direct HTTPS 200 without a password prompt,
+health, guest gate, exact HTML/CSS/JS parity, and English entry/help at 390×844.
+No production guests or messages were created. Local test browsers/server and
+database container are stopped; the database volume is retained.
 
 ## Доработка 2026-09-09
 
