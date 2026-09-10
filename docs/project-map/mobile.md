@@ -4,6 +4,51 @@ Status 2026-09-10: first source implementation, not a published application.
 See [implementation scope](../prd/evolving-world-mobile-implementation.md) and
 [product decisions](../prd/evolving-world-cross-platform-plan.md).
 
+## Resume on the owner's local computer — 2026-09-10
+
+Handoff branch: `codex/mobile-shared-world` in `MishaMgla/opencraft1`.
+Implementation commit: `e300d12`; base `main`: `b616c06`. Later handoff-only
+commits do not change the runtime. This branch is not merged or deployed.
+The owner requested pushing the work to continue locally; no store release or
+production deployment is part of this handoff. The VDS has only 523 MiB free
+at handoff, no Android SDK and no Xcode. No disk cleanup was performed.
+
+On a clean local clone, fetch and select the branch (preserve any existing work):
+
+```bash
+git fetch origin
+git switch --track origin/codex/mobile-shared-world
+```
+
+If the local branch already exists, switch to it and use `git pull --ff-only`.
+Read `AGENT_RULES.md`, this document, then the linked implementation/product plans.
+Continue the existing implementation; do not recreate the native projects or
+restart product planning. The next steps, in order, are:
+
+1. Inspect local OS, available space and toolchains; follow **Prepare and verify**
+   below. Both native projects and dependency lockfiles are committed. Ignored
+   `node_modules`, compiled web JS and copied native assets must be regenerated.
+2. Produce and install an Android debug APK; on Windows use `gradlew.bat` instead
+   of `./gradlew`. Build iOS on macOS with Xcode; a faster Windows/Linux machine
+   alone does not remove that requirement. Record actual build results.
+3. Before testing entry, check the target server's `/preview-info` for persistent
+   mode, `apiVersion: 2` and `mobileAuthVersion: 1`. The default app origin is
+   production, but this branch's server support has **not** been deployed there.
+   An older server refusing entry is expected, not proof of a native build bug.
+   Arrange a compatible HTTPS server or a separately authorized release through
+   `../deploy.md`; do not weaken auth, HTTPS or redirect checks to make entry work.
+4. Complete the device gates below, especially native cookie survival after
+   force-stop/reboot and the Android + iPhone + browser shared-world check.
+5. Update this record with device/OS, source revision, commands and outcomes;
+   distinguish APK/IPA compilation, device acceptance and production delivery.
+
+No credentials, signing keys, database dumps or installed SDKs travel via Git.
+Create separate local test configuration from `.env.example`; do not reuse a
+production database. VDS test servers on 8767/8768 and the preview DB container
+were stopped; its volume/data remain on the VDS. Prior verification results and
+the unresolved WebGL-context-loss observation are recorded below, not new claims
+about the owner's devices. The minimum communication-safety plan remains pending.
+
 ## Files and data flow
 
 - `mobile/`: pinned Capacitor 8.5.1 and App 8.1.1, native Android/iOS source
@@ -103,4 +148,3 @@ preserve the local database volume.
 - Before store distribution: replace prototype branding, confirm identifiers,
   signing and release builds, implement the approved communication-safety
   minimum and its operational handling, then perform device/store acceptance.
-- No production deployment or store release is implied by these source checks.

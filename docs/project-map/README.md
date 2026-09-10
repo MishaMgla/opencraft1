@@ -52,6 +52,7 @@ docs/project-map/
 
 ## changelog
 
+- 2026-09-10: add local-machine handoff in `mobile.md` with branch/revision, rebuild order, unshipped-server prerequisite, device gates and excluded secrets/test data. Push-only handoff; no production changes.
 - 2026-09-10: implement shared native shells, one-use guest socket admission and background recovery; add `mobile.md` and the bounded implementation plan. Source/loopback checks only; device builds and publication remain pending.
 - 2026-09-10: approve the minimum communication-safety plan: personal blocking, message reports, anti-spam, filtering and operator handling, with an unobtrusive message menu and separate evolution-agent safeguards. Documentation only; not implemented.
 - 2026-09-10: document the requested shared world across Android, iOS and web; guest entry now, Sign in with Apple and other login methods later, server-first updates and a proposed client release pipeline. Compatibility and store/UGC safeguards remain required. Planning only; no runtime or deployment changes.
