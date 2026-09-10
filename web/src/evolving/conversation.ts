@@ -62,16 +62,16 @@ export function savedConversation(append: (name: string, text: string, record: S
           if (record.playerId !== guest?.id) speak(record);
         }
         // Freeze the displayed page when reading above its end. No eviction of
-        // the line being read; the existing cursor API reloads on "К свежим".
+        // the line being read; the existing cursor API reloads on "Latest".
         if (!live || ((!get('conversation').classList.contains('expanded') || get('conversation').hidden) && get('conversation').dataset.reading === 'true') ||
           (!get('conversation').hidden && get('conversation').classList.contains('expanded') && list.scrollHeight - list.scrollTop - list.clientHeight >= 40)) {
           live = false;
-          historyStatus.textContent = 'Есть новые сообщения — «К свежим».';
+          historyStatus.textContent = 'New messages — select Latest.';
           return;
         }
       }
       if (before && !records.length) {
-        historyStatus.textContent = 'Это начало разговора.';
+        historyStatus.textContent = 'This is the start of the conversation.';
       } else {
         if (reset || before) list.replaceChildren();
         if (reset) cursor = records[records.length - 1]?.id || '';
@@ -83,13 +83,13 @@ export function savedConversation(append: (name: string, text: string, record: S
         if (!list.children.length) {
           const empty = document.createElement('li');
           empty.id = 'empty-chat'; empty.className = 'note';
-          empty.textContent = 'Здесь ещё никто не написал.'; list.append(empty);
+          empty.textContent = 'No messages yet.'; list.append(empty);
         }
-        historyStatus.textContent = live ? 'Сохранённый разговор. Доступен всем участникам пробы.' : 'Прошлые сообщения. Новые — по кнопке «К свежим».';
+        historyStatus.textContent = live ? 'Saved chat. Visible to everyone in this world.' : 'Older messages. Select Latest for new ones.';
         if (reset || before) list.scrollTop = before ? 0 : list.scrollHeight;
       }
     } catch {
-      if (attempt === epoch) { historyStatus.textContent = 'Не удалось обновить историю. Показанный текст остаётся на экране.'; historyStatus.classList.add('error'); }
+      if (attempt === epoch) { historyStatus.textContent = 'Could not refresh history. The messages already shown are still here.'; historyStatus.classList.add('error'); }
     } finally {
       reading = false;
       earlier.disabled = !connected || !list.firstElementChild?.getAttribute('data-message-id');
@@ -115,7 +115,7 @@ export function savedConversation(append: (name: string, text: string, record: S
     sending = true; send.disabled = true;
     ownSpeech(text, 'pending');
     delivery.dataset.state = 'pending';
-    delivery.textContent = storageOK ? 'Отправляется…' : 'Отправляется… Не закрывай страницу: черновик не сохраняется.';
+    delivery.textContent = storageOK ? 'Sending…' : 'Sending… Keep this page open: your draft cannot be saved.';
     try {
       const saved: SavedMessage = await previewRequest('messages', request);
       if (saved.playerId !== guest.id || saved.requestId !== request.requestId || saved.text !== request.text) throw new Error('invalid acknowledgement');
@@ -123,14 +123,14 @@ export function savedConversation(append: (name: string, text: string, record: S
       pending = undefined; remember();
       ownSpeech(text, 'saved');
       delivery.dataset.state = 'saved';
-      delivery.textContent = 'Сохранено в разговоре.';
+      delivery.textContent = 'Saved to chat.';
     } catch (error) {
       ownSpeech(text, 'error');
       delivery.dataset.state = 'error';
       delivery.textContent = error instanceof Error && error.message === '429'
-        ? 'Подожди немного и отправь снова. Текст остался в поле.'
-        : 'Подтверждения нет. Можно повторить: то же сообщение не запишется дважды.';
-      if (!storageOK) delivery.textContent += ' Не перезагружай страницу: браузер не сохраняет черновик.';
+        ? 'Wait a moment and try again. Your text is still in the field.'
+        : 'Not confirmed. You can retry: the same message will not be saved twice.';
+      if (!storageOK) delivery.textContent += ' Do not reload: this browser cannot save your draft.';
     } finally { sending = false; send.disabled = !connected; }
   });
 
@@ -143,7 +143,7 @@ export function savedConversation(append: (name: string, text: string, record: S
           if (draft && typeof draft.text === 'string') input.value = draft.text.slice(0, 200);
           if (draft?.pending && /^[a-f0-9]{32}$/.test(draft.pending.requestId) && typeof draft.pending.text === 'string') {
             pending = draft.pending;
-            delivery.textContent = 'Осталась неподтверждённая отправка. Повтор не создаст вторую запись.';
+            delivery.textContent = 'An earlier send is unconfirmed. Retrying will not create a duplicate.';
           }
         } catch { /* Optional local draft; ownership is in the HttpOnly cookie. */ }
       }

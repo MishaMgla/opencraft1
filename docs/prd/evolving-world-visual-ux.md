@@ -2,6 +2,15 @@
 
 Дата: 2026-09-06. Статус: рабочее визуальное описание для обсуждения.
 
+## In-game language — confirmed 2026-09-10
+
+English is required for all game-authored player-facing text. The canonical
+[language rule](../../AGENT_RULES.md#in-game-language-confirmed-2026-09-10)
+covers UI, accessibility text and generated world content, while preserving
+player-authored names and messages. Russian UI examples below are historical
+discussion, not implementation copy. The interface translation is implemented;
+see [implementation and release status](../project-map/evolving-preview.md#english-interface--2026-09-10).
+
 ## Уточнение после игры — 2026-09-09
 
 **Уточнение о чате, 2026-09-09:** пользователь имел в виду реплику возле говорящего персонажа, как в его примере Ultima Online, а не текстовую ленту в углу. Обычный режим — временный текст над фигурой без пузыря и подложки; справа только строка ввода с кнопками. История с датами открывается отдельно. Своя реплика появляется сразу, но до ответа сервера отмечена как отправляемая. Это заменяет прежнее предложение о нескольких постоянно видимых строках справа. Открытие не меняет камеру; стик, читаемый размер текста и области нажатия сохраняются.

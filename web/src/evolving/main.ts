@@ -67,7 +67,7 @@ function status(text: string, canRetry = false) {
   retry.hidden = !canRetry;
 }
 function updatePresence() {
-  element('presence').textContent = online ? `В мире: ${actors.size + 1}` : 'Нет соединения';
+  element('presence').textContent = online ? `In the world: ${actors.size + 1}` : 'Disconnected';
 }
 function stopMoving() {
   input.clear();
@@ -93,7 +93,7 @@ function restoreScroll() {
 }
 function unread(value: boolean) {
   element('unread-dot').hidden = !value;
-  openChat.setAttribute('aria-label', value ? 'Разговор: новые сообщения' : 'Открыть разговор');
+  openChat.setAttribute('aria-label', value ? 'Chat: new messages' : 'Open chat');
 }
 function setChat(open: boolean) {
   rememberScroll();
@@ -101,7 +101,7 @@ function setChat(open: boolean) {
   if (!open) expanded = false;
   conversation.classList.toggle('expanded', expanded);
   expandChat.textContent = expanded ? '−' : '≡';
-  expandChat.title = expanded ? 'Уменьшить историю' : 'Открыть историю';
+  expandChat.title = expanded ? 'Collapse history' : 'Open history';
   expandChat.setAttribute('aria-label', expandChat.title);
   expandChat.setAttribute('aria-expanded', String(expanded));
   openChat.hidden = open;
@@ -124,7 +124,7 @@ expandChat.addEventListener('click', () => {
   if (expanded) { stopMoving(); unread(false); }
   conversation.classList.toggle('expanded', expanded);
   expandChat.textContent = expanded ? '−' : '≡';
-  expandChat.title = expanded ? 'Уменьшить историю' : 'Открыть историю';
+  expandChat.title = expanded ? 'Collapse history' : 'Open history';
   expandChat.setAttribute('aria-label', expandChat.title);
   expandChat.setAttribute('aria-expanded', String(expanded));
   viewport();
@@ -171,7 +171,7 @@ function choiceControls() {
   reroll.disabled = starting || !verified;
   previousLook.hidden = !canChoose || !previousLooks.length;
   previousLook.disabled = starting;
-  joinButton.textContent = guest && !guest.appearanceChoicePending ? 'Вернуться' : 'Войти';
+  joinButton.textContent = guest && !guest.appearanceChoicePending ? 'Return' : 'Enter';
   viewport();
 }
 reroll.addEventListener('click', () => {
@@ -202,11 +202,11 @@ function loseConnection() {
   sendButton.disabled = true;
   joinButton.disabled = false;
   choiceControls();
-  if (pending) delivery.textContent = 'Доставка не подтверждена. Черновик сохранён в поле; повтор может создать дубликат.';
+  if (pending) delivery.textContent = 'Delivery unconfirmed. Your draft is still in the field; retrying may create a duplicate.';
   pending = '';
   clearTimeout(deliveryTimer);
   updatePresence();
-  status(persistent ? 'Соединения с миром нет. Если гость открыт в другой вкладке, закрой её и подключись снова.' : 'Соединение прервалось. Мир недоступен, текст остался на экране.', true);
+  status(persistent ? 'Disconnected from the world. If this guest is open in another tab, close it and reconnect.' : 'Connection lost. The world is unavailable; your text is still here.', true);
 }
 
 function appendMessage(name: string, text: string, record?: { id: string; createdAt: string }) {
@@ -220,7 +220,7 @@ function appendMessage(name: string, text: string, record?: { id: string; create
     li.dataset.messageId = record.id;
     const time = document.createElement('time');
     time.dateTime = record.createdAt;
-    time.textContent = ` · ${new Date(record.createdAt).toLocaleString('ru-RU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
+    time.textContent = ` · ${new Date(record.createdAt).toLocaleString('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`;
     author.append(time);
   }
   li.append(author, document.createTextNode(text));
@@ -236,7 +236,7 @@ function appendMessage(name: string, text: string, record?: { id: string; create
     clearTimeout(deliveryTimer);
     if (messageInput.value.trim() === pending) messageInput.value = '';
     pending = '';
-    delivery.textContent = 'Получено сервером. История пока не сохраняется.';
+    delivery.textContent = 'Received by the server. Chat history is not saved yet.';
     // Match the existing server's chat throttle without pretending rejected sends succeeded.
     sendButton.disabled = true;
     deliveryTimer = window.setTimeout(() => { sendButton.disabled = !online; }, 650);
@@ -254,7 +254,7 @@ async function join() {
   reroll.disabled = true;
   previousLook.disabled = true;
   joinedName = name;
-  status('Соединяемся с общей пустотой…');
+  status('Connecting to the shared world…');
   input.clear();
   for (const actor of actors.values()) scene.remove(actor);
   actors.clear();
@@ -281,7 +281,7 @@ async function join() {
       showLook();
     } catch {
       clearTimeout(timeout); loseConnection();
-      status('Не удалось восстановить гостя. Проверь соединение и повтори вход.', true);
+      status('Could not restore your guest. Check your connection and try entering again.', true);
       return;
     }
   }
@@ -306,7 +306,7 @@ async function join() {
       const previous = actors.get(message.id);
       if (previous) scene.remove(previous);
       const recipe = /^(shape|shape2)-([a-f0-9]{1,8})$/.exec(message.character);
-      if (!recipe) { fatal = true; network?.close(); stopMoving(); status('Обнови страницу: в мире появились новые формы.', true); retry.textContent = 'Перезагрузить'; return; }
+      if (!recipe) { fatal = true; network?.close(); stopMoving(); status('Reload the page: new character forms are available.', true); retry.textContent = 'Reload'; return; }
       const actorSeed = Number.parseInt(recipe[2]!, 16) >>> 0;
       const actor = scene.makeAvatar(actorSeed, message.name, recipe[1] === 'shape' ? 1 : 2);
       actor.x = actor.tx = message.x; actor.y = actor.ty = message.y;
@@ -345,13 +345,13 @@ element<HTMLFormElement>('message-form').addEventListener('submit', event => {
   if (!text || !online || sendButton.disabled || pending) return;
   pending = text;
   sendButton.disabled = true;
-  delivery.textContent = 'Отправляется…';
+  delivery.textContent = 'Sending…';
   scene.say(me, text, 'pending');
   network?.sendChat(text);
   deliveryTimer = window.setTimeout(() => {
     pending = '';
     sendButton.disabled = !online;
-    delivery.textContent = 'Доставка не подтверждена. Повторная отправка может создать дубликат.';
+    delivery.textContent = 'Delivery unconfirmed. Sending again may create a duplicate.';
     scene.say(me, text, 'error');
   }, 5000);
 });
@@ -360,8 +360,8 @@ canvas.addEventListener('webglcontextlost', event => {
   savedChat?.stop();
   event.preventDefault(); fatal = true; online = false; input.clear(); network?.close();
   messageInput.disabled = true; sendButton.disabled = true;
-  status('Графическая сцена остановилась. Для восстановления перезагрузи страницу.', true);
-  retry.textContent = 'Перезагрузить';
+  status('The 3D scene stopped. Reload the page to recover.', true);
+  retry.textContent = 'Reload';
 });
 
 let lastTime = performance.now();
@@ -394,8 +394,8 @@ try {
       // Backlog after a network gap belongs in history, not above today's head.
       if (actor && Date.now() - Date.parse(record.createdAt) < 15000) scene.say(actor, record.text);
     }, (text, state) => scene.say(me, text, state));
-    element('entry-note').textContent = 'Гость закреплён за этим браузером на 30 дней. Разговор сохраняется и доступен участникам и оператору пробы; автоудаления пока нет. Эволюция не подключена.';
-    element('history-status').textContent = 'Сохранённый разговор загрузится после входа.';
+    element('entry-note').textContent = 'Your guest belongs to this browser for 30 days. Chat is saved and visible to all participants and the test operator; messages are not automatically deleted. World evolution is not connected.';
+    element('history-status').textContent = 'Saved chat will load after you enter.';
     try {
       guest = await previewRequest('session');
       nameInput.value = guest!.name; nameInput.readOnly = true;
@@ -409,8 +409,8 @@ try {
   choiceControls(); viewport();
 } catch {
   fatal = true;
-  status(persistent ? 'Не удалось загрузить гостя. Проверь сервер пробы и перезагрузи страницу.' : 'Нужен отдельный сервер пробной сцены. Обычный сервер игры не подключён.', persistent);
-  if (persistent) retry.textContent = 'Перезагрузить';
+  status(persistent ? 'Could not load your guest. Check your connection and reload.' : 'This scene needs its own test server. The regular game server is not connected.', persistent);
+  if (persistent) retry.textContent = 'Reload';
 }
 
 window.addEventListener('pagehide', () => { generation++; savedChat?.stop(); network?.close(); scene.dispose(); });

@@ -1,18 +1,18 @@
 <!doctype html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="Пробная общая пустота: персонажи, движение и разговор.">
-  <title>Пустота — OpenCraft</title>
+  <meta name="description" content="A shared empty world: characters, movement and conversation.">
+  <title>The Void — OpenCraft</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%239BAF96' d='M16 2 27 10 23 26 10 29 5 12Z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="/evolving/style.css">
   <script type="importmap">{"imports":{"three":"/preview-vendor/three.module.js"}}</script>
 </head>
 <body>
-  <main id="world" aria-label="Общая трёхмерная пустота">
-    <canvas id="scene" aria-label="Персонажи в общем мире"></canvas>
+  <main id="world" aria-label="Shared 3D void">
+    <canvas id="scene" aria-label="Characters in the shared world"></canvas>
     <div id="labels" aria-hidden="true"></div>
   </main>
   <header id="hud" hidden>
@@ -21,48 +21,48 @@
   </header>
   <section id="entry" aria-labelledby="entry-title">
     <div class="entry-copy">
-      <p class="eyebrow">OpenCraft / пробная сцена</p>
-      <h1 id="entry-title">Пока — только мы.</h1>
-      <p>Можно идти и разговаривать.</p>
+      <p class="eyebrow">OpenCraft / early world</p>
+      <h1 id="entry-title">For now, just us.</h1>
+      <p>Walk around. Talk to each other.</p>
     </div>
     <form id="entry-form">
-      <label for="name">Как тебя называть</label>
-      <input id="name" name="name" maxlength="24" autocomplete="nickname" required placeholder="Имя">
+      <label for="name">What should we call you?</label>
+      <input id="name" name="name" maxlength="24" autocomplete="nickname" required placeholder="Name">
       <div class="entry-actions">
-        <button id="previous-look" type="button" hidden aria-label="Вернуть предыдущий облик">Назад</button>
-        <button id="reroll" type="button" disabled>Другой облик</button>
-        <button id="join" type="submit" disabled>Войти</button>
+        <button id="previous-look" type="button" hidden aria-label="Restore previous appearance">Back</button>
+        <button id="reroll" type="button" disabled>Another look</button>
+        <button id="join" type="submit" disabled>Enter</button>
       </div>
       <details id="entry-info" class="note">
-        <summary>Об игре</summary>
-        <p id="entry-note">Изолированная проба. История пока не сохраняется, эволюция ещё не подключена.</p>
+        <summary>About this world</summary>
+        <p id="entry-note">Isolated test world. Chat is not saved yet. World evolution is not connected.</p>
       </details>
     </form>
   </section>
   <div id="connection" role="status" hidden>
     <span id="connection-text"></span>
-    <button id="retry" type="button" hidden>Подключиться снова</button>
+    <button id="retry" type="button" hidden>Reconnect</button>
   </div>
   <div id="controls" hidden>
-    <button id="stick" type="button" aria-label="Движение: потяни в нужную сторону или используй стрелки">
+    <button id="stick" type="button" aria-label="Move: drag in a direction or use the arrow keys">
       <span id="stick-knob"></span>
     </button>
-    <p id="move-help" class="note">WASD / стрелки — идти</p>
+    <p id="move-help" class="note">WASD / arrows to move</p>
     <div class="conversation-control">
-      <button id="open-chat" type="button" aria-expanded="false" aria-controls="conversation">Чат <span id="unread-dot" hidden aria-hidden="true"></span></button>
+      <button id="open-chat" type="button" aria-expanded="false" aria-controls="conversation">Chat <span id="unread-dot" hidden aria-hidden="true"></span></button>
     </div>
   </div>
   <section id="conversation" aria-labelledby="conversation-title" hidden>
-    <header><h2 id="conversation-title">Разговор</h2></header>
-    <p id="history-status" class="note" role="status">Только это посещение. Сообщения пока не сохраняются.</p>
-    <div id="history-controls" hidden><button id="earlier" type="button">Раньше</button><button id="latest" type="button" hidden>К свежим</button></div>
-    <ol id="messages" tabindex="0" aria-label="Сообщения разговора"><li id="empty-chat" class="note">Здесь ещё никто не написал.</li></ol>
+    <header><h2 id="conversation-title">Conversation</h2></header>
+    <p id="history-status" class="note" role="status">This visit only. Messages are not saved yet.</p>
+    <div id="history-controls" hidden><button id="earlier" type="button">Earlier</button><button id="latest" type="button" hidden>Latest</button></div>
+    <ol id="messages" tabindex="0" aria-label="Chat messages"><li id="empty-chat" class="note">No messages yet.</li></ol>
     <form id="message-form">
-      <label class="sr-only" for="message">Сообщение</label>
-      <input id="message" name="message" maxlength="200" autocomplete="off" placeholder="Сообщение…" disabled>
-      <button id="send" type="submit" aria-label="Отправить" title="Отправить" disabled>↑</button>
-      <button id="expand-chat" type="button" aria-label="Открыть историю" title="Открыть историю" aria-expanded="false" aria-controls="messages">≡</button>
-      <button id="close-chat" type="button" aria-label="Закрыть разговор" title="Закрыть разговор">×</button>
+      <label class="sr-only" for="message">Message</label>
+      <input id="message" name="message" maxlength="200" autocomplete="off" placeholder="Message…" disabled>
+      <button id="send" type="submit" aria-label="Send" title="Send" disabled>↑</button>
+      <button id="expand-chat" type="button" aria-label="Open history" title="Open history" aria-expanded="false" aria-controls="messages">≡</button>
+      <button id="close-chat" type="button" aria-label="Close chat" title="Close chat">×</button>
     </form>
     <p id="delivery" class="note" role="status"></p>
   </section>
@@ -71,8 +71,8 @@
       const status = document.getElementById('connection');
       status.hidden = false;
       document.getElementById('connection-text').textContent = String(error).includes('WebGL')
-        ? 'Не удалось включить 3D. Попробуй браузер с поддержкой WebGL 2.'
-        : 'Не удалось загрузить сцену. Проверь сборку клиента и обнови страницу.';
+        ? 'Could not start 3D. Try a browser that supports WebGL 2.'
+        : 'Could not load the world. Check your connection and reload.';
     });
   </script>
 </body>

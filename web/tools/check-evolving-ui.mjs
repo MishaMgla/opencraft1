@@ -12,10 +12,21 @@ const run = (...args) => execFileSync('agent-browser', ['--session', session, ..
 const peer = (...args) => execFileSync('agent-browser', ['--session', `${session}-peer`, ...args], { encoding: 'utf8', timeout: 45000 });
 let peerOpened = false;
 const evaluate = code => JSON.parse(run('eval', code));
+function checkEnglish() {
+  assert.equal(evaluate('document.documentElement.lang'), 'en');
+  const copy = evaluate(`(() => {
+    const nodes = [...document.querySelectorAll('button, label, [role=status], .entry-copy, #entry-info, #move-help, #empty-chat, #messages time')];
+    const attributes = [...document.querySelectorAll('[aria-label], [placeholder], [title]')]
+      .flatMap(e => ['aria-label', 'placeholder', 'title'].map(a => e.getAttribute(a) || ''));
+    return [document.title, ...nodes.map(e => e.textContent), ...attributes].join(' ');
+  })()`);
+  assert.doesNotMatch(copy, /[А-Яа-яЁё]/u, 'game copy must be English; player names and messages are excluded');
+}
 try {
   run('open', origin);
   run('set', 'viewport', '390', '844');
   run('wait', '--fn', '!document.querySelector("#join").disabled');
+  checkEnglish();
   assert.equal(evaluate('document.querySelector("#appearance-note, #keep-look") !== null'), false);
   assert.equal(evaluate('document.querySelector("#entry-info").open'), false);
   for (const [width, height] of [[320,568], [390,844], [844,390], [1280,800]]) {
@@ -112,6 +123,7 @@ try {
   run('click', '#expand-chat');
   assert.equal(evaluate('document.querySelector("#conversation").classList.contains("expanded")'), true);
   assert.equal(evaluate('getComputedStyle(document.querySelector("#messages time")).display'), 'inline');
+  checkEnglish();
   run('screenshot', '/tmp/opencraft-ui-history.png');
   run('eval', 'document.querySelector("#messages").scrollTop = 75');
   const readingPosition = () => evaluate(`(() => {
@@ -160,9 +172,11 @@ try {
   })()`), true);
   run('eval', 'window.fetch = window.originalFetch; window.releaseSend()');
   run('wait', '--fn', 'document.querySelector("#delivery").dataset.state === "error"');
+  checkEnglish();
   assert.equal(evaluate('document.querySelector("#message").value'), 'Проверка компактной отправки');
   run('click', '#send');
-  run('wait', '--fn', 'document.querySelector("#message").value === "" && document.querySelector("#delivery").textContent === "Сохранено в разговоре."');
+  run('wait', '--fn', 'document.querySelector("#message").value === "" && document.querySelector("#delivery").textContent === "Saved to chat."');
+  checkEnglish();
   assert.equal(evaluate('document.activeElement.id'), 'message');
   assert.equal(evaluate('document.querySelector(".player-speech[data-state=saved]").textContent'), 'Проверка компактной отправки');
   run('screenshot', '/tmp/opencraft-ui-speech.png');
